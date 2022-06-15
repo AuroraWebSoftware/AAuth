@@ -2,9 +2,9 @@
 
 namespace Aurora\AAuth\Tests;
 
+use Aurora\AAuth\AAuthServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Orchestra\Testbench\TestCase as Orchestra;
-use Aurora\AAuth\AAuthServiceProvider;
 
 class TestCase extends Orchestra
 {
