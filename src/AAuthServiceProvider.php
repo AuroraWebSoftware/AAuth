@@ -2,9 +2,9 @@
 
 namespace Aurora\AAuth;
 
+use Aurora\AAuth\Commands\AAuthCommand;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Aurora\AAuth\Commands\AAuthCommand;
 
 class AAuthServiceProvider extends PackageServiceProvider
 {
