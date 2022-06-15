@@ -1,17 +1,17 @@
 {
-    "name": ":vendor_slug/:package_slug",
-    "description": ":package_description",
+    "name": "aurora/aauth",
+    "description": "Laravel Aauth",
     "keywords": [
-        ":vendor_name",
+        "Aurora",
         "laravel",
-        ":package_slug"
+        "aauth"
     ],
-    "homepage": "https://github.com/:vendor_slug/:package_slug",
+    "homepage": "https://github.com/aurora/aauth",
     "license": "MIT",
     "authors": [
         {
-            "name": ":author_name",
-            "email": "author@domain.com",
+            "name": "Aurora Web Software Team",
+            "email": "websoftwareteam@aurorabilisim.com",
             "role": "Developer"
         }
     ],
@@ -35,13 +35,13 @@
     },
     "autoload": {
         "psr-4": {
-            "VendorName\\Skeleton\\": "src",
-            "VendorName\\Skeleton\\Database\\Factories\\": "database/factories"
+            "Aurora\\AAuth\\": "src",
+            "Aurora\\AAuth\\Database\\Factories\\": "database/factories"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "VendorName\\Skeleton\\Tests\\": "tests"
+            "Aurora\\AAuth\\Tests\\": "tests"
         }
     },
     "scripts": {
@@ -51,15 +51,19 @@
         "format": "vendor/bin/php-cs-fixer fix --allow-risky=yes"
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "phpstan/extension-installer": true
+        }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "VendorName\\Skeleton\\SkeletonServiceProvider"
+                "Aurora\\AAuth\\AAuthServiceProvider"
             ],
             "aliases": {
-                "Skeleton": "VendorName\\Skeleton\\Facades\\Skeleton"
+                "AAuth": "Aurora\\AAuth\\Facades\\AAuth"
             }
         }
     },
