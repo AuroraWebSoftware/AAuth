@@ -13,6 +13,7 @@ class AAuthCommand extends Command
     public function handle(): int
     {
         $this->comment('All done');
+        $this->comment(config('aauth.aauth'));
 
         return self::SUCCESS;
     }
