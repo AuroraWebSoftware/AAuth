@@ -1,9 +1,6 @@
 <?php
 
 use Aurora\AAuth\Database\Seeders\SampleDataSeeder;
-use Aurora\AAuth\Models\OrganizationNode;
-use Aurora\AAuth\Models\OrganizationScope;
-use Aurora\AAuth\Models\Role;
 use Aurora\AAuth\Services\RolePermissionService;
 use Illuminate\Support\Facades\Artisan;
 
@@ -13,5 +10,3 @@ beforeEach(function () {
     $seeder->run();
     $this->service = new RolePermissionService();
 });
-
-
