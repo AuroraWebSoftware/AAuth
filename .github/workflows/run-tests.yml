@@ -22,7 +22,24 @@ jobs:
 
     name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
 
+    services:
+      mysql:
+        image: mysql:8.0
+        ports:
+          - 3306
+        env:
+          MYSQL_ROOT_PASSWORD: aauth
+          MYSQL_PASSWORD: aauth
+          MYSQL_USER: aauth
+          MYSQL_DATABASE: aauth
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
     steps:
+      - name: Verify Mysql connection
+        run: |
+          mysql --version
+          sudo apt-get install -y mysql-client
+          mysql --host 127.0.0.1 --port ${{ job.services.mysql.ports['3306'] }} -uaauth -paauth -e "SHOW DATABASES"
+
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -30,7 +47,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo, http
           coverage: none
 
       - name: Setup problem matchers
@@ -45,3 +62,7 @@ jobs:
 
       - name: Execute tests
         run: vendor/bin/pest
+        env:
+          DB_USERNAME: aauth
+          DB_PASSWORD: aauth
+          DB_PORT: ${{ job.services.mysql.ports[3306] }}

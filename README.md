@@ -25,7 +25,6 @@ composer require aurora/aauth
 You can publish and run the migrations with:
 
 ```bash
-php artisan vendor:publish --tag="aauth-migrations"
 php artisan migrate
 ```
 
@@ -33,6 +32,8 @@ You can publish the config file with:
 
 ```bash
 php artisan vendor:publish --tag="aauth-config"
+php artisan vendor:publish --tag="aauth-seeders"
+php artisan db:seed --class=SampleDataSeeder
 ```
 
 This is the contents of the published config file:
