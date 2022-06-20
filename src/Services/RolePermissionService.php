@@ -2,7 +2,6 @@
 
 namespace Aurora\AAuth\Services;
 
-
 use Aurora\AAuth\Http\Requests\StoreRoleRequest;
 use Aurora\AAuth\Models\Role;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +14,6 @@ use Throwable;
  */
 class RolePermissionService
 {
-
     /**
      * Creates a Perm. with given array
      * @param array $role
@@ -60,8 +58,6 @@ class RolePermissionService
 
         return $roleModel->update($role) ? $roleModel : null;
     }
-
-
 
     /**
      * deletes the role.

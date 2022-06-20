@@ -2,9 +2,6 @@
 
 namespace Aurora\AAuth\Http\Middleware;
 
-
-
-
 use Aurora\AAuth\Exceptions\UserHasNoAssignedRoleException;
 use Closure;
 use http\Client\Request;

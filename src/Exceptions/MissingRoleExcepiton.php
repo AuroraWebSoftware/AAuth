@@ -51,7 +51,6 @@ class MissingRoleExcepiton extends Exception
      *
      * @return string|null
      */
-
     public function redirectTo()
     {
         return $this->redirectTo;

@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\DB;
 
-
 /**
  * App\Models\Permission
  *
@@ -78,7 +77,6 @@ class Role extends Model
     /**
      * @return int
      */
-
     public function getAssignedUserCountAttribute(): int
     {
         // new attrbiute syntax
@@ -94,5 +92,4 @@ class Role extends Model
         // new attrbiute syntax
         return $this->getAssignedUserCountAttribute() == 0;
     }
-
 }

@@ -2,7 +2,6 @@
 
 namespace Aurora\AAuth;
 
-
 use Aurora\AAuth\Exceptions\InvalidOrganizationNodeException;
 use Aurora\AAuth\Exceptions\MissingRoleExcepiton;
 use Aurora\AAuth\Exceptions\UserHasNoAssignedRoleException;
@@ -20,7 +19,6 @@ use Throwable;
 
 class AAuth
 {
-
     /**
      * @throws Throwable
      */
@@ -39,7 +37,6 @@ class AAuth
      * @var array|null
      */
     public ?array $organizationNodeIds;
-
 
     /**
      * @throws Throwable
@@ -85,7 +82,6 @@ class AAuth
         }
     }
 
-
     /**
      * @return array|Collection|\Illuminate\Support\Collection
      */
@@ -104,7 +100,6 @@ class AAuth
                     ->get(['roles.id', 'name']) ?? [];
         }
     }
-
 
     /**
      * Role's all permissions
@@ -163,7 +158,7 @@ class AAuth
     public function passOrAbort(string $permission, string $message = 'No Permission'): void
     {
         // todo mesaj dil dosyasından gelecek.
-        if (!$this->can($permission)) {
+        if (! $this->can($permission)) {
             abort(ResponseAlias::HTTP_UNAUTHORIZED, $message);
         }
     }
@@ -236,5 +231,4 @@ class AAuth
         return OrganizationNode::where('path', 'like', $subTreeRootNode->path . '%')
             ->where('id', '=', $childNodeId)->exists();
     }
-
 }
