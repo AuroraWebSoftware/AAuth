@@ -23,8 +23,8 @@ jobs:
     name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
 
     services:
-      mariadb:
-        image: mariadb:10.8
+      mysql:
+        image: mysql:8.0
         ports:
           - 3306
         env:
@@ -34,11 +34,11 @@ jobs:
           MYSQL_DATABASE: aauth
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
     steps:
-      - name: Verify mariadb connection
+      - name: Verify Mysql connection
         run: |
-          mariadb --version
-          sudo apt-get install -y mariadb-client
-          mariadb --host 127.0.0.1 --port ${{ job.services.mariadb.ports['3306'] }} -uuser -psecret -e "SHOW DATABASES"
+          mysql --version
+          sudo apt-get install -y mysql-client
+          mysql --host 127.0.0.1 --port ${{ job.services.mysql.ports['3306'] }} -uaauth -paauth -e "SHOW DATABASES"
 
       - name: Checkout code
         uses: actions/checkout@v3
