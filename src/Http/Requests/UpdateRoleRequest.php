@@ -11,8 +11,8 @@ class UpdateRoleRequest extends FormRequest
             [
                 'required',
                 'min:5',
-                'unique:permissions'
-            ]
+                'unique:permissions',
+            ],
     ];
 
     /**

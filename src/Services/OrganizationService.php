@@ -139,6 +139,7 @@ class OrganizationService
 
             if ($validator->fails()) {
                 $message = implode(' , ', $validator->getMessageBag()->all());
+
                 throw new ValidationException($validator, 'Invalid Update Organization Node Request, ' . $message);
             }
         }

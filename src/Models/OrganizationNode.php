@@ -68,7 +68,10 @@ class OrganizationNode extends Model
     public function getDeletableAttribute(): bool
     {
         //todo new attrbiute syntax
-        if (OrganizationNode::whereParentId($this->id)->exists()) return false;
+        if (OrganizationNode::whereParentId($this->id)->exists()) {
+            return false;
+        }
+
         return $this->getAssignedNodeCountAttribute() == 0;
     }
 
@@ -80,7 +83,7 @@ class OrganizationNode extends Model
     {
         return OrganizationScope::where([
             ['status', 'active'],
-            ['level', '>', $this->organization_scope->level]
+            ['level', '>', $this->organization_scope->level],
 
         ])->get();
     }
@@ -95,8 +98,7 @@ class OrganizationNode extends Model
         foreach ($pathNodeIds as $pathNodeId) {
             $breadCrumbs->push(OrganizationNode::findOrFail($pathNodeId));
         }
+
         return $breadCrumbs;
     }
-
-
 }

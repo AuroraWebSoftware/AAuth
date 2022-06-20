@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-
 /**
  * App\Models\OrganizationScope
  *
@@ -44,7 +43,6 @@ class OrganizationScope extends Model
     protected $primaryKey = 'id';
     protected $fillable = ['name', 'level', 'status'];
 
-
     /**
      * @return int
      */
@@ -70,5 +68,4 @@ class OrganizationScope extends Model
     {
         return $this->hasMany(OrganizationNode::class);
     }
-
 }

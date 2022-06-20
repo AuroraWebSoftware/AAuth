@@ -125,6 +125,4 @@ test('can create and update OrganizationNode', function () {
     $updatedON = $this->service->updateOrganizationNode($data, $createdON->id);
     $updatedCount = OrganizationNode::whereName($data['name'])->count();
     $this->assertEquals(1, $updatedCount);
-
-
 });

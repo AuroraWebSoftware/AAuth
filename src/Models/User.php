@@ -51,7 +51,8 @@ use Illuminate\Support\Facades\DB;
  */
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory;
+    use Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -101,7 +102,6 @@ class User extends Authenticatable
         $rolesWithOrganizationNodes = DB::table('user_role_organization_node')->where('user_id', '=', $this->id)->get();
 
         foreach ($rolesWithOrganizationNodes as $rolesWithOrganizationNode) {
-
             $role = Role::find($rolesWithOrganizationNode->role_id);
             $role->organizationNode = OrganizationNode::find($rolesWithOrganizationNode->organization_node_id);
 
@@ -109,7 +109,6 @@ class User extends Authenticatable
         }
 
         return $rolesCollection;
-
     }
 
     /**
@@ -147,6 +146,4 @@ class User extends Authenticatable
         // todo new syntax
         return $this->getAssignedUserCountAttribute() == 0;
     }
-
-
 }
