@@ -36,7 +36,7 @@ jobs:
     steps:
       - name: Verify mariadb connection
         run: |
-          mysql --version
+          mariadb --version
           sudo apt-get install -y mariadb-client
           mariadb --host 127.0.0.1 --port ${{ job.services.mariadb.ports['3306'] }} -uuser -psecret -e "SHOW DATABASES"
 
