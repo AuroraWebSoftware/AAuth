@@ -16,6 +16,7 @@
 - trait yazılması
 - ABAC
 - translations
+- pest
 
 
 
