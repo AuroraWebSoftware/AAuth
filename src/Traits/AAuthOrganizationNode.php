@@ -10,35 +10,30 @@ use Aurora\AAuth\Scopes\AAuthOrganizationNodeScope;
 use Aurora\AAuth\Services\OrganizationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Throwable;
 
 /**
  * @method static addGlobalScope(AAuthOrganizationNodeScope $param)
  */
 trait AAuthOrganizationNode
 {
-    // model'in namespace ini alabilir miyiz?
-    public function aauth()
-    {
-    }
-
-    public static function bootAAuthOrganizationNode()
+    /**
+     * @return void
+     */
+    public static function bootAAuthOrganizationNode(): void
     {
         static::addGlobalScope(new AAuthOrganizationNodeScope());
-
         /*
-         * static::saving(function ($model) {
+        static::saving(function ($model) {
             $model->slug = $model->generateSlug($model->title);
         });
-
-        static::saving(function ($model) {
-        $settings = $model->sluggable();
-        $model->slug = $model->generateSlug($settings['source']);
-    });
-
          */
     }
 
-    public function allWithoutAAuthOrganizationNodeScope()
+    /**
+     * @return mixed
+     */
+    public function allWithoutAAuthOrganizationNodeScope(): mixed
     {
         return self::withoutGlobalScopes()->all();
     }
@@ -54,7 +49,7 @@ trait AAuthOrganizationNode
     }
 
     /**
-     * @throws \Throwable
+     * @throws Throwable
      */
     public static function createWithAAuthOrganizationNode(array $modelCreateData, int $parentOrganizationNodeId, int $organizationScopeId)
     {
@@ -84,5 +79,9 @@ trait AAuthOrganizationNode
         $createdON = $organizationService->createOrganizationNode($OrgNodeCreateData);
 
         return $createdModel;
+    }
+
+    public function deleteWithAAuthOrganizationNode(int $modelId)
+    {
     }
 }

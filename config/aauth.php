@@ -5,13 +5,13 @@ return [
             'system' => [
                 // example system permission
                 // key => translation
-                'edit_something' => 'aauth/system.edit_something',
-                'create_something' => 'aauth/system.create_something',
+                'edit_something_for_system' => 'aauth/system.edit_something_for_system',
+                'create_something_for_system' => 'aauth/system.create_something_for_system',
             ],
             'organization' => [
                 // example organization permission
-                'edit_something' => 'aauth/organization.edit_site_name',
-                'create_something' => 'aauth/organization.edit_site_name',
+                'edit_something_for_organization' => 'aauth/organization.edit_something_for_organization',
+                'create_something_for_organization' => 'aauth/organization.create_something_for_organization',
             ],
         ],
 ];
