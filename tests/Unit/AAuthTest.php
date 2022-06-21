@@ -24,7 +24,6 @@ beforeEach(function () {
 
 
 test('can create a org. node-able model and related org. node', function () {
-
     $data = ['name' => 'Test Organization Nodeable 1'];
 
     $createdModel = OrganizationNodeable::createWithAAuthOrganizationNode(

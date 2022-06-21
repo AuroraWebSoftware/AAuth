@@ -105,7 +105,6 @@ class OrganizationService
         return $organizationNode;
     }
 
-
     /**
      * @param Model $model
      * @param int $parentOrganizationId

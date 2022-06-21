@@ -7,7 +7,6 @@ use Aurora\AAuth\Exceptions\MissingRoleExcepiton;
 use Aurora\AAuth\Exceptions\UserHasNoAssignedRoleException;
 use Aurora\AAuth\Models\User;
 use Illuminate\Auth\AuthenticationException;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Redirect;
 use Spatie\LaravelPackageTools\Package;
@@ -65,6 +64,5 @@ class AAuthServiceProvider extends PackageServiceProvider
         Blade::directive('endaauth', function () {
             return "<?php } ?>";
         });
-
     }
 }
