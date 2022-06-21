@@ -6,7 +6,7 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 
-class InvalidOrganizationScopesException extends Exception
+class InvalidOrganizationScopeException extends Exception
 {
     /**
      * Report the exception.
