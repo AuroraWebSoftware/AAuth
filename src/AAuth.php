@@ -12,7 +12,6 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 use Throwable;
@@ -68,37 +67,10 @@ class AAuth
      */
     public function switchableRoles(): array|Collection|\Illuminate\Support\Collection
     {
-        if ($this->user->id) {
-            // todo buna ihtiyaç olmayabilir. silmek gerekebilir
-            return Role::where('uro.user_id', '=', $this->user->id)
-                ->leftJoin('user_role_organization_node as uro', 'uro.role_id', '=', 'roles.id')
-                ->distinct()
-                ->get(['roles.id', 'name']);
-        } else {
-            return Role::where('uro.user_id', '=', $this->user->id)
-                    ->leftJoin('user_role_organization_node as uro', 'uro.role_id', '=', 'roles.id')
-                    ->distinct()
-                    ->get(['roles.id', 'name']) ?? [];
-        }
-    }
-
-    /**
-     * @return array|Collection|\Illuminate\Support\Collection
-     */
-    public static function staticSwitchableRoles(): array|Collection|\Illuminate\Support\Collection
-    {
-        if (Auth::id()) {
-            // todo buna ihtiyaç olmayabilir. silmek gerekebilir
-            return Role::where('uro.user_id', '=', Auth::id())
-                ->leftJoin('user_role_organization_node as uro', 'uro.role_id', '=', 'roles.id')
-                ->distinct()
-                ->get(['roles.id', 'name']);
-        } else {
-            return Role::where('uro.user_id', '=', Auth::id())
-                    ->leftJoin('user_role_organization_node as uro', 'uro.role_id', '=', 'roles.id')
-                    ->distinct()
-                    ->get(['roles.id', 'name']) ?? [];
-        }
+        return Role::where('uro.user_id', '=', $this->user->id)
+            ->leftJoin('user_role_organization_node as uro', 'uro.role_id', '=', 'roles.id')
+            ->distinct()
+            ->get(['roles.id', 'name']);
     }
 
     /**

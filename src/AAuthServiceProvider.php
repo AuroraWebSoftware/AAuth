@@ -7,8 +7,10 @@ use Aurora\AAuth\Exceptions\MissingRoleExcepiton;
 use Aurora\AAuth\Exceptions\UserHasNoAssignedRoleException;
 use Aurora\AAuth\Models\User;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Session;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -36,30 +38,23 @@ class AAuthServiceProvider extends PackageServiceProvider
     public function boot()
     {
         // load packages migrations
-        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
 
         $this->publishes([
-            __DIR__.'/../database/seeders' => resource_path('../database/seeders'),
+            __DIR__ . '/../database/seeders' => resource_path('../database/seeders'),
         ], 'aauth-seeders');
 
         // todo singleton bind ??
         // AScaffold ?
         $this->app->singleton('aauth', function ($app) {
-            try {
-                return new AAuth(
-                    User::find(1),
-                    3
-                );
-            } catch (AuthenticationException $e) {
-                // todo refactor
-                dd('error aurora service provider 1');
-            } catch (UserHasNoAssignedRoleException|MissingRoleExcepiton $e) {
-                Redirect::route('/')->send();
-            }
+            return new AAuth(
+                Auth::user(),
+                Session::get('roleId')
+            );
         });
 
         Blade::directive('aauth', function ($permission) {
-            return "<?php if(\Aurora\AAuth\Facades\AAuth::can($permission)){ ?>";
+            return "<?php if(\Aurora\AAuth\Tests\Facades\AAuth::can($permission)){ ?>";
         });
         Blade::directive('endaauth', function () {
             return "<?php } ?>";

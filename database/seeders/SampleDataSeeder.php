@@ -48,7 +48,13 @@ class SampleDataSeeder extends Seeder
         $organizationScope2 = OrganizationScope::create([
             'name' => 'Sub-Scope',
             'level' => 10,
-            'status' => 'active'
+            'status' => 'active',
+        ]);
+
+        $organizationScope3 = OrganizationScope::create([
+            'name' => 'Sub-Sub-Scope',
+            'level' => 20,
+            'status' => 'active',
         ]);
 
         $organizationNode1 = OrganizationNode::whereName('Root Node')->first();
@@ -60,7 +66,7 @@ class SampleDataSeeder extends Seeder
                 'model_type' => null,
                 'model_id' => null,
                 'path' => '1/temp',
-                'parent_id' => $organizationNode1->id
+                'parent_id' => $organizationNode1->id,
             ]
         );
         $organizationNode2->path = $organizationNode1->id . '/' . $organizationNode2->id;
@@ -73,11 +79,25 @@ class SampleDataSeeder extends Seeder
                 'model_type' => null,
                 'model_id' => null,
                 'path' => '1/temp',
-                'parent_id' => $organizationNode1->id
+                'parent_id' => $organizationNode1->id,
             ]
         );
         $organizationNode3->path = $organizationNode1->id . '/' . $organizationNode3->id;
         $organizationNode3->save();
+
+        $organizationNode4 = OrganizationNode::create(
+            [
+                'organization_scope_id' => $organizationScope3->id,
+                'name' => 'Organization Node 1.2.4',
+                'model_type' => null,
+                'model_id' => null,
+                'path' => '1/temp',
+                'parent_id' => $organizationNode2->id,
+            ]
+        );
+        $organizationNode4->path = $organizationNode2->path . '/' . $organizationNode4->id;
+        $organizationNode4->save();
+
 
         $role1 = Role::create([
             'type' => 'system',
@@ -119,20 +139,39 @@ class SampleDataSeeder extends Seeder
             'status' => 'active',
         ]);
 
-        DB::table('user_role_organization_node')->insert([
-            'user_id' => $user1->id,
-            'role_id' => $role1->id
+        $role7 = Role::create([
+            'organization_scope_id' => $organizationScope3->id,
+            'type' => 'organization',
+            'name' => 'Sub-Sub-Scope Role 1',
+            'status' => 'active',
         ]);
 
         DB::table('user_role_organization_node')->insert([
             'user_id' => $user1->id,
-            'role_id' => $role2->id
+            'role_id' => $role1->id,
+        ]);
+
+        DB::table('user_role_organization_node')->insert([
+            'user_id' => $user1->id,
+            'role_id' => $role2->id,
         ]);
 
         DB::table('user_role_organization_node')->insert([
             'user_id' => $user1->id,
             'role_id' => $role3->id,
-            'organization_node_id' => $organizationScope1->id
+            'organization_node_id' => $organizationNode1->id,
+        ]);
+
+        DB::table('user_role_organization_node')->insert([
+            'user_id' => $user1->id,
+            'role_id' => $role5->id,
+            'organization_node_id' => $organizationNode2->id,
+        ]);
+
+        DB::table('user_role_organization_node')->insert([
+            'user_id' => $user1->id,
+            'role_id' => $role7->id,
+            'organization_node_id' => $organizationNode4->id,
         ]);
 
 
@@ -141,7 +180,7 @@ class SampleDataSeeder extends Seeder
         foreach ($systemPermissions as $key => $val) {
             DB::table('role_permission')->insert([
                 'role_id' => $role1->id,
-                'permission' =>  $key,
+                'permission' => $key,
             ]);
         }
 
@@ -152,17 +191,54 @@ class SampleDataSeeder extends Seeder
             ]);
         }
 
+        $organizationPermissions = config('aauth.permissions.organization');
+
+        foreach ($organizationPermissions as $key => $val) {
+            DB::table('role_permission')->insert([
+                'role_id' => $role3->id,
+                'permission' => $key,
+            ]);
+        }
+
+        foreach ($organizationPermissions as $key => $val) {
+            DB::table('role_permission')->insert([
+                'role_id' => $role4->id,
+                'permission' => $key,
+            ]);
+        }
+
+        foreach ($organizationPermissions as $key => $val) {
+            DB::table('role_permission')->insert([
+                'role_id' => $role5->id,
+                'permission' => $key,
+            ]);
+        }
+
+        foreach ($organizationPermissions as $key => $val) {
+            DB::table('role_permission')->insert([
+                'role_id' => $role6->id,
+                'permission' => $key,
+            ]);
+        }
+
+        foreach ($organizationPermissions as $key => $val) {
+            DB::table('role_permission')->insert([
+                'role_id' => $role7->id,
+                'permission' => $key,
+            ]);
+        }
+
         if (config('database.default') == 'pgsql') {
             $tables = DB::select('SELECT table_name FROM information_schema.tables WHERE table_schema = \'public\' ORDER BY table_name;');
 
             // Set the tables in the database you would like to ignore
-            $ignores = array('admin_setting', 'model_has_permissions', 'model_has_roles', 'password_resets', 'role_has_permissions', 'sessions');
+            $ignores = ['admin_setting', 'model_has_permissions', 'model_has_roles', 'password_resets', 'role_has_permissions', 'sessions'];
 
             //loop through the tables
             foreach ($tables as $table) {
 
                 // if the table is not to be ignored then:
-                if (!in_array($table->table_name, $ignores)) {
+                if (! in_array($table->table_name, $ignores)) {
                     //Get the max id from that table and add 1 to it
                     $seq = DB::table($table->table_name)->max('id') + 1;
 
@@ -171,6 +247,5 @@ class SampleDataSeeder extends Seeder
                 }
             }
         }
-
     }
 }
