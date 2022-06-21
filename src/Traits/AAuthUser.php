@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
-trait AauthUser
+trait AAuthUser
 {
     /**
      * @return BelongsToMany

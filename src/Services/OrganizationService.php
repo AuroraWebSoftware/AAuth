@@ -8,6 +8,7 @@ use Aurora\AAuth\Http\Requests\UpdateOrganizationNodeRequest;
 use Aurora\AAuth\Http\Requests\UpdateOrganizationScopeRequest;
 use Aurora\AAuth\Models\OrganizationNode;
 use Aurora\AAuth\Models\OrganizationScope;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -102,6 +103,17 @@ class OrganizationService
         $organizationNode->save();
 
         return $organizationNode;
+    }
+
+
+    /**
+     * @param Model $model
+     * @param int $parentOrganizationId
+     * @return OrganizationNode
+     */
+    public function createOrganizationNodeForModel(Model $model, int $parentOrganizationId): OrganizationNode
+    {
+        // todo
     }
 
     /**
