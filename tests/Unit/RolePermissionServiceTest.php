@@ -10,5 +10,3 @@ beforeEach(function () {
     $seeder->run();
     $this->service = new RolePermissionService();
 });
-
-
