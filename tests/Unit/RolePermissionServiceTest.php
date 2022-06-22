@@ -14,7 +14,6 @@ beforeEach(function () {
 });
 
 test('can create a role', function () {
-
     $organizationScope = OrganizationScope::whereName('Root Scope')->first();
 
     $data = [
@@ -45,7 +44,6 @@ test('can create a role', function () {
 
     $createdCount = Role::whereName($data['name'])->count();
     $this->assertEquals(1, $createdCount);
-
 });
 
 
