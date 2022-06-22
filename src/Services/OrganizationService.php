@@ -169,6 +169,7 @@ class OrganizationService
     public function deleteOrganizationNode(int $id): bool
     {
         // todo
+        // tamamen yeniden yazılacak.
         $rolePermissionService = new \App\Services\RolePermissionService();
 
         $PivotTable = DB::table('user_role_organization_node')

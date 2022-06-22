@@ -13,7 +13,6 @@ beforeEach(function () {
     $this->service = new OrganizationService();
 });
 
-
 test('can create OrganizationScope', function () {
 
     // arrange
@@ -73,7 +72,6 @@ test('can create and delete OrganizationScope', function () {
     $this->assertEquals($deletedOSCount, 0);
 });
 
-
 test('can create OrganizationNode', function () {
 
     // todo org. scopeları eşleşmeleri kontrol edilecek.
@@ -95,7 +93,6 @@ test('can create OrganizationNode', function () {
     $createdCount = OrganizationNode::whereName($data['name'])->count();
     $this->assertEquals(1, $createdCount);
 });
-
 
 test('can create and update OrganizationNode', function () {
 
