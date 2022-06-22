@@ -11,7 +11,6 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-
 beforeEach(function () {
     Artisan::call('migrate:fresh');
     $seeder = new SampleDataSeeder();

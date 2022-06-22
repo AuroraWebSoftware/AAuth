@@ -81,8 +81,7 @@ trait AAuthOrganizationNode
         return $createdModel;
     }
 
-
-    function deleteWithAAuthOrganizationNode(int $modelId){
-
+    public function deleteWithAAuthOrganizationNode(int $modelId)
+    {
     }
 }
