@@ -9,14 +9,11 @@
   - org. service
   - role perm service
 
-
-- service provider
-
-- trait yazılması ? scope yazılması
 - ABAC
 - translations
 - pest
 - phpstan
+- request's ve validations
 
 ## Done
 - gerekli migration'lar 
@@ -28,8 +25,9 @@
 - blade direktif
 - facade
 - modelin içideni create ve update delete metodları
-
-
+- service provider ??
+- trait yazılması ? scope yazılması
+- local scope? global scope? -> şuanda global yazıldı.
 
 ## AScaffold
 - middleware ?
