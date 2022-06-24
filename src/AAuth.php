@@ -6,7 +6,6 @@ use Aurora\AAuth\Exceptions\InvalidOrganizationNodeException;
 use Aurora\AAuth\Exceptions\MissingRoleExcepiton;
 use Aurora\AAuth\Exceptions\UserHasNoAssignedRoleException;
 use Aurora\AAuth\Models\OrganizationNode;
-use Aurora\AAuth\Models\Permission;
 use Aurora\AAuth\Models\Role;
 use Aurora\AAuth\Models\User;
 use Illuminate\Auth\AuthenticationException;
@@ -94,7 +93,6 @@ class AAuth
             ->leftJoin('role_permission as rp', 'rp.role_id', '=', 'roles.id')
             ->pluck('permission')->toArray();
     }
-
 
     /**
      * @return array
