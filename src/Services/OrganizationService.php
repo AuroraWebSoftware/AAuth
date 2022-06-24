@@ -108,11 +108,11 @@ class OrganizationService
     /**
      * @param Model $model
      * @param int $parentOrganizationId
-     * @return OrganizationNode
+     * @return OrganizationNode|null
      */
-    public function createOrganizationNodeForModel(Model $model, int $parentOrganizationId): OrganizationNode
+    public function createOrganizationNodeForModel(Model $model, int $parentOrganizationId): ?OrganizationNode
     {
-        // todo
+        return null;
     }
 
     /**
@@ -170,6 +170,7 @@ class OrganizationService
     {
         // todo
         // tamamen yeniden yazılacak.
+        /*
         $rolePermissionService = new \App\Services\RolePermissionService();
 
         $PivotTable = DB::table('user_role_organization_node')
@@ -181,5 +182,7 @@ class OrganizationService
         }
 
         return OrganizationNode::find($id)->delete();
+        */
+        return false;
     }
 }

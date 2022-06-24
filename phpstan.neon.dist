@@ -11,4 +11,6 @@ parameters:
     checkOctaneCompatibility: true
     checkModelProperties: true
     checkMissingIterableValueType: false
+    excludePaths:
+        - src/Scopes/AAuthOrganizationNodeScope.php
 

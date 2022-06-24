@@ -2,7 +2,7 @@
 
 - phpstan
 - packagist
-- pest
+- docs
 
 
 ## Done

@@ -6,6 +6,7 @@ use Aurora\AAuth\Exceptions\InvalidOrganizationNodeException;
 use Aurora\AAuth\Exceptions\InvalidRoleException;
 use Aurora\AAuth\Exceptions\InvalidUserException;
 use Aurora\AAuth\Http\Requests\StoreRoleRequest;
+use Aurora\AAuth\Http\Requests\UpdateRoleRequest;
 use Aurora\AAuth\Models\OrganizationNode;
 use Aurora\AAuth\Models\Role;
 use Aurora\AAuth\Models\User;

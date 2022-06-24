@@ -6,10 +6,9 @@ use Aurora\AAuth\Exceptions\InvalidOrganizationNodeException;
 use Aurora\AAuth\Exceptions\MissingRoleExcepiton;
 use Aurora\AAuth\Exceptions\UserHasNoAssignedRoleException;
 use Aurora\AAuth\Models\OrganizationNode;
-use Aurora\AAuth\Models\Permission;
 use Aurora\AAuth\Models\Role;
+use Aurora\AAuth\Models\User;
 use Illuminate\Auth\AuthenticationException;
-use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -25,7 +24,7 @@ class AAuth
     /**
      * current logged in user model
      */
-    public Authenticatable $user;
+    public User $user;
 
     /**
      * current logged in user's role model
@@ -40,7 +39,7 @@ class AAuth
     /**
      * @throws Throwable
      */
-    public function __construct(?Authenticatable $user, ?int $roleId)
+    public function __construct(?User $user, ?int $roleId)
     {
         throw_unless($user, new AuthenticationException());
         throw_unless($roleId, new MissingRoleExcepiton());
@@ -75,10 +74,9 @@ class AAuth
 
     /**
      * Role's all permissions
-     * @return \Illuminate\Support\Collection | Permission[]
-     * @throws Throwable
+     * @return array
      */
-    public function permissions(): \Illuminate\Support\Collection|array
+    public function permissions(): array
     {
         return Role::where('roles.id', '=', $this->role->id)
             ->leftJoin('role_permission as rp', 'rp.role_id', '=', 'roles.id')
@@ -86,10 +84,9 @@ class AAuth
     }
 
     /**
-     * @return \Illuminate\Support\Collection | Permission[]
-     * @throws Throwable
+     * @return array
      */
-    public function organizationPermissions(): \Illuminate\Support\Collection|array
+    public function organizationPermissions(): array
     {
         return Role::where('roles.id', '=', $this->role->id)
             ->where('type', '=', 'organization')
@@ -98,10 +95,9 @@ class AAuth
     }
 
     /**
-     * @return \Illuminate\Support\Collection | Permission[]
-     * @throws Throwable
+     * @return array
      */
-    public function systemPermissions(): array|\Illuminate\Support\Collection
+    public function systemPermissions(): array
     {
         return Role::where('roles.id', '=', $this->role->id)
             ->where('type', '=', 'system')
@@ -117,8 +113,8 @@ class AAuth
     public function can(string $permission): bool
     {
         return Role::where('roles.id', '=', $this->role->id)
-                ->where('permission', '=', $permission)
                 ->leftJoin('role_permission as rp', 'rp.role_id', '=', 'roles.id')
+                ->where('rp.permission', '=', $permission)
                 ->count() > 0;
     }
 
@@ -153,8 +149,7 @@ class AAuth
                 $rootNode = OrganizationNode::find($organizationNodeId);
                 throw_unless($rootNode, new InvalidOrganizationNodeException());
                 $rootNodeChar = $includeRootNode ? '' : '/';
-                //todo larastan hatası sonra çözülecek
-                /** @phpstan-ignore-next-line */
+
                 $query->orWhere('path', 'like', $rootNode->path . $rootNodeChar . '%');
             }
         })

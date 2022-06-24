@@ -7,27 +7,19 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
- * App\Models\OrganizationScope
+ * Aurora\AAuth\Models\OrganizationScope
  *
  * @property int $id
  * @property string $type
  * @property string $name
- * @property string $status
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @method static Builder|Permission newModelQuery()
- * @method static Builder|Permission newQuery()
- * @method static Builder|Permission query()
- * @method static Builder|Permission whereCreatedAt($value)
- * @method static Builder|Permission whereId($value)
- * @method static Builder|Permission whereName($value)
- * @method static Builder|Permission whereStatus($value)
- * @method static Builder|Permission whereType($value)
- * @method static Builder|Permission whereUpdatedAt($value)
- * @mixin \Eloquent
  * @property int $level
+ * @property string $status
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @mixin \Eloquent
  * @method static Builder|OrganizationScope whereLevel($value)
  * @property-read bool $deletable
  * @property-read bool $is_active
