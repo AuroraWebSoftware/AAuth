@@ -2,8 +2,13 @@
 
 namespace Aurora\AAuth\Services;
 
+use Aurora\AAuth\Exceptions\InvalidOrganizationNodeException;
+use Aurora\AAuth\Exceptions\InvalidRoleException;
+use Aurora\AAuth\Exceptions\InvalidUserException;
 use Aurora\AAuth\Http\Requests\StoreRoleRequest;
+use Aurora\AAuth\Models\OrganizationNode;
 use Aurora\AAuth\Models\Role;
+use Aurora\AAuth\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
@@ -94,54 +99,138 @@ class RolePermissionService
 
         return $roleId->save();
     }
-    /*
 
-    public function attachPermissionToRole(int $roleId, array $permissionIds): array
+    /**
+     * @param string|array $permissionOrPermissions
+     * @param int $roleId
+     * @return bool
+     */
+    public function attachPermissionToRole(string|array $permissionOrPermissions, int $roleId): bool
     {
-        return Role::find($roleId)->permissions()->sync($permissionIds, false);
+        $roleId = Role::find($roleId)->id;
+
+        if (is_array($permissionOrPermissions)) {
+            foreach ($permissionOrPermissions as $permission) {
+                $this->attachPermissionToRole($permission, $roleId);
+            }
+        } else {
+            $permissionQueryBuilder = DB::table('role_permission')
+                ->where('role_id', $roleId)
+                ->where('permission', $permissionOrPermissions);
+
+            if ($permissionQueryBuilder->doesntExist()) {
+                return DB::table('role_permission')->insert([
+                    'role_id' => $roleId,
+                    'permission' => $permissionOrPermissions,
+                ]);
+            }
+        }
+
+        return true;
     }
 
-    public function detachPermissionToRole(int $roleId, int|array $permissionIds): int
+    /**
+     * @param string|array $permissions
+     * @param int $roleId
+     * @return bool
+     */
+    public function detachPermissionFromRole(string|array $permissions, int $roleId): bool
     {
-        return Role::find($roleId)->permissions()->detach($permissionIds);
+        $roleId = Role::find($roleId)->id;
+
+        if (is_array($permissions)) {
+            foreach ($permissions as $permission) {
+                $this->detachPermissionFromRole($permission, $roleId);
+            }
+        } else {
+            DB::table('role_permission')->where([
+                'role_id' => $roleId,
+                'permission' => $permissions,
+            ])->delete();
+        }
+
+        return true;
     }
 
-
-    public function syncRolePermissions(int $roleId, array $permissionIds): array
+    /**
+     * @param int $roleId
+     * @return bool
+     */
+    public function detachAllPermissionsFromRole(int $roleId): bool
     {
-        return Role::find($roleId)->permissions()->sync($permissionIds);
+        $roleId = Role::find($roleId)->id;
+
+        DB::table('role_permission')->where([
+            'role_id' => $roleId,
+        ])->delete();
+
+        return true;
     }
 
-    */
+    /**
+     * @param array $permissions
+     * @param int $roleId
+     * @return bool
+     * @throws Throwable
+     */
+    public function syncPermissionsOfRole(array $permissions, int $roleId): bool
+    {
+        // todo need refactor
+        $role = Role::find($roleId);
+        throw_if($role == null, new InvalidRoleException());
+
+        $detached = $this->detachAllPermissionsFromRole($roleId);
+        $attached = $this->attachPermissionToRole($permissions, $roleId);
+
+        return ($attached && $detached);
+    }
 
     /**
      * @param int $userId
-     * @param array $roleId
+     * @param array $roleIdOrIds
      * @return array
      * @throws Throwable
      */
-    public function attachSystemRoleToUser(int $userId, array $roleId): array
+    public function attachSystemRoleToUser(array|int $roleIdOrIds, int $userId): array
     {
-        throw_unless(Role::whereId($roleId)
-            ->where('type', '=', 'system')
-            ->exists(), new UserHasNoAssignedRoleException());
+        // todo burası belki user trait'i ile yapılabilir ?
 
-        return User::find($userId)->system_roles()->sync($roleId, false);
+        if (! is_array($roleIdOrIds)) {
+            $tempRoleId[0] = $roleIdOrIds;
+            $roleIdOrIds = $tempRoleId;
+        }
+
+        throw_unless(User::whereId($userId)
+            ->exists(), new InvalidUserException());
+
+        throw_unless(Role::whereId($roleIdOrIds)
+            ->where('type', '=', 'system')
+            ->exists(), new InvalidRoleException());
+
+        return User::find($userId)->system_roles()->sync($roleIdOrIds, false);
     }
 
     /**
      * @param int $userId
-     * @param int $roleId
+     * @param int $roleIdOrIds
      * @return int
      * @throws Throwable
      */
-    public function detachSystemRoleFromUser(int $userId, int $roleId): int
+    public function detachSystemRoleFromUser(array|int $roleIdOrIds, int $userId): int
     {
-        throw_unless(Role::whereId($roleId)
-            ->where('type', '=', 'system')
-            ->exists(), new UserHasNoAssignedRoleException());
+        if (! is_array($roleIdOrIds)) {
+            $tempRoleId[0] = $roleIdOrIds;
+            $roleIdOrIds = $tempRoleId;
+        }
 
-        return User::find($userId)->system_roles()->detach($roleId);
+        throw_unless(User::whereId($userId)
+            ->exists(), new InvalidUserException());
+
+        throw_unless(Role::whereId($roleIdOrIds)
+            ->where('type', '=', 'system')
+            ->exists(), new InvalidRoleException());
+
+        return User::find($userId)->system_roles()->detach($roleIdOrIds);
     }
 
     /**
@@ -152,6 +241,7 @@ class RolePermissionService
     public function syncUserSystemRoles(int $userId, array $roleIds): array
     {
         // todo
+        // to be unit tested
         return User::find($userId)->system_roles()->sync($roleIds);
     }
 
@@ -163,22 +253,18 @@ class RolePermissionService
      * @return bool
      * @throws Throwable
      */
-    public function attachOrganizationRoleToUser(int $userId, int $roleId, int $organizationNodeId): bool
+    public function attachOrganizationRoleToUser(int $organizationNodeId, int $roleId, int $userId): bool
     {
+        // todo burası belki user trait'i ile yapılabilir ?
         throw_unless(User::whereId($userId)
-            ->exists(), new UserHasNoAssignedRoleException());
+            ->exists(), new InvalidUserException());
 
         throw_unless(Role::whereId($roleId)
             ->where('type', '=', 'organization')
-            ->exists(), new UserHasNoAssignedRoleException());
+            ->exists(), new InvalidRoleException());
 
         throw_unless(OrganizationNode::whereId($organizationNodeId)
             ->exists(), new InvalidOrganizationNodeException());
-
-        throw_unless(
-            OrganizationNode::find($organizationNodeId)->organization_scope_id == Role::find($roleId)->organization_scope_id,
-            new OrganizationScopesMismatchException()
-        );
 
         return DB::table('user_role_organization_node')
             ->updateOrInsert([
@@ -186,8 +272,6 @@ class RolePermissionService
                 'role_id' => $roleId,
                 'organization_node_id' => $organizationNodeId,
             ]);
-
-        // todo attach ve sync ile olmayacak gibi db query yazmak lazım
     }
 
     /**
@@ -199,12 +283,13 @@ class RolePermissionService
      */
     public function detachOrganizationRoleFromUser(int $userId, int $roleId, int $organizationNodeId): int
     {
+        // todo burası belki user trait'i ile yapılabilir ?
         throw_unless(User::whereId($userId)
-            ->exists(), new InvalidOrganizationNodeException());
+            ->exists(), new InvalidUserException());
 
         throw_unless(Role::whereId($roleId)
             ->where('type', '=', 'organization')
-            ->exists(), new UserHasNoAssignedRoleException());
+            ->exists(), new InvalidRoleException());
 
         throw_unless(OrganizationNode::whereId($organizationNodeId)
             ->exists(), new InvalidOrganizationNodeException());
@@ -213,7 +298,7 @@ class RolePermissionService
             ->where([
                 'user_id' => $userId,
                 'role_id' => $roleId,
-                'organization_node_id' => $organizationNodeId, ])
+                'organization_node_id' => $organizationNodeId,])
             ->delete();
         // todo attach ve sync ile olmayacak gibi direk db query yazmank lazım
     }
