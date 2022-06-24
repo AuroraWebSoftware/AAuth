@@ -34,6 +34,7 @@
 - ABAC
 - translations
 - request's ve validations
+- github pages
 
 
 
