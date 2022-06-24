@@ -95,7 +95,6 @@ class AAuth
             ->pluck('permission')->toArray();
     }
 
-
     /**
      * @return array
      */
