@@ -6,7 +6,6 @@ use AuroraWebSoftware\AAuth\Exceptions\InvalidOrganizationNodeException;
 use AuroraWebSoftware\AAuth\Exceptions\MissingRoleExcepiton;
 use AuroraWebSoftware\AAuth\Exceptions\UserHasNoAssignedRoleException;
 use AuroraWebSoftware\AAuth\Models\OrganizationNode;
-use AuroraWebSoftware\AAuth\Models\Permission;
 use AuroraWebSoftware\AAuth\Models\Role;
 use AuroraWebSoftware\AAuth\Models\User;
 use Illuminate\Auth\AuthenticationException;

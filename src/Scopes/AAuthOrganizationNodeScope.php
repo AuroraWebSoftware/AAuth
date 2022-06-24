@@ -2,7 +2,6 @@
 
 namespace AuroraWebSoftware\AAuth\Scopes;
 
-
 use AuroraWebSoftware\AAuth\Facades\AAuth;
 use Illuminate\Database\Eloquent\Builder;
 
