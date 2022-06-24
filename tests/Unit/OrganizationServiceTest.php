@@ -1,9 +1,9 @@
 <?php
 
-use Aurora\AAuth\Database\Seeders\SampleDataSeeder;
-use Aurora\AAuth\Models\OrganizationNode;
-use Aurora\AAuth\Models\OrganizationScope;
-use Aurora\AAuth\Services\OrganizationService;
+use AuroraWebSoftware\AAuth\Database\Seeders\SampleDataSeeder;
+use AuroraWebSoftware\AAuth\Models\OrganizationNode;
+use AuroraWebSoftware\AAuth\Models\OrganizationScope;
+use AuroraWebSoftware\AAuth\Services\OrganizationService;
 use Illuminate\Support\Facades\Artisan;
 
 beforeEach(function () {

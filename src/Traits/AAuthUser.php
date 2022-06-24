@@ -1,9 +1,9 @@
 <?php
 
-namespace Aurora\AAuth\Traits;
+namespace AuroraWebSoftware\AAuth\Traits;
 
-use Aurora\AAuth\Models\OrganizationNode;
-use Aurora\AAuth\Models\Role;
+use AuroraWebSoftware\AAuth\Models\OrganizationNode;
+use AuroraWebSoftware\AAuth\Models\Role;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;

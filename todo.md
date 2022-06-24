@@ -1,6 +1,5 @@
 ## Todo
 
-- phpstan
 - packagist
 - docs
 
@@ -22,6 +21,9 @@
 - testler
   - org. service
   - role perm service
+- phpstan
+
+
 
 ## todo v2
 - role permisson service ve validations

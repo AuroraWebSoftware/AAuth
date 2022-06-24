@@ -1,13 +1,13 @@
 <?php
 
-namespace Aurora\AAuth\Traits;
+namespace AuroraWebSoftware\AAuth\Traits;
 
-use Aurora\AAuth\Exceptions\InvalidOrganizationNodeException;
-use Aurora\AAuth\Exceptions\InvalidOrganizationScopeException;
-use Aurora\AAuth\Models\OrganizationNode;
-use Aurora\AAuth\Models\OrganizationScope;
-use Aurora\AAuth\Scopes\AAuthOrganizationNodeScope;
-use Aurora\AAuth\Services\OrganizationService;
+use AuroraWebSoftware\AAuth\Exceptions\InvalidOrganizationNodeException;
+use AuroraWebSoftware\AAuth\Exceptions\InvalidOrganizationScopeException;
+use AuroraWebSoftware\AAuth\Models\OrganizationNode;
+use AuroraWebSoftware\AAuth\Models\OrganizationScope;
+use AuroraWebSoftware\AAuth\Scopes\AAuthOrganizationNodeScope;
+use AuroraWebSoftware\AAuth\Services\OrganizationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Throwable;

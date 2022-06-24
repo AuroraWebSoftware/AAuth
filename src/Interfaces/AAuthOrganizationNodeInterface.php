@@ -1,6 +1,6 @@
 <?php
 
-namespace Aurora\AAuth\Interfaces;
+namespace AuroraWebSoftware\AAuth\Interfaces;
 
 interface AAuthOrganizationNodeInterface
 {

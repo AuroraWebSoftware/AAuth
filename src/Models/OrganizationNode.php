@@ -1,6 +1,6 @@
 <?php
 
-namespace Aurora\AAuth\Models;
+namespace AuroraWebSoftware\AAuth\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;

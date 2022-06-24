@@ -1,15 +1,15 @@
 <?php
 
-namespace Aurora\AAuth\Services;
+namespace AuroraWebSoftware\AAuth\Services;
 
-use Aurora\AAuth\Exceptions\InvalidOrganizationNodeException;
-use Aurora\AAuth\Exceptions\InvalidRoleException;
-use Aurora\AAuth\Exceptions\InvalidUserException;
-use Aurora\AAuth\Http\Requests\StoreRoleRequest;
-use Aurora\AAuth\Http\Requests\UpdateRoleRequest;
-use Aurora\AAuth\Models\OrganizationNode;
-use Aurora\AAuth\Models\Role;
-use Aurora\AAuth\Models\User;
+use AuroraWebSoftware\AAuth\Exceptions\InvalidOrganizationNodeException;
+use AuroraWebSoftware\AAuth\Exceptions\InvalidRoleException;
+use AuroraWebSoftware\AAuth\Exceptions\InvalidUserException;
+use AuroraWebSoftware\AAuth\Http\Requests\StoreRoleRequest;
+use AuroraWebSoftware\AAuth\Http\Requests\UpdateRoleRequest;
+use AuroraWebSoftware\AAuth\Models\OrganizationNode;
+use AuroraWebSoftware\AAuth\Models\Role;
+use AuroraWebSoftware\AAuth\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;

@@ -1,9 +1,9 @@
 <?php
 
-namespace Aurora\AAuth\Tests\Models;
+namespace AuroraWebSoftware\AAuth\Tests\Models;
 
-use Aurora\AAuth\Interfaces\AAuthOrganizationNodeInterface;
-use Aurora\AAuth\Traits\AAuthOrganizationNode;
+use AuroraWebSoftware\AAuth\Interfaces\AAuthOrganizationNodeInterface;
+use AuroraWebSoftware\AAuth\Traits\AAuthOrganizationNode;
 use Illuminate\Database\Eloquent\Model;
 
 class OrganizationNodeable extends Model implements AAuthOrganizationNodeInterface
@@ -14,7 +14,7 @@ class OrganizationNodeable extends Model implements AAuthOrganizationNodeInterfa
 
     public static function getModelType(): string
     {
-        return 'Aurora\AAuth\Tests\Models\OrganizationNodeable';
+        return 'AuroraWebSoftware\AAuth\Tests\Models\OrganizationNodeable';
     }
 
     public function getModelId(): int
