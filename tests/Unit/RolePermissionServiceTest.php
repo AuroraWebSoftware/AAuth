@@ -141,7 +141,6 @@ test('can attach system role to user and detach from user', function () {
 
 
 test('can attach organization role to user and detach from user', function () {
-
     $organizationScope = OrganizationScope::whereName('Root Scope')->first();
     $organizationNode = OrganizationNode::whereName('Root Node')->first();
 
