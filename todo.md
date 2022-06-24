@@ -1,19 +1,9 @@
 ## Todo
 
-- organizastion service class ve validations
-- rolepermisson service class ve validations
-- testler
-  - exception testleri
-  - validation excepitonarlını testti
-  - test with coverage
-  - org. service
-  - role perm service
-
-- ABAC
-- translations
-- pest
 - phpstan
-- request's ve validations
+- packagist
+- pest
+
 
 ## Done
 - gerekli migration'lar 
@@ -28,8 +18,24 @@
 - service provider ??
 - trait yazılması ? scope yazılması
 - local scope? global scope? -> şuanda global yazıldı.
+- rolepermisson service class ve validations
+- testler
+  - org. service
+  - role perm service
 
-## AScaffold
+## todo v2
+- role permisson service ve validations
+- org. permisson service ve validations
+- role perm. service validation ve excepiton unit testleri, validation excepitonarlını testti
+- org. service validation ve excepiton unit testleri, validation excepitonarlını testti
+- test with coverage
+- ABAC
+- translations
+- request's ve validations
+
+
+
+## AStart
 - middleware ?
 
 - Aauth service provider da AAuth olacak mı? -> AScaffold da da olacak override edecek
