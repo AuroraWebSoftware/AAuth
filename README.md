@@ -10,7 +10,7 @@ Hierarchical Rol-Permission Based Auth Laravel Package with Limitless Hierarchic
 
 ## Support us
 
-[<img src="https://banners.beyondco.de/Laravel%20AAuth.png?theme=light&packageManager=composer+require&packageName=aurorawebsoftware%2Faauth&pattern=jigsaw&style=style_1&description=Hierarchical++Rol-Permission+Based+Auth+Package+with+Limitless+Hierarchical+Level+of+Organizations&md=1&showWatermark=0&fontSize=175px&images=shield-check&widths=auto" width="500px" />](https://github.com/AuroraWebSoftware/AAuth)
+[<img src="https://banners.beyondco.de/Laravel%20AAuth.png?theme=light&packageManager=composer+require&packageName=aurorawebsoftware%2Faauth&pattern=jigsaw&style=style_1&description=Hierarchical++Rol-Permission+Based+Auth+Package+with+Limitless+Hierarchical+Level+of+Organizations&md=1&showWatermark=0&fontSize=175px&images=shield-check&widths=auto" />](https://github.com/AuroraWebSoftware/AAuth)
 
 
 
