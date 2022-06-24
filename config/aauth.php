@@ -1,5 +1,5 @@
 <?php
-// config for Aurora/AAuth
+// config for AuroraWebSoftware/AAuth
 return [
     'permissions' => [
             'system' => [

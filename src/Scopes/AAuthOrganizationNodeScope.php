@@ -1,8 +1,9 @@
 <?php
 
-namespace Aurora\AAuth\Scopes;
+namespace AuroraWebSoftware\AAuth\Scopes;
 
-use Aurora\AAuth\Facades\AAuth;
+
+use AuroraWebSoftware\AAuth\Facades\AAuth;
 use Illuminate\Database\Eloquent\Builder;
 
 class AAuthOrganizationNodeScope implements \Illuminate\Database\Eloquent\Scope

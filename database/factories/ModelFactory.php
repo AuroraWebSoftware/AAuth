@@ -1,6 +1,6 @@
 <?php
 
-namespace Aurora\AAuth\Database\Factories;
+namespace AuroraWebSoftware\AAuth\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 

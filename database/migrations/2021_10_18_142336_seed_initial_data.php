@@ -1,8 +1,8 @@
 <?php
 
 
-use Aurora\AAuth\Models\OrganizationNode;
-use Aurora\AAuth\Models\OrganizationScope;
+use AuroraWebSoftware\AAuth\Models\OrganizationNode;
+use AuroraWebSoftware\AAuth\Models\OrganizationScope;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 

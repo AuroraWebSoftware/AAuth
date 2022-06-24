@@ -1,13 +1,13 @@
 <?php
 
-namespace Aurora\AAuth\Services;
+namespace AuroraWebSoftware\AAuth\Services;
 
-use Aurora\AAuth\Http\Requests\StoreOrganizationNodeRequest;
-use Aurora\AAuth\Http\Requests\StoreOrganizationScopeRequest;
-use Aurora\AAuth\Http\Requests\UpdateOrganizationNodeRequest;
-use Aurora\AAuth\Http\Requests\UpdateOrganizationScopeRequest;
-use Aurora\AAuth\Models\OrganizationNode;
-use Aurora\AAuth\Models\OrganizationScope;
+use AuroraWebSoftware\AAuth\Http\Requests\StoreOrganizationNodeRequest;
+use AuroraWebSoftware\AAuth\Http\Requests\StoreOrganizationScopeRequest;
+use AuroraWebSoftware\AAuth\Http\Requests\UpdateOrganizationNodeRequest;
+use AuroraWebSoftware\AAuth\Http\Requests\UpdateOrganizationScopeRequest;
+use AuroraWebSoftware\AAuth\Models\OrganizationNode;
+use AuroraWebSoftware\AAuth\Models\OrganizationScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;

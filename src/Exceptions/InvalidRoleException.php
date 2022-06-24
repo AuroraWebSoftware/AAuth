@@ -1,6 +1,6 @@
 <?php
 
-namespace Aurora\AAuth\Exceptions;
+namespace AuroraWebSoftware\AAuth\Exceptions;
 
 use Exception;
 use Illuminate\Http\Request;

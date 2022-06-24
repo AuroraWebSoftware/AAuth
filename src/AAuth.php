@@ -1,14 +1,14 @@
 <?php
 
-namespace Aurora\AAuth;
+namespace AuroraWebSoftware\AAuth;
 
-use Aurora\AAuth\Exceptions\InvalidOrganizationNodeException;
-use Aurora\AAuth\Exceptions\MissingRoleExcepiton;
-use Aurora\AAuth\Exceptions\UserHasNoAssignedRoleException;
-use Aurora\AAuth\Models\OrganizationNode;
-use Aurora\AAuth\Models\Permission;
-use Aurora\AAuth\Models\Role;
-use Aurora\AAuth\Models\User;
+use AuroraWebSoftware\AAuth\Exceptions\InvalidOrganizationNodeException;
+use AuroraWebSoftware\AAuth\Exceptions\MissingRoleExcepiton;
+use AuroraWebSoftware\AAuth\Exceptions\UserHasNoAssignedRoleException;
+use AuroraWebSoftware\AAuth\Models\OrganizationNode;
+use AuroraWebSoftware\AAuth\Models\Permission;
+use AuroraWebSoftware\AAuth\Models\Role;
+use AuroraWebSoftware\AAuth\Models\User;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;

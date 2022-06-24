@@ -1,6 +1,6 @@
 <?php
 
-namespace Aurora\AAuth\Commands;
+namespace AuroraWebSoftware\AAuth\Commands;
 
 use Illuminate\Console\Command;
 

@@ -1,12 +1,12 @@
 <?php
 
-namespace Aurora\AAuth\Facades;
+namespace AuroraWebSoftware\AAuth\Facades;
 
 use Illuminate\Support\Facades\Facade;
 
 /**
  * AAuth Facade
- * @see \Aurora\AAuth\AAuth
+ * @see \AuroraWebSoftware\AAuth
  * @static switchableRoles(): array|Collection|\Illuminate\Support\Collection
  * @static permissions(): \Illuminate\Support\Collection|array
  * @static organizationPermissions(): \Illuminate\Support\Collection|array

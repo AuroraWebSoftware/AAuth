@@ -1,8 +1,8 @@
 <?php
 
-namespace Aurora\AAuth\Tests;
+namespace AuroraWebSoftware\AAuth\Tests;
 
-use Aurora\AAuth\AAuthServiceProvider;
+use AuroraWebSoftware\AAuth\AAuthServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Orchestra\Testbench\TestCase as Orchestra;
 
@@ -13,7 +13,7 @@ class TestCase extends Orchestra
         parent::setUp();
 
         Factory::guessFactoryNamesUsing(
-            fn (string $modelName) => 'Aurora\\AAuth\\Database\\Factories\\' . class_basename($modelName) . 'Factory'
+            fn (string $modelName) => 'AuroraWebSoftware\\AAuth\\Database\\Factories\\' . class_basename($modelName) . 'Factory'
         );
     }
 

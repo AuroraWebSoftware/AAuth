@@ -1,12 +1,12 @@
 {
-    "name": "aurora/aauth",
+    "name": "aurorawebsoftware/aauth",
     "description": "Laravel Aauth",
     "keywords": [
         "Aurora",
         "laravel",
         "aauth"
     ],
-    "homepage": "https://github.com/aurora/aauth",
+    "homepage": "https://github.com/AuroraWebSoftware/AAuth",
     "license": "MIT",
     "authors": [
         {
@@ -35,14 +35,14 @@
     },
     "autoload": {
         "psr-4": {
-            "Aurora\\AAuth\\": "src",
-            "Aurora\\AAuth\\Database\\Factories\\": "database/factories",
-            "Aurora\\AAuth\\Database\\Seeders\\": "database/seeders"
+            "AuroraWebSoftware\\AAuth\\": "src",
+            "AuroraWebSoftware\\AAuth\\Database\\Factories\\": "database/factories",
+            "AuroraWebSoftware\\AAuth\\Database\\Seeders\\": "database/seeders"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Aurora\\AAuth\\Tests\\": "tests"
+            "AuroraWebSoftware\\AAuth\\Tests\\": "tests"
         }
     },
     "scripts": {
@@ -61,10 +61,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Aurora\\AAuth\\AAuthServiceProvider"
+                "AuroraWebSoftware\\AAuth\\AAuthServiceProvider"
             ],
             "aliases": {
-                "AAuth": "Aurora\\AAuth\\Facades\\AAuth"
+                "AAuth": "AuroraWebSoftware\\AAuth\\Facades\\AAuth"
             }
         }
     },

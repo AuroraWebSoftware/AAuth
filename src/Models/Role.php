@@ -1,6 +1,6 @@
 <?php
 
-namespace Aurora\AAuth\Models;
+namespace AuroraWebSoftware\AAuth\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +10,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Aurora\AAuth\Models\Role
+ * AuroraWebSoftware\AAuth\Models\Role
  *
  * @property int $id
  * @property string $type

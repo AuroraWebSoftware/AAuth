@@ -1,6 +1,6 @@
 <?php
 
-namespace Aurora\AAuth\Models;
+namespace AuroraWebSoftware\AAuth\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;

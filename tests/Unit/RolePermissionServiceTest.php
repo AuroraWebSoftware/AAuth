@@ -1,12 +1,12 @@
 <?php
 
-use Aurora\AAuth\Database\Seeders\SampleDataSeeder;
-use Aurora\AAuth\Facades\AAuth;
-use Aurora\AAuth\Models\OrganizationNode;
-use Aurora\AAuth\Models\OrganizationScope;
-use Aurora\AAuth\Models\Role;
-use Aurora\AAuth\Models\User;
-use Aurora\AAuth\Services\RolePermissionService;
+use AuroraWebSoftware\AAuth\Database\Seeders\SampleDataSeeder;
+use AuroraWebSoftware\AAuth\Facades\AAuth;
+use AuroraWebSoftware\AAuth\Models\OrganizationNode;
+use AuroraWebSoftware\AAuth\Models\OrganizationScope;
+use AuroraWebSoftware\AAuth\Models\Role;
+use AuroraWebSoftware\AAuth\Models\User;
+use AuroraWebSoftware\AAuth\Services\RolePermissionService;
 use Illuminate\Support\Facades\Artisan;
 
 beforeEach(function () {
@@ -74,7 +74,7 @@ test('can attach to role and detach a permission from role', function () {
     $permissionName = 'test_permission1';
 
     $this->app->singleton('aauth', function ($app) use ($role) {
-        return new \Aurora\AAuth\AAuth(
+        return new \AuroraWebSoftware\AAuth\AAuth(
             User::find(1),
             $role->id
         );
@@ -96,7 +96,7 @@ test('can sync permission of role', function () {
     $permissionName3 = 'test_permission3';
 
     $this->app->singleton('aauth', function ($app) use ($role) {
-        return new \Aurora\AAuth\AAuth(
+        return new \AuroraWebSoftware\AAuth\AAuth(
             User::find(1),
             $role->id
         );

@@ -1,6 +1,6 @@
 <?php
 
-namespace Aurora\AAuth\Http\Requests;
+namespace AuroraWebSoftware\AAuth\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 

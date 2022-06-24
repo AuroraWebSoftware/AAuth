@@ -1,11 +1,11 @@
 <?php
 
-use Aurora\AAuth\Database\Seeders\SampleDataSeeder;
-use Aurora\AAuth\Facades\AAuth;
-use Aurora\AAuth\Models\OrganizationNode;
-use Aurora\AAuth\Models\User;
-use Aurora\AAuth\Services\OrganizationService;
-use Aurora\AAuth\Tests\Models\OrganizationNodeable;
+use AuroraWebSoftware\AAuth\Database\Seeders\SampleDataSeeder;
+use AuroraWebSoftware\AAuth\Facades\AAuth;
+use AuroraWebSoftware\AAuth\Models\OrganizationNode;
+use AuroraWebSoftware\AAuth\Models\User;
+use AuroraWebSoftware\AAuth\Services\OrganizationService;
+use AuroraWebSoftware\AAuth\Tests\Models\OrganizationNodeable;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +24,7 @@ beforeEach(function () {
     });
 
     $this->app->singleton('aauth', function ($app) {
-        return new \Aurora\AAuth\AAuth(
+        return new \AuroraWebSoftware\AAuth\AAuth(
             User::find(1),
             3
         );

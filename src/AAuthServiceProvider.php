@@ -1,8 +1,8 @@
 <?php
 
-namespace Aurora\AAuth;
+namespace AuroraWebSoftware\AAuth;
 
-use Aurora\AAuth\Commands\AAuthCommand;
+use AuroraWebSoftware\AAuth\Commands\AAuthCommand;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Session;
@@ -49,7 +49,7 @@ class AAuthServiceProvider extends PackageServiceProvider
         });
 
         Blade::directive('aauth', function ($permission) {
-            return "<?php if(\Aurora\AAuth\Tests\Facades\AAuth::can($permission)){ ?>";
+            return "<?php if(\AuroraWebSoftware\AAuth\Tests\Facades\AAuth::can($permission)){ ?>";
         });
         Blade::directive('endaauth', function () {
             return "<?php } ?>";

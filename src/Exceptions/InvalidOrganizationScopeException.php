@@ -1,6 +1,6 @@
 <?php
 
-namespace Aurora\AAuth\Exceptions;
+namespace AuroraWebSoftware\AAuth\Exceptions;
 
 use Exception;
 use Illuminate\Http\Request;
@@ -22,7 +22,7 @@ class InvalidOrganizationScopeException extends Exception
      * Render the exception into an HTTP response.
      *
      * @param Request $request
-     * @return Response
+     * @return Response|bool
      */
     public function render(Request $request): Response|bool
     {
