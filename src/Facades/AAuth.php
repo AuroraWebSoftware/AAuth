@@ -20,7 +20,6 @@ use Illuminate\Support\Facades\Facade;
 
 class AAuth extends Facade
 {
-
     protected static function getFacadeAccessor()
     {
         return 'aauth';
