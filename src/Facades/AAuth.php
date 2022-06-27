@@ -13,14 +13,14 @@ use Illuminate\Support\Facades\Facade;
  * @static systemPermissions(): array|\Illuminate\Support\Collection
  * @static can(string $string)
  * @static passOrAbort(string $string, string $message = 'No Permission')
- * @static organizationNodes(bool $includeRootNode = false, ?string $modelType = null): \Illuminate\Support\Collection
+ * @method static organizationNodes(bool $includeRootNode = false, ?string $modelType = null): \Illuminate\Support\Collection
  * @static organizationNode(int $nodeId, ?string $modelType = null): OrganizationNode|array|Collection|Model
  * @static descendant(int $rootNodeId, int $childNodeId): bool
- * @method static organizationNodes(bool $true, mixed $id)
  */
 
 class AAuth extends Facade
 {
+
     protected static function getFacadeAccessor()
     {
         return 'aauth';
