@@ -22,7 +22,7 @@
   - org. service
   - role perm service
 - phpstan
-- packagist
+- packagist 
 
 
 ## todo v2
