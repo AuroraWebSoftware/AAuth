@@ -40,7 +40,7 @@ class AAuthServiceProvider extends PackageServiceProvider
         ], 'aauth-seeders');
 
         // todo singleton bind ??
-        // AScaffold ?
+        // AStart ?
         $this->app->singleton('aauth', function ($app) {
             return new AAuth(
                 Auth::user(),
