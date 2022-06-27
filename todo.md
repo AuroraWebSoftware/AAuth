@@ -1,6 +1,6 @@
 ## Todo
 
-- packagist
+
 - docs
 
 
@@ -22,7 +22,7 @@
   - org. service
   - role perm service
 - phpstan
-
+- packagist
 
 
 ## todo v2

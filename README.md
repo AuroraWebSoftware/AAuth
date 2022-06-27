@@ -1,14 +1,26 @@
-# Aauth | Laravel Package
-
-Hierarchical Rol-Permission Based Auth Laravel Package with Limitless Hierarchical Level of Organizations
-
+# AAuth for Laravel
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/aurorawebsoftware/aauth.svg?style=flat-square)](https://packagist.org/packages/aurorawebsoftware/aauth)
 [![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/aurorawebsoftware/aauth/run-tests?label=tests)](https://github.com/aurorawebsoftware/aauth/actions?query=workflow%3Arun-tests+branch%3Amain)
 [![GitHub Code Style Action Status](https://img.shields.io/github/workflow/status/aurorawebsoftware/aauth/Check%20&%20fix%20styling?label=code%20style)](https://github.com/aurorawebsoftware/aauth/actions?query=workflow%3A"Check+%26+fix+styling"+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/aurorawebsoftware/aauth.svg?style=flat-square)](https://packagist.org/packages/aurora/aauth)
 
 
-## Support us
+
+Hierarchical Rol-Permission Based **Laravel Auth Package** with Limitless Hierarchical Level of Organizations
+
+## Features
+- Organization Based Access Controllable (OrBAC) Eloquent Models 
+- Rol Based Access Control (RoBAC)
+- Permissions Based Access Contol
+- Lean & Non-Complex Architecture
+- PolyMorphic Relationships of Model & Organization Node
+- Built-in Blade Directives for permission control inside **Blade** files
+- Mysql, MariaDB, Postgres Support
+- Community Driven and Open Source Forever
+
+
+---
+
 
 [<img src="https://banners.beyondco.de/AAuth%20for%20Laravel.png?theme=light&packageManager=composer+require&packageName=aurorawebsoftware%2Faauth&pattern=jigsaw&style=style_1&description=Hierarchical+Rol-Permission+Based+Laravel+Auth+Package+with+Limitless+Hierarchical+Level+of+Organizations&md=1&showWatermark=0&fontSize=175px&images=shield-check&widths=auto" />](https://github.com/AuroraWebSoftware/AAuth)
 
@@ -22,18 +34,24 @@ You can install the package via composer:
 composer require aurorawebsoftware/aauth
 ```
 
+You must add AAuthUser Trait to the User Model.
+
+```php
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use AuroraWebSoftware\AAuth\Traits\AAuthUser;
+
+class User extends Authenticatable
+{
+    use AAuthUser;
+
+    // ...
+}
+```
+
 You can publish and run the migrations with:
 
 ```bash
 php artisan migrate
-```
-
-You can publish the config file and sample data seeder with:
-
-```bash
-php artisan vendor:publish --tag="aauth-config"
-php artisan vendor:publish --tag="aauth-seeders"
-php artisan db:seed --class=SampleDataSeeder
 ```
 
 You can publish the sample data seeder with:
@@ -49,6 +67,11 @@ Optionally, You can seed the sample data with:
 php artisan db:seed --class=SampleDataSeeder
 ```
 
+You can publish the config file with:
+
+```bash
+php artisan vendor:publish --tag="aauth-config"
+```
 
 This is the example contents of the published config file:
 
@@ -124,22 +147,81 @@ and want to give access to see students data under their responsibility only for
 ---
 
 ## AAuth Terminology
- ....
-to be continued
+Before using AAuth its worth to understand the main terminology of AAuth.
+AAuth differs from other Auth Packages due to its organizational structure.
+
+### What is Organization?
+Organization is a kind of term 
+which refers to hierarchical arrangement of eloquent models in sequential tree.
+
+It consists of a central root organization node, and sub organization nodes, 
+which are connected via edges. 
+We can also say that organization tree has one root node, many sub organization nodes polymorphic-connected with one eloquent model.
+
+### Organization Scope
+In Organization Tree, each node has an organization scope.
+Organization scope has a level property to determine the level of the organization node in the tree.
+
+### Organization Node
+Each node in the organization tree means organization node.
+Each Organization Node is an Eloquent Model.
+Organization Node can be polymorphic-related with an Eloquent Model.
+
+### Permission
+In This Package there are 2 types of Permissions.
+1. System Permissions
+2. Organization Permissions
+
+**System Permission** is plain permission non-related to the organization which is useful for system related access controls like backup_db, edit_website_logo, edit_contact_info etc..
+A System permission can only be assigned to a System Role.
+
+
+**Organization Permission** is hierarchical controllable permission. An Organization permission can only be assigned to an Organization Role.
+
+
+### Role
+Roles are assigned to users. Each User can have multiple roles.
+
+In This Package there are 2 types of Roles.
+1. System Roles
+2. Organization Roles
+
+
+**System Role** is plain role for non-related to the organization which is useful for system related users like system admin, super admin etc..
+
+**Organization Role** is hierarchical position of a User in Organization Tree. 
+An Organization Role can be assigned to a user with 3 parameters.
+- user_id (related user's id)
+- role_id 
+- organization_node_id (id of the organization node which defines the position of the user's role on the organization Tree)
+
+> ! it can be a little overwhelming at the first, but it is not complex lol.
+
+### User
+Just a usual Laravel User.
+
+### Permission Config File
+
+#### Model - Organization Node Relations
 
 ## Usage
+
+### Initializing AAuth Service
+
+### Publish
+
+### Service Provider
+### Facade
+### AAuth methods
+### org. services
+### role perm. services
 
 ```php
 $aAuth = new Aurora\AAuth();
 echo $aAuth->echoPhrase('Hello, Aurora!');
 ```
 
-## Static Analyse and Unit Test
 
-```bash
-composer analyse
-composer test
-```
 
 ## Changelog
 
