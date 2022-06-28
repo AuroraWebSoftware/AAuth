@@ -1,9 +1,5 @@
 ## Todo
 
-
-- docs
-
-
 ## Done
 - gerekli migration'lar 
 - config dosyaları 
@@ -23,7 +19,7 @@
   - role perm service
 - phpstan
 - packagist 
-
+- docs
 
 ## todo v2
 - role permisson service ve validations
@@ -34,7 +30,8 @@
 - ABAC
 - translations
 - request's ve validations
-- github pages
+- github pages ?
+- test'lerin publish edilmesi
 
 
 
