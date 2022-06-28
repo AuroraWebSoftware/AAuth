@@ -3,7 +3,7 @@
 namespace AuroraWebSoftware\AAuth;
 
 use AuroraWebSoftware\AAuth\Exceptions\InvalidOrganizationNodeException;
-use AuroraWebSoftware\AAuth\Exceptions\MissingRoleExcepiton;
+use AuroraWebSoftware\AAuth\Exceptions\MissingRoleException;
 use AuroraWebSoftware\AAuth\Exceptions\UserHasNoAssignedRoleException;
 use AuroraWebSoftware\AAuth\Models\OrganizationNode;
 use AuroraWebSoftware\AAuth\Models\Role;
@@ -42,7 +42,7 @@ class AAuth
     public function __construct(?User $user, ?int $roleId)
     {
         throw_unless($user, new AuthenticationException());
-        throw_unless($roleId, new MissingRoleExcepiton());
+        throw_unless($roleId, new MissingRoleException());
 
         // if user dont have this role, not assigned
         throw_if(
@@ -53,7 +53,7 @@ class AAuth
         $this->user = $user;
         $this->role = Role::find($roleId);
 
-        throw_unless($this->role, new MissingRoleExcepiton());
+        throw_unless($this->role, new MissingRoleException());
 
         $this->organizationNodeIds = DB::table('user_role_organization_node')
             ->where('user_id', '=', $user->id)
@@ -184,7 +184,7 @@ class AAuth
 
     /**
      * Checks if tree has given child
-     * No permisson check.
+     * No permission check.
      * @param int $rootNodeId
      * @param int $childNodeId
      * @return bool

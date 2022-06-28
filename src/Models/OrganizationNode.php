@@ -57,7 +57,7 @@ class OrganizationNode extends Model
 
     public function getAssignedNodeCountAttribute(): int
     {
-        //todo new attrbiute syntax
+        //todo new attribute syntax
         return DB::table('user_role_organization_node')
             ->where('organization_node_id', $this->id)->count();
     }

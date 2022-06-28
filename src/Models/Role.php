@@ -58,7 +58,7 @@ class Role extends Model
      */
     public function getAssignedUserCountAttribute(): int
     {
-        // new attrbiute syntax
+        // new attribute syntax
         return DB::table('user_role_organization_node')
             ->where('role_id', $this->id)->groupBy('user_id')->count();
     }
@@ -68,7 +68,7 @@ class Role extends Model
      */
     public function getDeletableAttribute(): bool
     {
-        // new attrbiute syntax
+        // new attribute syntax
         return $this->getAssignedUserCountAttribute() == 0;
     }
 }
