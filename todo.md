@@ -31,8 +31,8 @@
 - translations
 - request's ve validations
 - github pages ?
-- test'lerin publish edilmesi
-
+- test'lerin publish edilmesi ve namespacelerin replace edilmesi
+- postgress testleri için github actions
 
 
 ## AStart
