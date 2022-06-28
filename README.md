@@ -10,8 +10,8 @@ Hierarchical Rol-Permission Based **Laravel Auth Package** with Limitless Hierar
 # Features
 
 - Organization Based Access Controllable (OrBAC) Eloquent Models
-- Rol Based Access Control (RoBAC)
-- Permissions Based Access Contol
+- Role Based Access Control (RoBAC)
+- Permissions Based Access Control
 - Lean & Non-Complex Architecture
 - PolyMorphic Relationships of Model & Organization Node
 - Built-in Blade Directives for permission control inside **Blade** files
@@ -21,7 +21,7 @@ Hierarchical Rol-Permission Based **Laravel Auth Package** with Limitless Hierar
 ---
 
 
-[<img src="https://banners.beyondco.de/AAuth%20for%20Laravel.png?theme=light&packageManager=composer+require&packageName=aurorawebsoftware%2Faauth&pattern=jigsaw&style=style_1&description=Hierarchical+Rol-Permission+Based+Laravel+Auth+Package+with+Limitless+Hierarchical+Level+of+Organizations&md=1&showWatermark=0&fontSize=175px&images=shield-check&widths=auto" />](https://github.com/AuroraWebSoftware/AAuth)
+[<img src="https://banners.beyondco.de/AAuth%20for%20Laravel.png?theme=light&packageManager=composer+require&packageName=aurorawebsoftware%2Faauth&pattern=jigsaw&style=style_1&description=Hierarchical+Role-Permission+Based+Laravel+Auth+Package+with+Limitless+Hierarchical+Level+of+Organizations&md=1&showWatermark=0&fontSize=175px&images=shield-check&widths=auto" />](https://github.com/AuroraWebSoftware/AAuth)
 
 # Installation
 
@@ -89,7 +89,7 @@ return [
 
 # Main Philosophy
 
-In computer system security, there are several approachs to restrict system access to authorized users.
+In computer system security, there are several approaches to restrict system access to authorized users.
 
 Most used and known *access control method* is Rol Based Access Control (RoBAC).
 
@@ -99,7 +99,7 @@ Basically; Roles and Permissions are assigned to the Users, The data can be acce
 What if your data access needs are further more than one level?
 and what if you need to restrict and filter the data in organizational and hierarchical manner?
 
-Let's assume we need to implement a multi-zone, multi-level school system and be our structre like this.
+Let's assume we need to implement a multi-zone, multi-level school system and be our structure like this.
 
 - Türkiye
     - A High School
@@ -413,7 +413,7 @@ class ExampleModel extends Model implements AAuthOrganizationNodeInterface
 ## AAuth Service and Facade Methods
 
 ### Current Roles All Permissions
-current user's selected roles permissons with **AAuth Facade**
+current user's selected roles permissions with **AAuth Facade**
 ```php
 $permissions = AAuth::permissions();
 ```
@@ -428,7 +428,7 @@ if (AAuth::can('create_something_for_organization')) {
 }
 ```
 
-### Check permisson and abort if not user and current allowed
+### Check permission and abort if not user and current allowed
 ```php
 AAuth::passOrAbort('create_something_for_organization');
 ```
@@ -462,7 +462,7 @@ $data = ['name' => 'Test Organization Node-able Example'];
 $createdModel = ExampleModel::createWithAAuthOrganizationNode($data, 1, 2);
 ```
 
-### Geting Related Organization Node of Model
+### Getting Related Organization Node of Model
 ```php
 $exampleModel = ExampleModel::find(1);
 $relatedOrganizationModel = $exampleModel->relatedAAuthOrganizationNode()
