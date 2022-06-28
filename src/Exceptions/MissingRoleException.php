@@ -4,7 +4,7 @@ namespace AuroraWebSoftware\AAuth\Exceptions;
 
 use Exception;
 
-class MissingRoleExcepiton extends Exception
+class MissingRoleException extends Exception
 {
     /**
      * All of the guards that were checked.
