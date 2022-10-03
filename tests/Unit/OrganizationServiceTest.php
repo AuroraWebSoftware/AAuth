@@ -14,7 +14,6 @@ beforeEach(function () {
 });
 
 test('can create OrganizationScope', function () {
-
     // arrange
     $data = [
         'name' => 'Org Scope1',
@@ -73,7 +72,6 @@ test('can create and delete OrganizationScope', function () {
 });
 
 test('can create OrganizationNode', function () {
-
     // todo org. scopeları eşleşmeleri kontrol edilecek.
     // arrange
     $os = OrganizationScope::first();
@@ -95,7 +93,6 @@ test('can create OrganizationNode', function () {
 });
 
 test('can create and update OrganizationNode', function () {
-
     // todo org. scopeları eşleşmeleri kontrol edilecek.
     $os = OrganizationScope::first();
 
