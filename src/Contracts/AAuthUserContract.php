@@ -5,7 +5,7 @@ namespace AuroraWebSoftware\AAuth\Contracts;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
- * @property int $id
+ * @property-read int $id
  */
 interface AAuthUserContract
 {
