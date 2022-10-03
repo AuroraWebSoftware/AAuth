@@ -25,19 +25,26 @@ class AAuthServiceProvider extends PackageServiceProvider
         $package
             ->name('aauth')
             ->hasConfigFile()
-            ->hasViews()
-            //->hasMigration('create_aauth_table')
-            ->hasCommand(AAuthCommand::class);
+            // ->hasViews()
+            // ->hasMigration()
+            // ->hasCommand(AAuthCommand::class)
+        ;
     }
 
     public function boot()
     {
+        parent::boot();
+
         // load packages migrations
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
 
         $this->publishes([
             __DIR__ . '/../database/seeders' => resource_path('../database/seeders'),
         ], 'aauth-seeders');
+
+        $this->publishes([
+            __DIR__ . '/../config' => config_path(),
+        ], 'aauth-config');
 
         // todo singleton bind ??
         // AStart ?

@@ -33,6 +33,7 @@
 - github pages ?
 - test'lerin publish edilmesi ve namespacelerin replace edilmesi
 - postgress testleri için github actions
+- laravel gates register policy
 
 
 ## AStart
