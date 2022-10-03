@@ -2,6 +2,10 @@
 
 All notable changes to `AAuth` will be documented in this file.
 
+## 1.0.3 - 2022-10-03
+
+config publish fixed
+
 ## 1.0.2 - 2022-06-28
 
 - Typo Fix
