@@ -2,6 +2,8 @@
 
 namespace AuroraWebSoftware\AAuth\Models;
 
+use AuroraWebSoftware\AAuth\Contracts\AAuthUserContract;
+use Eloquent;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -21,7 +23,7 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $remember_token
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @mixin \Eloquent
+ * @mixin Eloquent
  * @property-read \Illuminate\Database\Eloquent\Collection|Role[] $roles
  * @property-read int|null $roles_count
  * @property-read \Illuminate\Database\Eloquent\Collection|Role[] $organizational_roles
@@ -34,7 +36,7 @@ use Illuminate\Support\Facades\DB;
  * @property-read int $assigned_user_count
  * @property-read bool $deletable
  */
-class User extends Authenticatable
+class User extends Authenticatable implements AAuthUserContract
 {
     use HasFactory;
     use Notifiable;
