@@ -47,7 +47,7 @@ class AAuth
 
         // if user don't have this role, not assigned
         throw_if(
-            $user->roles()->where('id', '=', $roleId)->count() < 1,
+            $user->roles()->where('roles.id', '=', $roleId)->count() < 1,
             new UserHasNoAssignedRoleException()
         );
 
