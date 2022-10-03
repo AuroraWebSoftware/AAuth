@@ -2,6 +2,7 @@
 
 namespace AuroraWebSoftware\AAuth;
 
+use AuroraWebSoftware\AAuth\Contracts\AAuthUserContract;
 use AuroraWebSoftware\AAuth\Exceptions\InvalidOrganizationNodeException;
 use AuroraWebSoftware\AAuth\Exceptions\MissingRoleException;
 use AuroraWebSoftware\AAuth\Exceptions\UserHasNoAssignedRoleException;
@@ -24,7 +25,7 @@ class AAuth
     /**
      * current logged in user model
      */
-    public User $user;
+    public AAuthUserContract $user;
 
     /**
      * current logged in user's role model
@@ -39,14 +40,14 @@ class AAuth
     /**
      * @throws Throwable
      */
-    public function __construct(?User $user, ?int $roleId)
+    public function __construct(?AAuthUserContract $user, ?int $roleId)
     {
         throw_unless($user, new AuthenticationException());
         throw_unless($roleId, new MissingRoleException());
 
-        // if user dont have this role, not assigned
+        // if user don't have this role, not assigned
         throw_if(
-            $user->roles->where('id', '=', $roleId)->count() < 1,
+            $user->roles()->where('roles.id', '=', $roleId)->count() < 1,
             new UserHasNoAssignedRoleException()
         );
 

@@ -31,13 +31,14 @@ You can install the package via composer:
 composer require aurorawebsoftware/aauth
 ```
 
-You must add AAuthUser Trait to the User Model.
+You must add AAuthUser Trait to the User Model and User Model must implement AAuthUserContract
 
 ```php
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use AuroraWebSoftware\AAuth\Traits\AAuthUser;
+use AuroraWebSoftware\AAuth\Contracts\AAuthUserContract;
 
-class User extends Authenticatable
+class User extends Authenticatable implements AAuthUserContract
 {
     use AAuthUser;
 
