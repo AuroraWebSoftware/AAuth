@@ -63,6 +63,15 @@ class AAuth
     }
 
     /**
+     * @return Role|null
+     */
+    public function currentRole(): ?Role
+    {
+        // todo unit test
+        return $this->role;
+    }
+
+    /**
      * @return array|Collection|\Illuminate\Support\Collection
      */
     public function switchableRoles(): array|Collection|\Illuminate\Support\Collection
