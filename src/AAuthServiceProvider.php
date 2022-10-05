@@ -47,7 +47,6 @@ class AAuthServiceProvider extends PackageServiceProvider
         ], 'aauth-config');
 
         // todo singleton bind ??
-        // AStart ?
         $this->app->singleton('aauth', function ($app) {
             return new AAuth(
                 Auth::user(),
