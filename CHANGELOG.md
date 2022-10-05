@@ -2,6 +2,10 @@
 
 All notable changes to `AAuth` will be documented in this file.
 
+## 1.0.5 - 2022-10-05
+
+static switchable roles function
+
 ## 1.0.4 - 2022-10-03
 
 1.0.4
