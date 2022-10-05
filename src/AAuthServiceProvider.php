@@ -17,11 +17,6 @@ class AAuthServiceProvider extends PackageServiceProvider
      */
     public function configurePackage(Package $package): void
     {
-        /*
-         * This class is a Package Service Provider
-         *
-         * More info: https://github.com/spatie/laravel-package-tools
-         */
         $package
             ->name('aauth')
             ->hasConfigFile()
@@ -47,7 +42,6 @@ class AAuthServiceProvider extends PackageServiceProvider
         ], 'aauth-config');
 
         // todo singleton bind ??
-        // AStart ?
         $this->app->singleton('aauth', function ($app) {
             return new AAuth(
                 Auth::user(),

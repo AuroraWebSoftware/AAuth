@@ -74,6 +74,19 @@ class AAuth
     }
 
     /**
+     * @param int $userId
+     * @return array|Collection|\Illuminate\Support\Collection
+     */
+    public static function switchableRolesStatic(int $userId): array|Collection|\Illuminate\Support\Collection
+    {
+        // todo test'i yazılacak
+        return Role::where('uro.user_id', '=', $userId)
+            ->leftJoin('user_role_organization_node as uro', 'uro.role_id', '=', 'roles.id')
+            ->distinct()
+            ->get(['roles.id', 'name']);
+    }
+
+    /**
      * Role's all permissions
      * @return array
      */
