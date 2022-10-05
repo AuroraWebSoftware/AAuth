@@ -2,6 +2,7 @@
 
 namespace AuroraWebSoftware\AAuth\Facades;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Facade;
 
 /**
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static organizationNodes(bool $includeRootNode = false, ?string $modelType = null): \Illuminate\Support\Collection
  * @static organizationNode(int $nodeId, ?string $modelType = null): OrganizationNode|array|Collection|Model
  * @static descendant(int $rootNodeId, int $childNodeId): bool
+ * @static switchableRolesStatic(int $userId): array|Collection|\Illuminate\Support\Collection
  */
 
 class AAuth extends Facade
