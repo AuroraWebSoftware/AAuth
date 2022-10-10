@@ -2,13 +2,11 @@
 
 namespace AuroraWebSoftware\AAuth\Facades;
 
-use AuroraWebSoftware\AAuth\Models\Role;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Facade;
 
 /**
  * AAuth Facade
- * @see \AuroraWebSoftware\AAuth
+ * @see AuroraWebSoftware
  * @static switchableRoles(): array|Collection|\Illuminate\Support\Collection
  * @static permissions(): \Illuminate\Support\Collection|array
  * @static organizationPermissions(): \Illuminate\Support\Collection|array
@@ -20,6 +18,8 @@ use Illuminate\Support\Facades\Facade;
  * @static descendant(int $rootNodeId, int $childNodeId): bool
  * @static switchableRolesStatic(int $userId): array|Collection|\Illuminate\Support\Collection
  * @static currentRole(): ?Role
+ * @method static ?Role currentRole()
+ * @method ?Role currentRole()
  */
 
 class AAuth extends Facade
