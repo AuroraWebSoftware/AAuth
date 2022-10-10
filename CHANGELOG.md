@@ -2,6 +2,10 @@
 
 All notable changes to `AAuth` will be documented in this file.
 
+## 1.0.7 - 2022-10-10
+
+1.0.7
+
 ## 1.0.6 - 2022-10-05
 
 currentRole func.
