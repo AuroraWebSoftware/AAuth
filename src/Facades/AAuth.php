@@ -17,7 +17,8 @@ use Illuminate\Support\Facades\Facade;
  * @static organizationNode(int $nodeId, ?string $modelType = null): OrganizationNode|array|Collection|Model
  * @static descendant(int $rootNodeId, int $childNodeId): bool
  * @static switchableRolesStatic(int $userId): array|Collection|\Illuminate\Support\Collection
- * @method static currentRole(): ?Role
+ * @method static currentRole() \AuroraWebSoftware\AAuth\Models\Role|null
+ *
  */
 
 class AAuth extends Facade
