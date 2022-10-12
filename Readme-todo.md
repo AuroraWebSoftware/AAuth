@@ -36,17 +36,6 @@
 - laravel gates register policy
 
 
-## AStart
-- middleware ?
-
-- Aauth service provider da AAuth olacak mı? -> AScaffold da da olacak override edecek
-
-
-
-
-## backlog
-service provider'ın implementasyonu Aauth da mı AScaffold'da mı olmalı?
-
 ## Dökümantasyon
 
 - config'ler
