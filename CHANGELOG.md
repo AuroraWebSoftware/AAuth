@@ -2,6 +2,11 @@
 
 All notable changes to `AAuth` will be documented in this file.
 
+## 1.0.8 - 2022-10-13
+
+1.0.8
+Blade directive problem fixed by @nusinan
+
 ## 1.0.7 - 2022-10-10
 
 1.0.7

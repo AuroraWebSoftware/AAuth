@@ -50,7 +50,7 @@ class AAuthServiceProvider extends PackageServiceProvider
         });
 
         Blade::directive('aauth', function ($permission) {
-            return "<?php if(\AuroraWebSoftware\AAuth\Tests\Facades\AAuth::can($permission)){ ?>";
+            return "<?php if(\AuroraWebSoftware\AAuth\Facades\AAuth::can($permission)){ ?>";
         });
         Blade::directive('endaauth', function () {
             return "<?php } ?>";
