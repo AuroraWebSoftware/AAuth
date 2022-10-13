@@ -18,7 +18,7 @@ class CreateAbacTables extends Migration
             $table->string('model_type')->index();
             $table->json('abac_rule');
             /**
-            [ "and" : [ { "column" : "name", "operator" : "<", "value": "3" } ] ]
+            [ "and" : [ { "attribute" : "name", "operator" : "<", "value": "3" } ] ]
              */
 
         });
