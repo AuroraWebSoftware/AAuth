@@ -4,7 +4,6 @@ use Spatie\ModelInfo\ModelFinder;
 use Spatie\ModelInfo\ModelInfo;
 
 test('b', function () {
-
     ModelFinder::all();
 
     // dd(ModelFinder::all());
