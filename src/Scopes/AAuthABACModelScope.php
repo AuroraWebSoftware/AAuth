@@ -11,7 +11,6 @@ class AAuthABACModelScope implements Scope
 {
     public function apply(Builder $builder, Model $model)
     {
-
         // todo
         // $organizationNodeIds = AAuth::organizationNodes(true, $model->id)->pluck('id');
         // $builder->whereIn('id', $organizationNodeIds);
