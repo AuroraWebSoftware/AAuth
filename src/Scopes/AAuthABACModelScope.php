@@ -38,8 +38,4 @@ class AAuthABACModelScope implements Scope
         // $organizationNodeIds = AAuth::organizationNodes(true, $model->id)->pluck('id');
         // $builder->whereIn('id', $organizationNodeIds);
     }
-
-    private function andBuilder() {
-
-    }
 }
