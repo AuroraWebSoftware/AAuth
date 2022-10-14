@@ -2,7 +2,7 @@
 
 namespace AuroraWebSoftware\AAuth\Enums;
 
-enum ABACComparisonOperator
+enum ABACCondition
 {
     case equal;
     case identical;
