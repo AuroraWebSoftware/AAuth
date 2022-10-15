@@ -17,7 +17,7 @@ class CreateAbacTables extends Migration
             $table->bigIncrements('id');
             $table->unsignedBigInteger('role_id')->index();
             $table->string('model_type')->index();
-            $table->json('rule_json');
+            $table->json('rules_json');
         });
     }
 
