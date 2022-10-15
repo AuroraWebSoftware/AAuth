@@ -148,7 +148,7 @@ class AAuth
     public function passOrAbort(string $permission, string $message = 'No Permission'): void
     {
         // todo mesaj dil dosyasından gelecek.
-        if (!$this->can($permission)) {
+        if (! $this->can($permission)) {
             abort(ResponseAlias::HTTP_UNAUTHORIZED, $message);
         }
     }
@@ -230,6 +230,5 @@ class AAuth
         return DB::table('role_model_abac_rules')
             ->where('role_id', '=', $this->role->id)
             ->first()?->abac_rule;
-
     }
 }
