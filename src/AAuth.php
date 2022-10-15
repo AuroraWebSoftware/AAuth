@@ -8,6 +8,7 @@ use AuroraWebSoftware\AAuth\Exceptions\MissingRoleException;
 use AuroraWebSoftware\AAuth\Exceptions\UserHasNoAssignedRoleException;
 use AuroraWebSoftware\AAuth\Models\OrganizationNode;
 use AuroraWebSoftware\AAuth\Models\Role;
+use AuroraWebSoftware\AAuth\Models\RoleModelAbacRule;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -148,7 +149,7 @@ class AAuth
     public function passOrAbort(string $permission, string $message = 'No Permission'): void
     {
         // todo mesaj dil dosyasından gelecek.
-        if (! $this->can($permission)) {
+        if (!$this->can($permission)) {
             abort(ResponseAlias::HTTP_UNAUTHORIZED, $message);
         }
     }
@@ -227,8 +228,9 @@ class AAuth
      */
     public function ABACRules(string $modelType): ?array
     {
-        return DB::table('role_model_abac_rules')
-            ->where('role_id', '=', $this->role->id)
-            ->first()?->abac_rule;
+        // todo abac rule validation
+        return RoleModelAbacRule::where('role_id', '=', $this->role->id)
+            ->where('model_type', '=', $modelType)
+            ->first()?->rules_json;
     }
 }

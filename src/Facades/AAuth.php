@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Facade;
  * @static descendant(int $rootNodeId, int $childNodeId): bool
  * @static switchableRolesStatic(int $userId): array|Collection|\Illuminate\Support\Collection
  * @method static currentRole() \AuroraWebSoftware\AAuth\Models\Role|null
+ * @method static ABACRules() array|null
  *
  */
 

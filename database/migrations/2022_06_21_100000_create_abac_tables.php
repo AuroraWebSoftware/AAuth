@@ -18,6 +18,7 @@ class CreateAbacTables extends Migration
             $table->unsignedBigInteger('role_id')->index();
             $table->string('model_type')->index();
             $table->json('rules_json');
+            $table->timestamps();
         });
     }
 

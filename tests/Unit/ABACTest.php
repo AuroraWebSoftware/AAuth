@@ -1,6 +1,7 @@
 <?php
 
 use AuroraWebSoftware\AAuth\Database\Seeders\SampleDataSeeder;
+use AuroraWebSoftware\AAuth\Models\RoleModelAbacRule;
 use AuroraWebSoftware\AAuth\Models\User;
 use AuroraWebSoftware\AAuth\Services\OrganizationService;
 use AuroraWebSoftware\AAuth\Tests\Models\OrganizationNodeable;
@@ -51,13 +52,21 @@ test('b', function () {
         2
     );
 
-
+    $rules = [
+        "&&" => [
+            ["like" => ["name", "%Nodeable%"]],
+        ],
+    ];
 
     $data3 = [
         'role_id' => 3,
         'model_type' => OrganizationNodeable::getModelType(),
-        "abac_rule" =>
+        "rules_json" => $rules,
     ];
+
+    RoleModelAbacRule::create($data3);
+
+    //dd(RoleModelAbacRule::find(1)->rules_json);
 
     dd(OrganizationNodeable::all()->pluck('name'));
 
