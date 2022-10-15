@@ -14,7 +14,8 @@ use Illuminate\Database\Eloquent\Model;
  */
 class OrganizationNodeable extends Model implements AAuthOrganizationNodeInterface, AAuthABACModelInterface
 {
-    use AAuthOrganizationNode, AAuthABACModel;
+    use AAuthOrganizationNode;
+    use AAuthABACModel;
 
     protected $fillable = ['name'];
 

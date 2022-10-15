@@ -51,6 +51,14 @@ test('b', function () {
         2
     );
 
+
+
+    $data3 = [
+        'role_id' => 3,
+        'model_type' => OrganizationNodeable::getModelType(),
+        "abac_rule" =>
+    ];
+
     dd(OrganizationNodeable::all()->pluck('name'));
 
     $this->assertTrue(true);
