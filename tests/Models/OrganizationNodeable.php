@@ -5,12 +5,16 @@ namespace AuroraWebSoftware\AAuth\Tests\Models;
 use AuroraWebSoftware\AAuth\Enums\ABACCondition;
 use AuroraWebSoftware\AAuth\Interfaces\AAuthABACModelInterface;
 use AuroraWebSoftware\AAuth\Interfaces\AAuthOrganizationNodeInterface;
+use AuroraWebSoftware\AAuth\Traits\AAuthABACModel;
 use AuroraWebSoftware\AAuth\Traits\AAuthOrganizationNode;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property-read string $name
+ */
 class OrganizationNodeable extends Model implements AAuthOrganizationNodeInterface, AAuthABACModelInterface
 {
-    use AAuthOrganizationNode;
+    use AAuthOrganizationNode, AAuthABACModel;
 
     protected $fillable = ['name'];
 
