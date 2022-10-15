@@ -27,8 +27,8 @@ class AAuthABACModelScope implements Scope
 
             $rules = [
                 "&&" => [
-                    ["like" => ["name", "%Nodeable 1%"]]
-                ]
+                    ["like" => ["name", "%Nodeable 1%"]],
+                ],
             ];
         }
 
