@@ -39,24 +39,31 @@ test('b', function () {
     // dd($modelInfo->attributes);
 
     $data1 = ['name' => 'Test Organization Nodeable 1'];
-    $data2 = ['name' => 'Test Organization Nodeable 2'];
     $createdModel1 = OrganizationNodeable::createWithAAuthOrganizationNode(
         $data1,
         1,
         2
     );
 
+    $data2 = ['name' => 'Test Organization Nodeable 2'];
     $createdModel2 = OrganizationNodeable::createWithAAuthOrganizationNode(
         $data2,
         1,
         2
     );
 
-    $rules = [
-        "&&" => [
-            ["like" => ["name", "%Nodeable%"]],
-        ],
-    ];
+    $rules =
+        [
+            "&&" => [
+                ["like" => ["attribute" => "name", "value" => "%2%"]],
+                ["like" => ["attribute" => "name", "value" => "%test%"]],
+                ["&&" =>
+                    [
+                        ["like" => ["attribute" => "name", "value" => "%1%"]],
+                    ],
+                ],
+            ],
+        ];
 
     $data3 = [
         'role_id' => 3,

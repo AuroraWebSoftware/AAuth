@@ -2,20 +2,39 @@ todo
 ---
 
 - config e aranacak model klasörü eklenecek ??
-- abac rule'u eloquent'a - dönüştüren builder
+- abac rule'u eloquent'a - dönüştüren builder ?? şimdilik scope içinden yapıldı
 
-- 
+-
 
 ```json
 {
     "&&": [
-        {"==": ["$attribute", "asd"]},
-        {"==": ["$attribute", "asd"]},
         {
-            "||": 
-            [
-                {"==": ["$attribute", "asd"]},
-                {"==": ["$attribute", "asd"]}
+            "==": [
+                "$attribute",
+                "asd"
+            ]
+        },
+        {
+            "==": [
+                "$attribute",
+                "asd"
+            ]
+        },
+        {
+            "||": [
+                {
+                    "==": [
+                        "$attribute",
+                        "asd"
+                    ]
+                },
+                {
+                    "==": [
+                        "$attribute",
+                        "asd"
+                    ]
+                }
             ]
         }
     ]
@@ -25,16 +44,14 @@ todo
 ```php
 
 [
-    "&&" =>  [
-        ["==" => ["$attribute", "asd"]],
-        ["==" => ["$attribute", "asd"]],
-        [
-            "||" => 
-            [
-                ["==" => ["$attribute", "asd"]],
-                ["==" => ["$attribute", "asd"]]
+    "&&" => [
+                ["==" => [ "attribute" => "$attribute", "value" => "asasd"]]
+            ],
+            ["||" =>
+                [
+                    ["==" => [ "attribute" => "$attribute", "value" => "asasd"]],
+                ]
             ]
-        ]
     ]
 ]
 
