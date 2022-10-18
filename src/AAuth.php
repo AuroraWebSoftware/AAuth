@@ -228,7 +228,6 @@ class AAuth
      */
     public function ABACRules(string $modelType): ?array
     {
-        // todo abac rule validation
         return RoleModelAbacRule::where('role_id', '=', $this->role->id)
             ->where('model_type', '=', $modelType)
             ->first()?->rules_json;

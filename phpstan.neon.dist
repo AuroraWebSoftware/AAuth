@@ -2,6 +2,7 @@ includes:
     - phpstan-baseline.neon
 
 parameters:
+    reportUnmatchedIgnoredErrors: false
     level: 4
     paths:
         - src
@@ -11,6 +12,9 @@ parameters:
     checkOctaneCompatibility: true
     checkModelProperties: true
     checkMissingIterableValueType: false
+#    ignoreErrors:
+#        - '#.*Internal error.*#'
     excludePaths:
         - src/Scopes/AAuthOrganizationNodeScope.php
+        - src/Scopes/AAuthABACModelScope.php
 

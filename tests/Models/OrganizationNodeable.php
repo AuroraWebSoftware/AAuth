@@ -17,7 +17,7 @@ class OrganizationNodeable extends Model implements AAuthOrganizationNodeInterfa
     use AAuthOrganizationNode;
     use AAuthABACModel;
 
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'age'];
 
     public static function getModelType(): string
     {

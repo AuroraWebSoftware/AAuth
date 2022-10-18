@@ -4,4 +4,5 @@
 ```bash
 composer analyse
 composer test
+composer format
 ```

@@ -28,15 +28,10 @@ class ABACService
         ];
 
         foreach (ABACCondition::cases() as $condition) {
-            // todo requeired if ile kontrol
             $validationRules[$condition->value] = ['array'];
-            // $validationRules['*.' . $condition->value . '.attribute'] = ['string'];
-            // $validationRules['*.' . $condition->value . '.value'] = 'string';
-
             if (array_key_exists($condition->value, $abacRules)) {
                 $validationRules[$condition->value . '.attribute'] = ['string', 'required'];
             }
-
         }
 
 

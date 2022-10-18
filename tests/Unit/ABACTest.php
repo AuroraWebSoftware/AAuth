@@ -21,6 +21,7 @@ beforeEach(function () {
     Schema::create('organization_nodeables', function (Blueprint $table) {
         $table->id();
         $table->string('name');
+        $table->integer('age');
         $table->timestamps();
     });
 
@@ -30,6 +31,64 @@ beforeEach(function () {
             3
         );
     });
+});
+
+test('can get all model instances without created role abac rule', function () {
+    $data1 = ['name' => 'Test Organization Nodeable 1.1', 'age' => 18];
+    $createdModel1 = OrganizationNodeable::createWithAAuthOrganizationNode(
+        $data1,
+        1,
+        2
+    );
+
+    $data2 = ['name' => 'Test Organization Nodeable 1.2', 'age' => 19];
+    $createdModel2 = OrganizationNodeable::createWithAAuthOrganizationNode(
+        $data2,
+        1,
+        2
+    );
+
+    $count = OrganizationNodeable::all()->pluck('name')->count();
+    $this->assertEquals($count, 2);
+});
+
+test('can get all model instances with (and) operator and 2 (equal) condition', function () {
+    $data1 = ['name' => 'Test Organization Nodeable 2.1', 'age' => 18];
+    $createdModel1 = OrganizationNodeable::createWithAAuthOrganizationNode(
+        $data1,
+        1,
+        2
+    );
+
+    $data2 = ['name' => 'Test Organization Nodeable 2.2', 'age' => 19];
+    $createdModel2 = OrganizationNodeable::createWithAAuthOrganizationNode(
+        $data2,
+        1,
+        2
+    );
+
+    $rules =
+        [
+            "&&" => [
+                ["=" => ["attribute" => "name", "value" => "Test Organization Nodeable 2.2"]],
+                ["=" => ["attribute" => "age", "value" => "19"]],
+            ],
+        ];
+
+
+    $data3 = [
+        'role_id' => 3,
+        'model_type' => OrganizationNodeable::getModelType(),
+        "rules_json" => $rules,
+    ];
+
+    RoleModelAbacRule::create($data3);
+
+
+     dd(OrganizationNodeable::all());
+
+    // $count = OrganizationNodeable::all()->pluck('name');
+    // $this->assertEquals($count, 2);
 });
 
 
@@ -88,7 +147,7 @@ test('b', function () {
 
     OrganizationNodeable::all()->pluck('name');
 
-    dd(DB::getQueryLog());
+    // dd(DB::getQueryLog());
 
     $this->assertTrue(true);
 });

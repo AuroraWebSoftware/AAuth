@@ -1,4 +1,9 @@
 ## Todo
+- Facade yerine sadece service provide kullanılabilir mi? aliass?
+  - singleton içinde facade yerine service class olabilir
+- phpStan problemleri
+- pint
+
 
 ## Done
 - gerekli migration'lar 
