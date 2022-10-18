@@ -85,7 +85,7 @@ test('can get all model instances with (and) operator and 2 (equal) condition', 
     RoleModelAbacRule::create($data3);
 
 
-     dd(OrganizationNodeable::all());
+    dd(OrganizationNodeable::all());
 
     // $count = OrganizationNodeable::all()->pluck('name');
     // $this->assertEquals($count, 2);
