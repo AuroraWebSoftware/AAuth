@@ -7,6 +7,7 @@ use AuroraWebSoftware\AAuth\Services\OrganizationService;
 use AuroraWebSoftware\AAuth\Tests\Models\OrganizationNodeable;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Spatie\ModelInfo\ModelFinder;
 use Spatie\ModelInfo\ModelInfo;
@@ -55,17 +56,16 @@ test('b', function () {
     $rules =
         [
             "&&" => [
-                ["like" => ["attribute" => "name", "value" => "%1%"]],
-                ["like" => ["attribute" => "name", "value" => "%test%"]],
+                ["like" => ["attribute" => "name", "value" => "%asd%"]],
                 ["&&" =>
                     [
-                        ["like" => ["attribute" => "name", "value" => "%org%"]],
+                        ["like" => ["attribute" => "name", "value" => "%asd%"]],
                     ],
                 ],
                 ["||" =>
                     [
                         ["like" => ["attribute" => "name", "value" => "%1%"]],
-                        ["like" => ["attribute" => "name", "value" => "%2%"]],
+                        ["like" => ["attribute" => "name", "value" => "%1%"]],
                     ],
                 ],
             ],
@@ -81,7 +81,14 @@ test('b', function () {
 
     //dd(RoleModelAbacRule::find(1)->rules_json);
 
-    dd(OrganizationNodeable::all()->pluck('name'));
+
+    // dd(OrganizationNodeable::all()->pluck('name'));
+
+    DB::enableQueryLog();
+
+    OrganizationNodeable::all()->pluck('name');
+
+    dd(DB::getQueryLog());
 
     $this->assertTrue(true);
 });

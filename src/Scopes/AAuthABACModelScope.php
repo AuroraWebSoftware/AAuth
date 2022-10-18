@@ -30,7 +30,7 @@ class AAuthABACModelScope implements Scope
                             }
                         );
                     } elseif ($suboperator == '||') {
-                        $builder->orWhere(
+                        $builder->where(
                             function ($query) use ($subrule, $model) {
                                 $this->apply($query, $model, $subrule);
                             }
@@ -48,7 +48,7 @@ class AAuthABACModelScope implements Scope
                     $suboperator = array_key_first($subrule);
 
                     if ($suboperator == '&&') {
-                        $builder->where(
+                        $builder->orWhere(
                             function ($query) use ($subrule, $model) {
                                 $this->apply($query, $model, $subrule);
                             }
