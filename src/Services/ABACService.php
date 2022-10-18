@@ -36,7 +36,6 @@ class ABACService
             if (array_key_exists($condition->value, $abacRules)) {
                 $validationRules[$condition->value . '.attribute'] = ['string', 'required'];
             }
-
         }
 
 
