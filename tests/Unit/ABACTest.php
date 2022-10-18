@@ -55,11 +55,17 @@ test('b', function () {
     $rules =
         [
             "&&" => [
-                ["like" => ["attribute" => "name", "value" => "%2%"]],
+                ["like" => ["attribute" => "name", "value" => "%1%"]],
                 ["like" => ["attribute" => "name", "value" => "%test%"]],
                 ["&&" =>
                     [
+                        ["like" => ["attribute" => "name", "value" => "%org%"]],
+                    ],
+                ],
+                ["||" =>
+                    [
                         ["like" => ["attribute" => "name", "value" => "%1%"]],
+                        ["like" => ["attribute" => "name", "value" => "%2%"]],
                     ],
                 ],
             ],
