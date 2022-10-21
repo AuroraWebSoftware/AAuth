@@ -32,6 +32,7 @@ class OrganizationService
             $validator = Validator::make($organizationScope, StoreOrganizationScopeRequest::getRules());
             if ($validator->fails()) {
                 $message = implode(' , ', $validator->getMessageBag()->all());
+
                 throw new ValidationException($validator, new Response($message, Response::HTTP_UNPROCESSABLE_ENTITY));
             }
         }
@@ -54,6 +55,7 @@ class OrganizationService
 
             if ($validator->fails()) {
                 $message = implode(' , ', $validator->getMessageBag()->all());
+
                 throw new ValidationException($validator, new Response($message, Response::HTTP_UNPROCESSABLE_ENTITY));
             }
         }
@@ -86,6 +88,7 @@ class OrganizationService
             $validator = Validator::make($organizationNode, StoreOrganizationNodeRequest::$rules);
             if ($validator->fails()) {
                 $message = implode(' , ', $validator->getMessageBag()->all());
+
                 throw new ValidationException($validator, new Response($message, Response::HTTP_UNPROCESSABLE_ENTITY));
             }
         }
@@ -148,6 +151,7 @@ class OrganizationService
 
             if ($validator->fails()) {
                 $message = implode(' , ', $validator->getMessageBag()->all());
+
                 throw new ValidationException($validator, new Response($message, Response::HTTP_UNPROCESSABLE_ENTITY));
             }
         }

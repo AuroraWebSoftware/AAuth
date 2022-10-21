@@ -35,6 +35,7 @@ class RolePermissionService
 
             if ($validator->fails()) {
                 $message = implode(' , ', $validator->getMessageBag()->all());
+
                 throw new ValidationException($validator, new Response($message, Response::HTTP_UNPROCESSABLE_ENTITY));
             }
         }
