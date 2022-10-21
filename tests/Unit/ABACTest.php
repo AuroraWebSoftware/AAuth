@@ -9,8 +9,6 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Spatie\ModelInfo\ModelFinder;
-use Spatie\ModelInfo\ModelInfo;
 
 beforeEach(function () {
     Artisan::call('migrate:fresh');
