@@ -18,6 +18,8 @@ class ABACService
      */
     public static function validateAbacRuleArray(array $abacRules): void
     {
+        // todo improvement needed
+
         $validationRules = [
             '&&' => 'array',
             '||' => 'array',

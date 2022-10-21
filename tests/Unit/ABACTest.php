@@ -3,6 +3,7 @@
 use AuroraWebSoftware\AAuth\Database\Seeders\SampleDataSeeder;
 use AuroraWebSoftware\AAuth\Models\RoleModelAbacRule;
 use AuroraWebSoftware\AAuth\Models\User;
+use AuroraWebSoftware\AAuth\Services\ABACService;
 use AuroraWebSoftware\AAuth\Services\OrganizationService;
 use AuroraWebSoftware\AAuth\Tests\Models\OrganizationNodeable;
 use Illuminate\Database\Schema\Blueprint;
@@ -31,6 +32,35 @@ beforeEach(function () {
     });
 });
 
+
+test('can validate abac rule array', function () {
+    $rules1 =
+        [
+            "&&" => [
+                ["=" => ["attribute" => "name", "value" => "Test Organization Nodeable 2.2"]],
+                ["=" => ["attribute" => "age", "value" => "19"]],
+            ],
+        ];
+
+    $rules2 =
+        [
+            "&&" => [
+                ["=" => ["attribute" => "name", "value" => "Test Organization Nodeable 2.2"]],
+                ["=" => ["attribute" => "age", "value" => "19"]],
+                [
+                    "&&" => [
+                        ["=" => ["attribute" => "name", "value" => "Test Organization Nodeable 2.2"]],
+                        ["=" => ["attribute" => "age", "value" => "19"]],
+                    ],
+                ],
+            ],
+        ];
+
+    ABACService::validateAbacRuleArray($rules1);
+    ABACService::validateAbacRuleArray($rules2);
+    $this->assertTrue(true);
+});
+
 test('can get all model instances without created role abac rule', function () {
     $data1 = ['name' => 'Test Organization Nodeable 1.1', 'age' => 18];
     $createdModel1 = OrganizationNodeable::createWithAAuthOrganizationNode(
@@ -50,7 +80,7 @@ test('can get all model instances without created role abac rule', function () {
     $this->assertEquals($count, 2);
 });
 
-test('can get all model instances with (and) operator and 2 (equal) condition', function () {
+test('can get all model instances proper conditions', function () {
     $data1 = ['name' => 'Test Organization Nodeable 2.1', 'age' => 18];
     $createdModel1 = OrganizationNodeable::createWithAAuthOrganizationNode(
         $data1,
@@ -65,7 +95,28 @@ test('can get all model instances with (and) operator and 2 (equal) condition', 
         2
     );
 
-    $rules =
+    $data3 = ['name' => 'Test Organization Nodeable 2.3', 'age' => 19];
+    $createdModel3 = OrganizationNodeable::createWithAAuthOrganizationNode(
+        $data3,
+        1,
+        2
+    );
+
+    $data4 = ['name' => 'Test Organization Nodeable 2.4', 'age' => 20];
+    $createdModel4 = OrganizationNodeable::createWithAAuthOrganizationNode(
+        $data4,
+        1,
+        2
+    );
+
+    $data5 = ['name' => 'Test Organization Nodeable 2.5', 'age' => 21];
+    $createdModel5 = OrganizationNodeable::createWithAAuthOrganizationNode(
+        $data5,
+        1,
+        2
+    );
+
+    $rules1 =
         [
             "&&" => [
                 ["=" => ["attribute" => "name", "value" => "Test Organization Nodeable 2.2"]],
@@ -74,19 +125,28 @@ test('can get all model instances with (and) operator and 2 (equal) condition', 
         ];
 
 
-    $data3 = [
+    $dataRule = [
         'role_id' => 3,
         'model_type' => OrganizationNodeable::getModelType(),
-        "rules_json" => $rules,
+        "rules_json" => $rules1,
     ];
 
-    RoleModelAbacRule::create($data3);
+    $roleModelAbacRuleModelInstance = RoleModelAbacRule::create($dataRule);
 
+    $this->assertEquals(1, OrganizationNodeable::count());
 
-    dd(OrganizationNodeable::all());
+    $rules2 =
+        [
+            "&&" => [
+                [">" => ["attribute" => "age", "value" => "19"]],
+            ],
+        ];
 
-    // $count = OrganizationNodeable::all()->pluck('name');
-    // $this->assertEquals($count, 2);
+    $roleModelAbacRuleModelInstance->rules_json = $rules2;
+    $roleModelAbacRuleModelInstance->save();
+
+    $this->assertEquals(OrganizationNodeable::count(), 2);
+
 });
 
 
