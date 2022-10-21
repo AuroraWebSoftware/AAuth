@@ -1,13 +1,20 @@
 todo
 ---
 
-- config e aranacak model klasörü eklenecek ??
-- abac rule'u eloquent'a - dönüştüren builder ?? şimdilik scope içinden yapıldı
+
+
 - unit testlerin yazılması - pest
-  - rule validation testleri
+    - rule validation testleri
 - dökümanlar
 
 -
+
+backlog
+---
+- config e aranacak model klasörü eklenecek ??
+- abac rule'u eloquent'a - dönüştüren builder ?? şimdilik scope içinden yapıldı
+
+-----
 
 ```json
 {

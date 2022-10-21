@@ -7,14 +7,10 @@ use Exception;
 use Illuminate\Support\Facades\Validator;
 
 /**
- * Organization Data Service
+ * todo service mi ? utility? helper?
  */
 class ABACService
 {
-    public static function getQueryBuilderfromJson()
-    {
-    }
-
     /**
      * @param array $abacRules
      * @return void
@@ -49,7 +45,13 @@ class ABACService
         }
     }
 
-    public static function validateAbacRuleJson(string $rule)
+    /**
+     * @param string $ruleJson
+     * @return void
+     * @throws Exception
+     */
+    public static function validateAbacRuleJson(string $ruleJson): void
     {
+        ABACService::validateAbacRuleArray(json_decode($ruleJson));
     }
 }
