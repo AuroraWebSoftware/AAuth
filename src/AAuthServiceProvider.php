@@ -26,7 +26,10 @@ class AAuthServiceProvider extends PackageServiceProvider
         ;
     }
 
-    public function boot()
+    /**
+     * @return void
+     */
+    public function boot() : void
     {
         parent::boot();
 
@@ -44,7 +47,7 @@ class AAuthServiceProvider extends PackageServiceProvider
         // todo singleton bind ??
         $this->app->singleton('aauth', function ($app) {
             return new AAuth(
-                Auth::user(),
+                Auth::user(), // @phpstan-ignore-line
                 Session::get('roleId')
             );
         });

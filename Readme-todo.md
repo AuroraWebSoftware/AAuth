@@ -3,6 +3,7 @@
   - singleton içinde facade yerine service class olabilir
 - phpStan problemleri
 - pint
+- can fonkisyonlarında yetki 1 kez çekilebilir
 
 
 ## Done

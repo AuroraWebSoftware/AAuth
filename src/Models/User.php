@@ -69,7 +69,7 @@ class User extends Authenticatable implements AAuthUserContract
     ];
 
     /**
-     * @return BelongsToMany
+     * @return BelongsToMany<Role>
      */
     public function roles(): BelongsToMany
     {
@@ -77,11 +77,13 @@ class User extends Authenticatable implements AAuthUserContract
     }
 
     /**
-     * @return Collection
+     * @return Collection<int, Role>
      */
     public function rolesWithOrganizationNodes(): Collection
     {
+        // @phpstan-ignore-next-line
         $rolesCollection = collect();
+
         $rolesWithOrganizationNodes = DB::table('user_role_organization_node')->where('user_id', '=', $this->id)->get();
 
         foreach ($rolesWithOrganizationNodes as $rolesWithOrganizationNode) {
@@ -95,7 +97,7 @@ class User extends Authenticatable implements AAuthUserContract
     }
 
     /**
-     * @return BelongsToMany
+     * @return BelongsToMany<Role>
      */
     public function system_roles(): BelongsToMany
     {
@@ -104,7 +106,7 @@ class User extends Authenticatable implements AAuthUserContract
     }
 
     /**
-     * @return BelongsToMany
+     * @return BelongsToMany<Role>
      */
     public function organization_roles(): BelongsToMany
     {

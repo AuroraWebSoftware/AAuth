@@ -13,6 +13,7 @@ use AuroraWebSoftware\AAuth\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
 /**
@@ -34,8 +35,7 @@ class RolePermissionService
 
             if ($validator->fails()) {
                 $message = implode(' , ', $validator->getMessageBag()->all());
-
-                throw new ValidationException($validator, 'Invalid Update Organization Node Request, ' . $message);
+                throw new ValidationException($validator, new Response($message, Response::HTTP_UNPROCESSABLE_ENTITY));
             }
         }
 

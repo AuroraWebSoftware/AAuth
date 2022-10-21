@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Organization Data Service
@@ -31,8 +32,7 @@ class OrganizationService
             $validator = Validator::make($organizationScope, StoreOrganizationScopeRequest::getRules());
             if ($validator->fails()) {
                 $message = implode(' , ', $validator->getMessageBag()->all());
-
-                throw new ValidationException($validator, 'Invalid Store Organization Scope Request, ' . $message);
+                throw new ValidationException($validator, new Response($message, Response::HTTP_UNPROCESSABLE_ENTITY));
             }
         }
 
@@ -54,8 +54,7 @@ class OrganizationService
 
             if ($validator->fails()) {
                 $message = implode(' , ', $validator->getMessageBag()->all());
-
-                throw new ValidationException($validator, 'Invalid Store Organization Scope Request, ' . $message);
+                throw new ValidationException($validator, new Response($message, Response::HTTP_UNPROCESSABLE_ENTITY));
             }
         }
         $organizationScopeModel = OrganizationScope::find($id);
@@ -87,8 +86,7 @@ class OrganizationService
             $validator = Validator::make($organizationNode, StoreOrganizationNodeRequest::$rules);
             if ($validator->fails()) {
                 $message = implode(' , ', $validator->getMessageBag()->all());
-
-                throw new ValidationException($validator, 'Invalid Store Organization Node Request, ' . $message);
+                throw new ValidationException($validator, new Response($message, Response::HTTP_UNPROCESSABLE_ENTITY));
             }
         }
 
@@ -150,8 +148,7 @@ class OrganizationService
 
             if ($validator->fails()) {
                 $message = implode(' , ', $validator->getMessageBag()->all());
-
-                throw new ValidationException($validator, 'Invalid Update Organization Node Request, ' . $message);
+                throw new ValidationException($validator, new Response($message, Response::HTTP_UNPROCESSABLE_ENTITY));
             }
         }
 
