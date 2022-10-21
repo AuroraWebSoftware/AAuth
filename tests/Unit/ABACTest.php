@@ -146,7 +146,6 @@ test('can get all model instances proper conditions', function () {
     $roleModelAbacRuleModelInstance->save();
 
     $this->assertEquals(OrganizationNodeable::count(), 2);
-
 });
 
 
