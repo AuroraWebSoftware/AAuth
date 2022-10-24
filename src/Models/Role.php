@@ -38,7 +38,7 @@ class Role extends Model
     }
 
     /**
-     * @return BelongsTo
+     * @return BelongsTo<OrganizationScope, Role>
      */
     public function organization_scope(): BelongsTo
     {
@@ -46,7 +46,7 @@ class Role extends Model
     }
 
     /**
-     * @return BelongsToMany
+     * @return BelongsToMany<OrganizationNode>
      */
     public function organization_nodes(): BelongsToMany
     {

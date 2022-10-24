@@ -14,13 +14,11 @@ class CreateAbacTables extends Migration
     public function up()
     {
         Schema::create('role_model_abac_rules', function (Blueprint $table) {
+            $table->bigIncrements('id');
             $table->unsignedBigInteger('role_id')->index();
             $table->string('model_type')->index();
-            $table->json('abac_rule');
-            /**
-            [ "and" : [ { "column" : "name", "operator" : "<", "value": "3" } ] ]
-             */
-
+            $table->json('rules_json');
+            $table->timestamps();
         });
     }
 

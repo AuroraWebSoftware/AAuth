@@ -2,6 +2,7 @@
 
 namespace AuroraWebSoftware\AAuth\Contracts;
 
+use AuroraWebSoftware\AAuth\Models\Role;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
@@ -9,5 +10,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  */
 interface AAuthUserContract
 {
+    /**
+     * @return BelongsToMany<Role>
+     */
     public function roles(): BelongsToMany;
 }

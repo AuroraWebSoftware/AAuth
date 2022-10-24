@@ -2,15 +2,22 @@
 
 namespace AuroraWebSoftware\AAuth\Tests\Models;
 
+use AuroraWebSoftware\AAuth\Enums\ABACCondition;
+use AuroraWebSoftware\AAuth\Interfaces\AAuthABACModelInterface;
 use AuroraWebSoftware\AAuth\Interfaces\AAuthOrganizationNodeInterface;
+use AuroraWebSoftware\AAuth\Traits\AAuthABACModel;
 use AuroraWebSoftware\AAuth\Traits\AAuthOrganizationNode;
 use Illuminate\Database\Eloquent\Model;
 
-class OrganizationNodeable extends Model implements AAuthOrganizationNodeInterface
+/**
+ * @property-read string $name
+ */
+class OrganizationNodeable extends Model implements AAuthOrganizationNodeInterface, AAuthABACModelInterface
 {
     use AAuthOrganizationNode;
+    use AAuthABACModel;
 
-    protected $fillable = ['name'];
+    protected $fillable = ['name', 'age'];
 
     public static function getModelType(): string
     {
@@ -25,5 +32,13 @@ class OrganizationNodeable extends Model implements AAuthOrganizationNodeInterfa
     public function getModelName(): ?string
     {
         return $this->name;
+    }
+
+    public static function getABACRules(): array
+    {
+        return [
+            'name' => [ABACCondition::equal, ABACCondition::greater_than_or_equal_to],
+            'id' => [ABACCondition::equal, ABACCondition::greater_than_or_equal_to],
+        ];
     }
 }

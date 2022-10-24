@@ -54,7 +54,7 @@ class OrganizationScope extends Model
     }
 
     /**
-     * @return HasMany
+     * @return HasMany<OrganizationNode>
      */
     public function organization_nodes(): HasMany
     {

@@ -4,7 +4,7 @@ namespace AuroraWebSoftware\AAuth\Interfaces;
 
 interface AAuthOrganizationNodeInterface
 {
-    public static function bootAAuthOrganizationNode();
+    public static function bootAAuthOrganizationNode(): void;
 
     public static function getModelType(): string;
 

@@ -8,7 +8,7 @@ use AuroraWebSoftware\AAuth\Exceptions\MissingRoleException;
 use AuroraWebSoftware\AAuth\Exceptions\UserHasNoAssignedRoleException;
 use AuroraWebSoftware\AAuth\Models\OrganizationNode;
 use AuroraWebSoftware\AAuth\Models\Role;
-use AuroraWebSoftware\AAuth\Models\User;
+use AuroraWebSoftware\AAuth\Models\RoleModelAbacRule;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -72,7 +72,7 @@ class AAuth
     }
 
     /**
-     * @return array|Collection|\Illuminate\Support\Collection
+     * @return array|Collection|\Illuminate\Support\Collection<int, Role>
      */
     public function switchableRoles(): array|Collection|\Illuminate\Support\Collection
     {
@@ -84,7 +84,7 @@ class AAuth
 
     /**
      * @param int $userId
-     * @return array|Collection|\Illuminate\Support\Collection
+     * @return array|Collection|\Illuminate\Support\Collection<int, Role>
      */
     public static function switchableRolesStatic(int $userId): array|Collection|\Illuminate\Support\Collection
     {
@@ -159,7 +159,7 @@ class AAuth
      * if model type is given, returns only this model typed nodes.
      * @param bool $includeRootNode
      * @param string|null $modelType
-     * @return \Illuminate\Support\Collection
+     * @return \Illuminate\Support\Collection<int, OrganizationNode>
      * @throws Throwable
      */
     public function organizationNodes(bool $includeRootNode = false, ?string $modelType = null): \Illuminate\Support\Collection
@@ -185,10 +185,10 @@ class AAuth
      * checks if current role authorized to access given node id
      * @param int $nodeId
      * @param string|null $modelType
-     * @return OrganizationNode|array|Collection|Model
+     * @return OrganizationNode
      * @throws InvalidOrganizationNodeException|Throwable
      */
-    public function organizationNode(int $nodeId, ?string $modelType = null): OrganizationNode|array|Collection|Model
+    public function organizationNode(int $nodeId, ?string $modelType = null): OrganizationNode
     {
         $organizationNodes = $this->organizationNodes(true, $modelType);
 
@@ -220,5 +220,16 @@ class AAuth
 
         return OrganizationNode::where('path', 'like', $subTreeRootNode->path . '%')
             ->where('id', '=', $childNodeId)->exists();
+    }
+
+    /**
+     * @param string $modelType
+     * @return array|null
+     */
+    public function ABACRules(string $modelType): ?array
+    {
+        return RoleModelAbacRule::where('role_id', '=', $this->role->id)
+            ->where('model_type', '=', $modelType)
+            ->first()?->rules_json;
     }
 }

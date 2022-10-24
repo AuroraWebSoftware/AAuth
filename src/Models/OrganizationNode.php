@@ -47,7 +47,7 @@ class OrganizationNode extends Model
     protected $fillable = ['organization_scope_id', 'name', 'model_type', 'model_id', 'path', 'parent_id'];
 
     /**
-     * @return BelongsTo
+     * @return BelongsTo<OrganizationScope, OrganizationNode>
      */
     public function organization_scope(): BelongsTo
     {
@@ -77,7 +77,7 @@ class OrganizationNode extends Model
     }
 
     /**
-     * @return Collection
+     * @return Collection<int, OrganizationScope>
      * todo daha güzel fonksiyon ismi bulunmalı
      */
     public function availableScopes(): Collection
@@ -85,16 +85,16 @@ class OrganizationNode extends Model
         return OrganizationScope::where([
             ['status', 'active'],
             ['level', '>', $this->organization_scope->level],
-
         ])->get();
     }
 
     /**
-     * @return \Illuminate\Support\Collection
+     * @return \Illuminate\Support\Collection<int, OrganizationNode>
      */
     public function breadCrumbs(): \Illuminate\Support\Collection
     {
         $pathNodeIds = explode('/', $this->path);
+        /* @phpstan-ignore-next-line */
         $breadCrumbs = collect();
         foreach ($pathNodeIds as $pathNodeId) {
             $breadCrumbs->push(OrganizationNode::findOrFail($pathNodeId));
