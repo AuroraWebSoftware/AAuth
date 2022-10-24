@@ -15,7 +15,7 @@ class ABACUtil
      */
     public static function validateAbacRuleArray(array $abacRules): void
     {
-        // todo improvement needed
+        // todo validation improvement needed
 
         $validationRules = [
             '&&' => 'array',

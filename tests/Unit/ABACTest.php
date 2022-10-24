@@ -61,6 +61,8 @@ test('can validate abac rule array', function () {
     $this->assertTrue(true);
 });
 
+// todo validation exception tests
+
 test('can get all model instances without created role abac rule', function () {
     $data1 = ['name' => 'Test Organization Nodeable 1.1', 'age' => 18];
     $createdModel1 = OrganizationNodeable::createWithAAuthOrganizationNode(
