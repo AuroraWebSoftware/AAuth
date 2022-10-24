@@ -1,15 +1,12 @@
 <?php
 
-namespace AuroraWebSoftware\AAuth\Services;
+namespace AuroraWebSoftware\AAuth\Utils;
 
 use AuroraWebSoftware\AAuth\Enums\ABACCondition;
 use Exception;
 use Illuminate\Support\Facades\Validator;
 
-/**
- * todo service mi ? utility? helper?
- */
-class ABACService
+class ABACUtil
 {
     /**
      * @param array $abacRules
@@ -29,10 +26,9 @@ class ABACService
             $validationRules[$condition->value] = ['array'];
             if (array_key_exists($condition->value, $abacRules)) {
                 $validationRules[$condition->value . '.attribute'] = ['string', 'required'];
+                $validationRules[$condition->value . '.value'] = ['string', 'required'];
             }
         }
-
-
 
         $validation = Validator::make($abacRules, $validationRules);
 
@@ -42,7 +38,7 @@ class ABACService
 
         foreach ($abacRules as $abacRule) {
             if (is_array($abacRule)) {
-                ABACService::validateAbacRuleArray($abacRule);
+                ABACUtil::validateAbacRuleArray($abacRule);
             }
         }
     }
@@ -54,6 +50,6 @@ class ABACService
      */
     public static function validateAbacRuleJson(string $ruleJson): void
     {
-        ABACService::validateAbacRuleArray(json_decode($ruleJson));
+        ABACUtil::validateAbacRuleArray(json_decode($ruleJson));
     }
 }

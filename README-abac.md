@@ -2,16 +2,19 @@ todo
 ---
 
 
-
 - unit testlerin yazılması - pest
     - rule validation testleri
 - dökümanlar
 
--
+
+
+todo v2
+---
+A
 
 backlog
 ---
-- config e aranacak model klasörü eklenecek ??
+- config e aranacak model klasörü eklenecek ?? AStart a mı eklemek lazım?
 - abac rule'u eloquent'a - dönüştüren builder ?? şimdilik scope içinden yapıldı
 
 -----

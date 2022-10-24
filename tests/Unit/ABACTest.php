@@ -3,9 +3,9 @@
 use AuroraWebSoftware\AAuth\Database\Seeders\SampleDataSeeder;
 use AuroraWebSoftware\AAuth\Models\RoleModelAbacRule;
 use AuroraWebSoftware\AAuth\Models\User;
-use AuroraWebSoftware\AAuth\Services\ABACService;
 use AuroraWebSoftware\AAuth\Services\OrganizationService;
 use AuroraWebSoftware\AAuth\Tests\Models\OrganizationNodeable;
+use AuroraWebSoftware\AAuth\Utils\ABACUtil;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -56,8 +56,8 @@ test('can validate abac rule array', function () {
             ],
         ];
 
-    ABACService::validateAbacRuleArray($rules1);
-    ABACService::validateAbacRuleArray($rules2);
+    ABACUtil::validateAbacRuleArray($rules1);
+    ABACUtil::validateAbacRuleArray($rules2);
     $this->assertTrue(true);
 });
 

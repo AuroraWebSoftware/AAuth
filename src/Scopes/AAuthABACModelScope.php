@@ -3,7 +3,7 @@
 namespace AuroraWebSoftware\AAuth\Scopes;
 
 use AuroraWebSoftware\AAuth\Facades\AAuth;
-use AuroraWebSoftware\AAuth\Services\ABACService;
+use AuroraWebSoftware\AAuth\Utils\ABACUtil;
 use Exception;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -18,7 +18,7 @@ class AAuthABACModelScope implements Scope
     {
         if ($rules === false) {
             $rules = AAuth::ABACRules($model::getModelType()) ?? [];
-            ABACService::validateAbacRuleArray($rules);
+            ABACUtil::validateAbacRuleArray($rules);
 
             return $builder->where(
                 function ($query) use ($rules, $model) {
