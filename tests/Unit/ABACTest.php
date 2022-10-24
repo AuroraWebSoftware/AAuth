@@ -268,7 +268,7 @@ test('can get all model instances proper (and) conditions', function () {
                     "||" => [
                         ["like" => ["attribute" => "name", "value" => "3.%"]],
                         ["like" => ["attribute" => "name", "value" => "3.%"]],
-                    ]
+                    ],
                 ],
             ],
         ];
