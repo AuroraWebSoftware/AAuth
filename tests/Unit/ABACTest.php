@@ -257,28 +257,20 @@ test('can get all model instances proper (and) conditions', function () {
     $this->assertEquals(3, OrganizationNodeable::count());
     // 21 end
 
-    // 22 - greater or equal
+    // 22 - nested (or) and (and)
     $rules22 =
         [
             "||" => [
-                ["like" => ["attribute" => "name", "value" => "3.%"]],
+                ["like" => ["attribute" => "name", "value" => "%3.%"]],
                 "&&" => [
-                    ["=" => ["attribute" => "age", "value" => "19"]],
-                    ["like" => ["attribute" => "name", "value" => "2.%"]],
-                    "||" => [
-                        ["like" => ["attribute" => "name", "value" => "3.%"]],
-                        ["like" => ["attribute" => "name", "value" => "3.%"]],
-                    ]
+                    [">=" => ["attribute" => "age", "value" => "20"]],
+                    ["<=" => ["attribute" => "age", "value" => "21"]],
                 ],
             ],
         ];
 
     $roleModelAbacRuleModelInstance->rules_json = $rules22;
     $roleModelAbacRuleModelInstance->save();
-
-    DB::enableQueryLog();
-    OrganizationNodeable::all();
-    dd(DB::getQueryLog());
 
     $this->assertEquals(3, OrganizationNodeable::count());
     // 22 end
