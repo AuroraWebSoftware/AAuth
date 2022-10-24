@@ -80,7 +80,7 @@ test('can get all model instances without created role abac rule', function () {
     $this->assertEquals($count, 2);
 });
 
-test('can get all model instances proper conditions', function () {
+test('can get all model instances proper (and) conditions', function () {
     $data1 = ['name' => 'Test Organization Nodeable 2.1', 'age' => 18];
     $createdModel1 = OrganizationNodeable::createWithAAuthOrganizationNode(
         $data1,
@@ -116,6 +116,15 @@ test('can get all model instances proper conditions', function () {
         2
     );
 
+    $data6 = ['name' => 'Test Organization Nodeable 3.1', 'age' => 30];
+    $createdModel6 = OrganizationNodeable::createWithAAuthOrganizationNode(
+        $data6,
+        1,
+        2
+    );
+
+
+    // 1 - 2 equals
     $rules1 =
         [
             "&&" => [
@@ -135,6 +144,10 @@ test('can get all model instances proper conditions', function () {
 
     $this->assertEquals(1, OrganizationNodeable::count());
 
+    // 1 end
+
+
+    // 2 - greater then
     $rules2 =
         [
             "&&" => [
@@ -145,7 +158,134 @@ test('can get all model instances proper conditions', function () {
     $roleModelAbacRuleModelInstance->rules_json = $rules2;
     $roleModelAbacRuleModelInstance->save();
 
-    $this->assertEquals(OrganizationNodeable::count(), 2);
+    $this->assertEquals(3, OrganizationNodeable::count());
+    // 2 end
+
+
+    // 3 - greater than and equals to
+    $rules3 =
+        [
+            "&&" => [
+                [">=" => ["attribute" => "age", "value" => "19"]],
+            ],
+        ];
+
+    $roleModelAbacRuleModelInstance->rules_json = $rules3;
+    $roleModelAbacRuleModelInstance->save();
+
+    $this->assertEquals(5, OrganizationNodeable::count());
+    // 3 end
+
+
+    // 3 - like
+    $rules3 =
+        [
+            "&&" => [
+                ["like" => ["attribute" => "name", "value" => "%2.%"]],
+            ],
+        ];
+
+    $roleModelAbacRuleModelInstance->rules_json = $rules3;
+    $roleModelAbacRuleModelInstance->save();
+
+    $this->assertEquals(5, OrganizationNodeable::count());
+    // 3 end
+
+
+    // 4 - 2 like
+    $rules4 =
+        [
+            "&&" => [
+                ["like" => ["attribute" => "name", "value" => "%2.%"]],
+                ["like" => ["attribute" => "name", "value" => "%3.%"]],
+            ],
+        ];
+
+    $roleModelAbacRuleModelInstance->rules_json = $rules4;
+    $roleModelAbacRuleModelInstance->save();
+
+    $this->assertEquals(0, OrganizationNodeable::count());
+    // 4 end
+
+    // 5 - like and equal
+    $rules5 =
+        [
+            "&&" => [
+                ["like" => ["attribute" => "name", "value" => "%2.%"]],
+                ["=" => ["attribute" => "age", "value" => "19"]],
+            ],
+        ];
+
+    $roleModelAbacRuleModelInstance->rules_json = $rules5;
+    $roleModelAbacRuleModelInstance->save();
+
+    $this->assertEquals(2, OrganizationNodeable::count());
+    // 5 end
+
+    // todo not_equal,nested and
+
+
+    // 20 - like or equal
+    $rules20 =
+        [
+            "||" => [
+                ["like" => ["attribute" => "name", "value" => "%3.%"]],
+                ["=" => ["attribute" => "age", "value" => "21"]],
+            ],
+        ];
+
+    $roleModelAbacRuleModelInstance->rules_json = $rules20;
+    $roleModelAbacRuleModelInstance->save();
+
+
+    $this->assertEquals(2, OrganizationNodeable::count());
+    // 20 end
+
+
+    // 21 - greater or equal
+    $rules21 =
+        [
+            "||" => [
+                [">" => ["attribute" => "age", "value" => "21"]],
+                ["=" => ["attribute" => "age", "value" => "19"]],
+            ],
+        ];
+
+    $roleModelAbacRuleModelInstance->rules_json = $rules21;
+    $roleModelAbacRuleModelInstance->save();
+
+    $this->assertEquals(3, OrganizationNodeable::count());
+    // 21 end
+
+    // 22 - greater or equal
+    $rules22 =
+        [
+            "||" => [
+                ["like" => ["attribute" => "name", "value" => "3.%"]],
+                "&&" => [
+                    ["=" => ["attribute" => "age", "value" => "19"]],
+                    ["like" => ["attribute" => "name", "value" => "2.%"]],
+                    "||" => [
+                        ["like" => ["attribute" => "name", "value" => "3.%"]],
+                        ["like" => ["attribute" => "name", "value" => "3.%"]],
+                    ]
+                ],
+            ],
+        ];
+
+    $roleModelAbacRuleModelInstance->rules_json = $rules22;
+    $roleModelAbacRuleModelInstance->save();
+
+    DB::enableQueryLog();
+    OrganizationNodeable::all();
+    dd(DB::getQueryLog());
+
+    $this->assertEquals(3, OrganizationNodeable::count());
+    // 22 end
+
+    // DB::enableQueryLog();
+    // OrganizationNodeable::all();
+    // dd(DB::getQueryLog());
 });
 
 
