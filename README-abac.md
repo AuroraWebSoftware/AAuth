@@ -2,15 +2,15 @@ todo
 ---
 
 
-- unit testlerin yazılması - pest
-    - rule validation testleri
-- dökümanlar
+
+- docs
 
 
 
 todo v2
 ---
-A
+- unit test improvements
+AbacUtil validation improvements
 
 backlog
 ---
