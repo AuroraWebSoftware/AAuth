@@ -4,6 +4,8 @@
 - phpStan problemleri
 - pint
 - can fonkisyonlarında yetki 1 kez çekilebilir
+- Readme contribution
+
 
 
 ## Done

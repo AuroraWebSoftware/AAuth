@@ -1,16 +1,16 @@
 todo
 ---
 
-
-
 - docs
-
-
+- 
 
 todo v2
 ---
 - unit test improvements
-AbacUtil validation improvements
+- AbacUtil validation improvements
+- AbacRules() and AbacArray Validation together
+- interface tests
+
 
 backlog
 ---
