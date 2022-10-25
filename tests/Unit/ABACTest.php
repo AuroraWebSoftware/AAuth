@@ -8,7 +8,6 @@ use AuroraWebSoftware\AAuth\Tests\Models\OrganizationNodeable;
 use AuroraWebSoftware\AAuth\Utils\ABACUtil;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 beforeEach(function () {

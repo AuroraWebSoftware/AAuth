@@ -37,7 +37,8 @@ class OrganizationNodeable extends Model implements AAuthOrganizationNodeInterfa
     public static function getABACRules(): array
     {
         return [
-            'name' => [ABACCondition::equal, ABACCondition::greater_than_or_equal_to],
+            'name' => [ABACCondition::equal, ABACCondition::like],
+            'age' => [ABACCondition::equal, ABACCondition::greater_then],
             'id' => [ABACCondition::equal, ABACCondition::greater_than_or_equal_to],
         ];
     }
