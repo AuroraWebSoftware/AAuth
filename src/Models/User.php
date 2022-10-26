@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\DB;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @mixin Eloquent
+ *
  * @property-read \Illuminate\Database\Eloquent\Collection|Role[] $roles
  * @property-read int|null $roles_count
  * @property-read \Illuminate\Database\Eloquent\Collection|Role[] $organizational_roles
@@ -46,7 +47,6 @@ class User extends Authenticatable implements AAuthUserContract
      *
      * @var string[]
      */
-
     protected $fillable = [
         'name',
         'email',

@@ -31,25 +31,24 @@ beforeEach(function () {
     });
 });
 
-
 test('can validate abac rule array', function () {
     $rules1 =
         [
-            "&&" => [
-                ["=" => ["attribute" => "name", "value" => "Test Organization Nodeable 2.2"]],
-                ["=" => ["attribute" => "age", "value" => "19"]],
+            '&&' => [
+                ['=' => ['attribute' => 'name', 'value' => 'Test Organization Nodeable 2.2']],
+                ['=' => ['attribute' => 'age', 'value' => '19']],
             ],
         ];
 
     $rules2 =
         [
-            "&&" => [
-                ["=" => ["attribute" => "name", "value" => "Test Organization Nodeable 2.2"]],
-                ["=" => ["attribute" => "age", "value" => "19"]],
+            '&&' => [
+                ['=' => ['attribute' => 'name', 'value' => 'Test Organization Nodeable 2.2']],
+                ['=' => ['attribute' => 'age', 'value' => '19']],
                 [
-                    "&&" => [
-                        ["=" => ["attribute" => "name", "value" => "Test Organization Nodeable 2.2"]],
-                        ["=" => ["attribute" => "age", "value" => "19"]],
+                    '&&' => [
+                        ['=' => ['attribute' => 'name', 'value' => 'Test Organization Nodeable 2.2']],
+                        ['=' => ['attribute' => 'age', 'value' => '19']],
                     ],
                 ],
             ],
@@ -124,21 +123,19 @@ test('can get all model instances proper (and) conditions', function () {
         2
     );
 
-
     // 1 - 2 equals
     $rules1 =
         [
-            "&&" => [
-                ["=" => ["attribute" => "name", "value" => "Test Organization Nodeable 2.2"]],
-                ["=" => ["attribute" => "age", "value" => "19"]],
+            '&&' => [
+                ['=' => ['attribute' => 'name', 'value' => 'Test Organization Nodeable 2.2']],
+                ['=' => ['attribute' => 'age', 'value' => '19']],
             ],
         ];
-
 
     $dataRule = [
         'role_id' => 3,
         'model_type' => OrganizationNodeable::getModelType(),
-        "rules_json" => $rules1,
+        'rules_json' => $rules1,
     ];
 
     $roleModelAbacRuleModelInstance = RoleModelAbacRule::create($dataRule);
@@ -147,12 +144,11 @@ test('can get all model instances proper (and) conditions', function () {
 
     // 1 end
 
-
     // 2 - greater then
     $rules2 =
         [
-            "&&" => [
-                [">" => ["attribute" => "age", "value" => "19"]],
+            '&&' => [
+                ['>' => ['attribute' => 'age', 'value' => '19']],
             ],
         ];
 
@@ -162,12 +158,11 @@ test('can get all model instances proper (and) conditions', function () {
     $this->assertEquals(3, OrganizationNodeable::count());
     // 2 end
 
-
     // 3 - greater than and equals to
     $rules3 =
         [
-            "&&" => [
-                [">=" => ["attribute" => "age", "value" => "19"]],
+            '&&' => [
+                ['>=' => ['attribute' => 'age', 'value' => '19']],
             ],
         ];
 
@@ -176,13 +171,12 @@ test('can get all model instances proper (and) conditions', function () {
 
     $this->assertEquals(5, OrganizationNodeable::count());
     // 3 end
-
 
     // 3 - like
     $rules3 =
         [
-            "&&" => [
-                ["like" => ["attribute" => "name", "value" => "%2.%"]],
+            '&&' => [
+                ['like' => ['attribute' => 'name', 'value' => '%2.%']],
             ],
         ];
 
@@ -192,13 +186,12 @@ test('can get all model instances proper (and) conditions', function () {
     $this->assertEquals(5, OrganizationNodeable::count());
     // 3 end
 
-
     // 4 - 2 like
     $rules4 =
         [
-            "&&" => [
-                ["like" => ["attribute" => "name", "value" => "%2.%"]],
-                ["like" => ["attribute" => "name", "value" => "%3.%"]],
+            '&&' => [
+                ['like' => ['attribute' => 'name', 'value' => '%2.%']],
+                ['like' => ['attribute' => 'name', 'value' => '%3.%']],
             ],
         ];
 
@@ -211,9 +204,9 @@ test('can get all model instances proper (and) conditions', function () {
     // 5 - like and equal
     $rules5 =
         [
-            "&&" => [
-                ["like" => ["attribute" => "name", "value" => "%2.%"]],
-                ["=" => ["attribute" => "age", "value" => "19"]],
+            '&&' => [
+                ['like' => ['attribute' => 'name', 'value' => '%2.%']],
+                ['=' => ['attribute' => 'age', 'value' => '19']],
             ],
         ];
 
@@ -225,30 +218,27 @@ test('can get all model instances proper (and) conditions', function () {
 
     // todo not_equal,nested and
 
-
     // 20 - like or equal
     $rules20 =
         [
-            "||" => [
-                ["like" => ["attribute" => "name", "value" => "%3.%"]],
-                ["=" => ["attribute" => "age", "value" => "21"]],
+            '||' => [
+                ['like' => ['attribute' => 'name', 'value' => '%3.%']],
+                ['=' => ['attribute' => 'age', 'value' => '21']],
             ],
         ];
 
     $roleModelAbacRuleModelInstance->rules_json = $rules20;
     $roleModelAbacRuleModelInstance->save();
 
-
     $this->assertEquals(2, OrganizationNodeable::count());
     // 20 end
-
 
     // 21 - greater or equal
     $rules21 =
         [
-            "||" => [
-                [">" => ["attribute" => "age", "value" => "21"]],
-                ["=" => ["attribute" => "age", "value" => "19"]],
+            '||' => [
+                ['>' => ['attribute' => 'age', 'value' => '21']],
+                ['=' => ['attribute' => 'age', 'value' => '19']],
             ],
         ];
 
@@ -261,11 +251,11 @@ test('can get all model instances proper (and) conditions', function () {
     // 22 - nested (or) and (and)
     $rules22 =
         [
-            "||" => [
-                ["like" => ["attribute" => "name", "value" => "%3.%"]],
-                "&&" => [
-                    [">=" => ["attribute" => "age", "value" => "20"]],
-                    ["<=" => ["attribute" => "age", "value" => "21"]],
+            '||' => [
+                ['like' => ['attribute' => 'name', 'value' => '%3.%']],
+                '&&' => [
+                    ['>=' => ['attribute' => 'age', 'value' => '20']],
+                    ['<=' => ['attribute' => 'age', 'value' => '21']],
                 ],
             ],
         ];

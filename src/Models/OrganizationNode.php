@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\DB;
  * @property-read int $assigned_node_count
  * @property-read bool $deletable
  * @property-read OrganizationScope $organization_scope
+ *
  * @method static Builder|OrganizationNode newModelQuery()
  * @method static Builder|OrganizationNode newQuery()
  * @method static Builder|OrganizationNode query()
@@ -64,7 +65,6 @@ class OrganizationNode extends Model
 
     /**
      * @return bool
-     *
      */
     public function getDeletableAttribute(): bool
     {

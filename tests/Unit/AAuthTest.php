@@ -42,7 +42,6 @@ test('user can see all switchable roles', function () {
     $this->assertEquals($switchableRolesCount, $srCount);
 });
 
-
 test('role can get all permissions', function () {
     $permissionsCount = count(AAuth::permissions());
 
@@ -58,11 +57,10 @@ test('role can check allowed permission with can() method', function () {
         ->and(AAuth::can('create_something_for_organization_k'))->toBeFalse();
 });
 
-
 test('passOrAbort', function () {
+    // todo
     expect(1)->toBeTruthy();
 });
-
 
 test('can get all permitted organization nodes', function () {
     $organizationNodeCount = AAuth::organizationNodes()->count();
@@ -81,7 +79,6 @@ test('can get one specified organization node', function () {
     // todo
     expect(1)->toBeTruthy();
 });
-
 
 test('descendant nodes can be checked', function () {
     expect(AAuth::descendant(1, 3))->toBeTrue()

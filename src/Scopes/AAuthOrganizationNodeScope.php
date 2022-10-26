@@ -9,8 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 class AAuthOrganizationNodeScope implements \Illuminate\Database\Eloquent\Scope
 {
     /**
-     * @param Builder $builder
-     * @param Model $model
+     * @param  Builder  $builder
+     * @param  Model  $model
      * @return void
      */
     public function apply(Builder $builder, Model $model): void

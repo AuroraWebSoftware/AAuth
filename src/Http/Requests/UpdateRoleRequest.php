@@ -7,12 +7,11 @@ use Illuminate\Foundation\Http\FormRequest;
 class UpdateRoleRequest extends FormRequest
 {
     public static array $rules = [
-        'name' =>
-            [
-                'required',
-                'min:5',
-                'unique:permissions',
-            ],
+        'name' => [
+            'required',
+            'min:5',
+            'unique:permissions',
+        ],
     ];
 
     /**

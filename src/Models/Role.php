@@ -20,11 +20,13 @@ use Illuminate\Support\Facades\DB;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property int|null $organization_scope_id
+ *
  * @method static find($role_id) : Role
  */
 class Role extends Model
 {
     use HasFactory;
+
     protected $fillable = ['organization_scope_id', 'type', 'name', 'status'];
 
     /**
