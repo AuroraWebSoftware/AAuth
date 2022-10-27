@@ -11,5 +11,4 @@ interface AAuthOrganizationNodeInterface
     public static function getModelName(): ?string;
 
     public function getModelId(): int;
-
 }
