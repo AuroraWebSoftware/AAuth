@@ -109,7 +109,6 @@ test('can create and update OrganizationNode', function () {
     $createdCount = OrganizationNode::whereName($data['name'])->count();
     $this->assertEquals(1, $createdCount);
 
-
     $data = [
         'name' => 'Updated Org Node 2',
         'organization_scope_id' => $os->id,

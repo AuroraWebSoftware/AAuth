@@ -75,7 +75,6 @@ class AAuthABACModelScope implements Scope
             }
         }
 
-
         // todo refactor gerekebilir
         /*
         foreach ($rules as $key => $rule) {

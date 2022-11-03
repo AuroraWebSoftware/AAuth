@@ -33,7 +33,6 @@ test('can create a role', function () {
     $createdCount = Role::whereName($data['name'])->count();
     $this->assertEquals(1, $createdCount);
 
-
     $data = [
         'organization_scope_id' => $organizationScope->id,
         'type' => 'organization',
@@ -83,11 +82,9 @@ test('can attach to role and detach a permission from role', function () {
     $this->service->attachPermissionToRole($permissionName, $role->id);
     expect(AAuth::can($permissionName))->toBeTrue();
 
-    $this->service->detachPermissionFromRole($permissionName, $role->id, );
+    $this->service->detachPermissionFromRole($permissionName, $role->id);
     expect(AAuth::can($permissionName))->toBeFalse();
 });
-
-
 
 test('can sync permission of role', function () {
     $role = Role::whereName('System Role 1')->first();
@@ -138,7 +135,6 @@ test('can attach system role to user and detach from user', function () {
     });
     expect($contains)->toBeFalse();
 });
-
 
 test('can attach organization role to user and detach from user', function () {
     $organizationScope = OrganizationScope::whereName('Root Scope')->first();

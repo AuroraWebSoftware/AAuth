@@ -5,15 +5,17 @@
 [![GitHub Code Style Action Status](https://img.shields.io/github/workflow/status/aurorawebsoftware/aauth/Check%20&%20fix%20styling?label=code%20style)](https://github.com/aurorawebsoftware/aauth/actions?query=workflow%3A"Check+%26+fix+styling"+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/aurorawebsoftware/aauth.svg?style=flat-square)](https://packagist.org/packages/aurora/aauth)
 
-Hierarchical Rol-Permission Based **Laravel Auth Package** with Limitless Hierarchical Level of Organizations
+Organization Based (OrBAC) , Attibute Based (ABAC) , Rol-Permission (RBAC)  Based Authentication Methods Combined **Laravel Auth Package** with Limitless Hierarchical Level of Organizations and Limitless Attribute Conditions
 
 # Features
 
 - Organization Based Access Controllable (OrBAC) Eloquent Models
+- Attribute Based Access Controllable (ABAC) Eloquent Models
 - Role Based Access Control (RoBAC)
 - Permissions Based Access Control
 - Lean & Non-Complex Architecture
 - PolyMorphic Relationships of Model & Organization Node
+- DB Row Level Filtering for the Role with ABAC
 - Built-in Blade Directives for permission control inside **Blade** files
 - Mysql, MariaDB, Postgres Support
 - Community Driven and Open Source Forever
@@ -21,7 +23,7 @@ Hierarchical Rol-Permission Based **Laravel Auth Package** with Limitless Hierar
 ---
 
 
-[<img src="https://banners.beyondco.de/AAuth%20for%20Laravel.png?theme=light&packageManager=composer+require&packageName=aurorawebsoftware%2Faauth&pattern=jigsaw&style=style_1&description=Hierarchical+Role-Permission+Based+Laravel+Auth+Package+with+Limitless+Hierarchical+Level+of+Organizations&md=1&showWatermark=0&fontSize=175px&images=shield-check&widths=auto" />](https://github.com/AuroraWebSoftware/AAuth)
+[<img src="https://banners.beyondco.de/AAuth%20for%20Laravel.png?theme=light&packageManager=composer+require&packageName=aurorawebsoftware%2Faauth&pattern=jigsaw&style=style_1&description=OrBAC, ABAC, RBAC Combined Laravel Auth Package&md=1&showWatermark=0&fontSize=175px&images=shield-check&widths=auto" />](https://github.com/AuroraWebSoftware/AAuth)
 
 # Installation
 
@@ -88,7 +90,7 @@ return [
 ];
 ```
 
-# Main Philosophy
+# Main Philosophy of AAuth OrBAC
 
 In computer system security, there are several approaches to restrict system access to authorized users.
 
@@ -139,6 +141,12 @@ Principal dynamically *without writing one line of code?*
     - Canada
         - .....
 
+# Main Philosophy of AAuth ABAC
+
+// todo coming soon ....
+
+
+---
 **AAuth may be your first class assistant package.**
 
 ---
@@ -187,6 +195,9 @@ file's permission['system'] array.
 an Organization Role.
 Organization Permissions should be added inside `aauth.php` config file's permission['organization'] array.
 
+## ABAC
+// todo coming soon
+
 ## Role
 
 Roles are assigned to users. Each User can have multiple roles.
@@ -225,6 +236,10 @@ be an organization node and can be access controllable.
 
 It means that; Only Authorized User Role can be access the relating model, or in other words, Each role only can access
 the models which is on Authenticated Sub-Organization Tree of User's Role.
+
+### Model - ABAC rules
+// todo coming soon
+
 
 # Usage
 
@@ -283,10 +298,10 @@ $organizationService->createOrganizationScope($data);
 ```
 
 ### Updating an Organization Scope
-the contributors' space
+// todo help wanted
 
 ### Deleting an Organization Scope
-the contributors' space
+// todo help wanted
 
 
 ### Creating an Organization Node without Model Relationship
@@ -304,10 +319,10 @@ $organizationService->createOrganizationNode($data);
 ```
 
 ### Updating an Organization Node
-the contributors' space
+// todo help wanted
 
 ### Deleting an Organization Node
-the contributors' space
+// todo help wanted
 
 ##  Role Permission Service
 
@@ -341,10 +356,10 @@ $createdRole = $rolePermissionService->createRole($data);
 ```
 
 ### Updating a Role
-...
+// todo help wanted
 
 ### Deleting a Role
-....
+// todo help wanted
 
 ### Attaching a Role to a User
 ```php
@@ -389,7 +404,7 @@ $rolePermissionService->attachOrganizationRoleToUser($organizationNode->id, $cre
 ```
 
 ### Creating a System Role and Attaching to a User
-....
+// todo help wanted
 
 
 ## Using AAuth Interface and Trait with Eloquent Models
@@ -411,7 +426,11 @@ class ExampleModel extends Model implements AAuthOrganizationNodeInterface
 }
 ```
 
+## Using ABAC Interface and Trait with Eloquent Models
+// todo
+
 ## AAuth Service and Facade Methods
+// todo
 
 ### Current Roles All Permissions
 current user's selected roles permissions with **AAuth Facade**
@@ -444,8 +463,7 @@ $organizationNodes = AAuth::organizationNodes();
 ```
 
 ### Get one specified organization node
-.....
-
+// todo help wanted
 
 ### Descendant nodes can be checked
 with this method you can check is a organization node is descendant of another organization node.
@@ -469,15 +487,21 @@ $exampleModel = ExampleModel::find(1);
 $relatedOrganizationModel = $exampleModel->relatedAAuthOrganizationNode()
 ```
 
-## Getting allowed Organization Nodes Only.
+## Getting authorized Models only. (OrBAC)
 
 after adding `AAuthOrganizationNode` trait to your model, you are adding a global scope which filters the permitted data.
 
-Thus you can simply use any eloquent model method without adding anything
+Thus, you can simply use any eloquent model method without adding anything
 
 ```php
 ExampleModel::all();
 ```
+
+## Creating Role - ABAC Rules
+// todo
+
+## Getting authorized Models only. (ABAC)
+// todo
 
 ## Getting All Model Collection without any access control
 ```php

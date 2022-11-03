@@ -21,9 +21,11 @@ class OrganizationService
 {
     /**
      * Creates an org. scope with given array
-     * @param array $organizationScope
-     * @param bool $withValidation
+     *
+     * @param  array  $organizationScope
+     * @param  bool  $withValidation
      * @return OrganizationScope
+     *
      * @throws ValidationException
      */
     public function createOrganizationScope(array $organizationScope, bool $withValidation = true): OrganizationScope
@@ -42,10 +44,12 @@ class OrganizationService
 
     /**
      * Updates a Perm.
-     * @param array $organizationScope
-     * @param int $id
-     * @param bool $withValidation
+     *
+     * @param  array  $organizationScope
+     * @param  int  $id
+     * @param  bool  $withValidation
      * @return ?OrganizationScope
+     *
      * @throws ValidationException
      */
     public function updateOrganizationScope(array $organizationScope, int $id, bool $withValidation = true): ?OrganizationScope
@@ -66,7 +70,8 @@ class OrganizationService
 
     /**
      * deletes perm.
-     * @param int $id
+     *
+     * @param  int  $id
      * @return bool|null
      */
     public function deleteOrganizationScope(int $id): ?bool
@@ -76,9 +81,11 @@ class OrganizationService
 
     /**
      * Creates an org. node with given array
-     * @param array $organizationNode
-     * @param bool $withValidation
+     *
+     * @param  array  $organizationNode
+     * @param  bool  $withValidation
      * @return OrganizationNode
+     *
      * @throws ValidationException
      */
     public function createOrganizationNode(array $organizationNode, bool $withValidation = true): OrganizationNode
@@ -96,19 +103,19 @@ class OrganizationService
         $parentPath = $this->getPath($organizationNode['parent_id'] ?? null);
 
         // add temp path before determine actual path
-        $organizationNode['path'] = $parentPath . '/?';
+        $organizationNode['path'] = $parentPath.'/?';
         $organizationNode = OrganizationNode::create($organizationNode);
 
         // todo , can be add inside model's created event
-        $organizationNode->path = $parentPath . $organizationNode->id;
+        $organizationNode->path = $parentPath.$organizationNode->id;
         $organizationNode->save();
 
         return $organizationNode;
     }
 
     /**
-     * @param Model $model
-     * @param int $parentOrganizationId
+     * @param  Model  $model
+     * @param  int  $parentOrganizationId
      * @return OrganizationNode|null
      */
     public function createOrganizationNodeForModel(Model $model, int $parentOrganizationId): ?OrganizationNode
@@ -117,7 +124,7 @@ class OrganizationService
     }
 
     /**
-     * @param int|null $organizationNodeId
+     * @param  int|null  $organizationNodeId
      * @return string|null
      */
     public function getPath(?int $organizationNodeId): ?string
@@ -126,11 +133,11 @@ class OrganizationService
             return '';
         }
 
-        return OrganizationNode::find($organizationNodeId)?->path . '/';
+        return OrganizationNode::find($organizationNodeId)?->path.'/';
     }
 
     /**
-     * @param int $organizationNodeId
+     * @param  int  $organizationNodeId
      */
     public function calculatePath(int $organizationNodeId): void
     {
@@ -138,10 +145,11 @@ class OrganizationService
     }
 
     /**
-     * @param array $organizationNode
-     * @param int $id
-     * @param bool $withValidation
+     * @param  array  $organizationNode
+     * @param  int  $id
+     * @param  bool  $withValidation
      * @return OrganizationNode|false
+     *
      * @throws ValidationException
      */
     public function updateOrganizationNode(array $organizationNode, int $id, bool $withValidation = true): OrganizationNode|bool
@@ -158,13 +166,13 @@ class OrganizationService
 
         $organizationNodeModel = OrganizationNode::find($id);
 
-        $organizationNodeModel->path = $this->getPath($organizationNodeModel->parent_id) . $organizationNodeModel->id;
+        $organizationNodeModel->path = $this->getPath($organizationNodeModel->parent_id).$organizationNodeModel->id;
 
         return $organizationNodeModel->update($organizationNode) ? $organizationNodeModel : false;
     }
 
     /**
-     * @param int $id
+     * @param  int  $id
      * @return bool
      */
     public function deleteOrganizationNode(int $id): bool

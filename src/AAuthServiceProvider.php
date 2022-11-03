@@ -12,7 +12,7 @@ use Spatie\LaravelPackageTools\PackageServiceProvider;
 class AAuthServiceProvider extends PackageServiceProvider
 {
     /**
-     * @param Package $package
+     * @param  Package  $package
      * @return void
      */
     public function configurePackage(Package $package): void
@@ -34,14 +34,14 @@ class AAuthServiceProvider extends PackageServiceProvider
         parent::boot();
 
         // load packages migrations
-        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
         $this->publishes([
-            __DIR__ . '/../database/seeders' => resource_path('../database/seeders'),
+            __DIR__.'/../database/seeders' => resource_path('../database/seeders'),
         ], 'aauth-seeders');
 
         $this->publishes([
-            __DIR__ . '/../config' => config_path(),
+            __DIR__.'/../config' => config_path(),
         ], 'aauth-config');
 
         // todo singleton bind ??
@@ -56,7 +56,7 @@ class AAuthServiceProvider extends PackageServiceProvider
             return "<?php if(\AuroraWebSoftware\AAuth\Facades\AAuth::can($permission)){ ?>";
         });
         Blade::directive('endaauth', function () {
-            return "<?php } ?>";
+            return '<?php } ?>';
         });
     }
 }

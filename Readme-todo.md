@@ -2,10 +2,10 @@
 - Facade yerine sadece service provide kullanılabilir mi? aliass?
   - singleton içinde facade yerine service class olabilir
 - phpStan problemleri
-- pint
+- pint, github actions
 - can fonkisyonlarında yetki 1 kez çekilebilir
 - Readme contribution
-
+- ABAC
 
 
 ## Done
@@ -35,17 +35,19 @@
 - role perm. service validation ve excepiton unit testleri, validation excepitonarlını testti
 - org. service validation ve excepiton unit testleri, validation excepitonarlını testti
 - test with coverage
-- ABAC
 - translations
 - request's ve validations
-- github pages ?
 - test'lerin publish edilmesi ve namespacelerin replace edilmesi
 - postgress testleri için github actions
 - laravel gates register policy
 
 
 ## Dökümantasyon
-
 - config'ler
 - migr. ve seeder'ların çalıştırılması
 - github pages docs
+- ABAC docs
+
+
+## backlog
+- github pages ?

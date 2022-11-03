@@ -17,6 +17,7 @@ backlog
 
 - config e aranacak model klasörü eklenecek ?? AStart a mı eklemek lazım?
 - abac rule'u eloquent'a - dönüştüren builder ?? şimdilik scope içinden yapıldı
+- model'in rule'larını alan servis veya util ?
 
 -----
 

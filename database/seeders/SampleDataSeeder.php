@@ -69,7 +69,7 @@ class SampleDataSeeder extends Seeder
                 'parent_id' => $organizationNode1->id,
             ]
         );
-        $organizationNode2->path = $organizationNode1->id . '/' . $organizationNode2->id;
+        $organizationNode2->path = $organizationNode1->id.'/'.$organizationNode2->id;
         $organizationNode2->save();
 
         $organizationNode3 = OrganizationNode::create(
@@ -82,7 +82,7 @@ class SampleDataSeeder extends Seeder
                 'parent_id' => $organizationNode1->id,
             ]
         );
-        $organizationNode3->path = $organizationNode1->id . '/' . $organizationNode3->id;
+        $organizationNode3->path = $organizationNode1->id.'/'.$organizationNode3->id;
         $organizationNode3->save();
 
         $organizationNode4 = OrganizationNode::create(
@@ -95,9 +95,8 @@ class SampleDataSeeder extends Seeder
                 'parent_id' => $organizationNode2->id,
             ]
         );
-        $organizationNode4->path = $organizationNode2->path . '/' . $organizationNode4->id;
+        $organizationNode4->path = $organizationNode2->path.'/'.$organizationNode4->id;
         $organizationNode4->save();
-
 
         $role1 = Role::create([
             'type' => 'system',
@@ -174,7 +173,6 @@ class SampleDataSeeder extends Seeder
             'organization_node_id' => $organizationNode4->id,
         ]);
 
-
         $systemPermissions = config('aauth.permissions.system');
 
         foreach ($systemPermissions as $key => $val) {
@@ -236,14 +234,13 @@ class SampleDataSeeder extends Seeder
 
             //loop through the tables
             foreach ($tables as $table) {
-
                 // if the table is not to be ignored then:
                 if (! in_array($table->table_name, $ignores)) {
                     //Get the max id from that table and add 1 to it
                     $seq = DB::table($table->table_name)->max('id') + 1;
 
                     // alter the sequence to now RESTART WITH the new sequence index from above
-                    DB::select('ALTER SEQUENCE ' . $table->table_name . '_id_seq RESTART WITH ' . $seq);
+                    DB::select('ALTER SEQUENCE '.$table->table_name.'_id_seq RESTART WITH '.$seq);
                 }
             }
         }

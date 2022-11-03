@@ -20,7 +20,9 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @mixin \Eloquent
+ *
  * @method static Builder|OrganizationScope whereLevel($value)
+ *
  * @property-read bool $deletable
  * @property-read bool $is_active
  * @property-read int $node_count
@@ -33,6 +35,7 @@ class OrganizationScope extends Model
     use HasFactory;
 
     protected $primaryKey = 'id';
+
     protected $fillable = ['name', 'level', 'status'];
 
     /**

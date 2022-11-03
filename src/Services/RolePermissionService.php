@@ -23,9 +23,11 @@ class RolePermissionService
 {
     /**
      * Creates a Perm. with given array
-     * @param array $role
-     * @param bool $withValidation
+     *
+     * @param  array  $role
+     * @param  bool  $withValidation
      * @return Role
+     *
      * @throws ValidationException
      */
     public function createRole(array $role, bool $withValidation = true): Role
@@ -45,9 +47,10 @@ class RolePermissionService
 
     /**
      * Updates a Perm.
-     * @param array $role
-     * @param int $id
-     * @param bool $withValidation
+     *
+     * @param  array  $role
+     * @param  int  $id
+     * @param  bool  $withValidation
      * @return Role|null
      */
     public function updateRole(array $role, int $id, bool $withValidation = true): ?Role
@@ -58,7 +61,7 @@ class RolePermissionService
             if ($validator->fails()) {
                 $message = implode(' , ', $validator->getMessageBag()->all());
 
-                abort(422, 'Invalid Update Role Request, ' . $message);
+                abort(422, 'Invalid Update Role Request, '.$message);
             }
         }
         $roleModel = Role::find($id);
@@ -68,7 +71,8 @@ class RolePermissionService
 
     /**
      * deletes the role.
-     * @param int $id
+     *
+     * @param  int  $id
      * @return bool|null
      */
     public function deleteRole(int $id): ?bool
@@ -78,7 +82,8 @@ class RolePermissionService
 
     /**
      * activates the roles
-     * @param int $roleId
+     *
+     * @param  int  $roleId
      * @return bool
      */
     public function activateRole(int $roleId): bool
@@ -91,7 +96,8 @@ class RolePermissionService
 
     /**
      * deactivates the roles
-     * @param int $roleId
+     *
+     * @param  int  $roleId
      * @return bool
      */
     public function deactivateRole(int $roleId): bool
@@ -103,8 +109,8 @@ class RolePermissionService
     }
 
     /**
-     * @param string|array $permissionOrPermissions
-     * @param int $roleId
+     * @param  string|array  $permissionOrPermissions
+     * @param  int  $roleId
      * @return bool
      */
     public function attachPermissionToRole(string|array $permissionOrPermissions, int $roleId): bool
@@ -132,8 +138,8 @@ class RolePermissionService
     }
 
     /**
-     * @param string|array $permissions
-     * @param int $roleId
+     * @param  string|array  $permissions
+     * @param  int  $roleId
      * @return bool
      */
     public function detachPermissionFromRole(string|array $permissions, int $roleId): bool
@@ -155,7 +161,7 @@ class RolePermissionService
     }
 
     /**
-     * @param int $roleId
+     * @param  int  $roleId
      * @return bool
      */
     public function detachAllPermissionsFromRole(int $roleId): bool
@@ -170,9 +176,10 @@ class RolePermissionService
     }
 
     /**
-     * @param array $permissions
-     * @param int $roleId
+     * @param  array  $permissions
+     * @param  int  $roleId
      * @return bool
+     *
      * @throws Throwable
      */
     public function syncPermissionsOfRole(array $permissions, int $roleId): bool
@@ -184,13 +191,14 @@ class RolePermissionService
         $detached = $this->detachAllPermissionsFromRole($roleId);
         $attached = $this->attachPermissionToRole($permissions, $roleId);
 
-        return ($attached && $detached);
+        return $attached && $detached;
     }
 
     /**
-     * @param int $userId
-     * @param array $roleIdOrIds
+     * @param  int  $userId
+     * @param  array  $roleIdOrIds
      * @return array
+     *
      * @throws Throwable
      */
     public function attachSystemRoleToUser(array|int $roleIdOrIds, int $userId): array
@@ -213,9 +221,10 @@ class RolePermissionService
     }
 
     /**
-     * @param int $userId
-     * @param int $roleIdOrIds
+     * @param  int  $userId
+     * @param  int  $roleIdOrIds
      * @return int
+     *
      * @throws Throwable
      */
     public function detachSystemRoleFromUser(array|int $roleIdOrIds, int $userId): int
@@ -236,8 +245,8 @@ class RolePermissionService
     }
 
     /**
-     * @param int $userId
-     * @param array $roleIds
+     * @param  int  $userId
+     * @param  array  $roleIds
      * @return array
      */
     public function syncUserSystemRoles(int $userId, array $roleIds): array
@@ -249,10 +258,12 @@ class RolePermissionService
 
     /**
      * it makes organization insert and return the pivot table id's
-     * @param int $userId
-     * @param int $roleId
-     * @param int $organizationNodeId
+     *
+     * @param  int  $userId
+     * @param  int  $roleId
+     * @param  int  $organizationNodeId
      * @return bool
+     *
      * @throws Throwable
      */
     public function attachOrganizationRoleToUser(int $organizationNodeId, int $roleId, int $userId): bool
@@ -277,10 +288,11 @@ class RolePermissionService
     }
 
     /**
-     * @param int $userId
-     * @param int $roleId
-     * @param int $organizationNodeId
+     * @param  int  $userId
+     * @param  int  $roleId
+     * @param  int  $organizationNodeId
      * @return int
+     *
      * @throws Throwable
      */
     public function detachOrganizationRoleFromUser(int $userId, int $roleId, int $organizationNodeId): int
@@ -300,7 +312,7 @@ class RolePermissionService
             ->where([
                 'user_id' => $userId,
                 'role_id' => $roleId,
-                'organization_node_id' => $organizationNodeId,])
+                'organization_node_id' => $organizationNodeId, ])
             ->delete();
         // todo attach ve sync ile olmayacak gibi direk db query yazmank lazım
     }

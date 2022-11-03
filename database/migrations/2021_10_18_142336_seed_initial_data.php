@@ -1,6 +1,5 @@
 <?php
 
-
 use AuroraWebSoftware\AAuth\Models\OrganizationNode;
 use AuroraWebSoftware\AAuth\Models\OrganizationScope;
 use Illuminate\Database\Migrations\Migration;
@@ -8,22 +7,19 @@ use Illuminate\Support\Facades\DB;
 
 class SeedInitialData extends Migration
 {
-
     /**
      * Run the migrations.
      *
      * @return void
      */
-
     public function up()
     {
         $organizationScope = new OrganizationScope();
         $organizationScope->id = 1;
-        $organizationScope->name = "Root Scope";
+        $organizationScope->name = 'Root Scope';
         $organizationScope->level = 1;
-        $organizationScope->status = "active";
+        $organizationScope->status = 'active';
         $organizationScope->save();
-
 
         if (config('database.default') == 'pgsql') {
             DB::select("
@@ -35,8 +31,8 @@ class SeedInitialData extends Migration
         $on = new OrganizationNode();
         $on->id = 1;
         $on->organization_scope_id = 1;
-        $on->name = "Root Node";
-        $on->path = "1";
+        $on->name = 'Root Node';
+        $on->path = '1';
         $on->save();
 
         if (config('database.default') == 'pgsql') {
@@ -52,7 +48,6 @@ class SeedInitialData extends Migration
      *
      * @return void
      */
-
     public function down()
     {
         OrganizationScope::whereId(1)->delete();
