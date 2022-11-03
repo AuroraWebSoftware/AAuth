@@ -23,7 +23,7 @@ class AAuthServiceProvider extends PackageServiceProvider
             // ->hasViews()
             // ->hasMigration()
             // ->hasCommand(AAuthCommand::class)
-;
+        ;
     }
 
     /**
