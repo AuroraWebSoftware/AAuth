@@ -2,6 +2,10 @@
 
 All notable changes to `AAuth` will be documented in this file.
 
+## 1.1.0 - 2022-10-24
+
+Abac Features
+
 ## 1.0.8 - 2022-10-13
 
 1.0.8
