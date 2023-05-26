@@ -26,10 +26,13 @@ class TestCase extends Orchestra
 
     public function getEnvironmentSetUp($app)
     {
-        // for GitHub tests
-        config()->set('database.default', 'mysql');
+        // for GitHub tests wirh mysql
+        // config()->set('database.default', 'mysql');
 
-        // for local tests
+        // for local tests with sqlite
         config()->set('database.default', 'testing');
+
+        // for local tests with mysql
+        config()->set('database.default', 'mysql');
     }
 }
