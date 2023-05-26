@@ -9,6 +9,7 @@ use AuroraWebSoftware\AAuth\Exceptions\UserHasNoAssignedRoleException;
 use AuroraWebSoftware\AAuth\Models\OrganizationNode;
 use AuroraWebSoftware\AAuth\Models\Role;
 use AuroraWebSoftware\AAuth\Models\RoleModelAbacRule;
+use AuroraWebSoftware\AAuth\Models\User;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -56,6 +57,10 @@ class AAuth
 
         throw_unless($this->role, new MissingRoleException());
 
+        /**
+         * @var User $user
+         */
+
         $this->organizationNodeIds = DB::table('user_role_organization_node')
             ->where('user_id', '=', $user->id)
             ->where('role_id', '=', $roleId)
@@ -72,10 +77,11 @@ class AAuth
     }
 
     /**
-     * @return array|Collection|\Illuminate\Support\Collection<int, Role>
+     * @return array|Collection<int, Role>|\Illuminate\Support\Collection<int, Role>
      */
     public function switchableRoles(): array|Collection|\Illuminate\Support\Collection
     {
+        // @phpstan-ignore-next-line
         return Role::where('uro.user_id', '=', $this->user->id)
             ->leftJoin('user_role_organization_node as uro', 'uro.role_id', '=', 'roles.id')
             ->distinct()
@@ -84,7 +90,7 @@ class AAuth
 
     /**
      * @param  int  $userId
-     * @return array|Collection|\Illuminate\Support\Collection<int, Role>
+     * @return array|Collection<int, Role>|\Illuminate\Support\Collection<int, Role>
      */
     public static function switchableRolesStatic(int $userId): array|Collection|\Illuminate\Support\Collection
     {
