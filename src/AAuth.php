@@ -77,10 +77,11 @@ class AAuth
     }
 
     /**
-     * @return array|Collection<int, string>|\Illuminate\Support\Collection<int, Role>
+     * @return array|Collection<int, Role>|\Illuminate\Support\Collection<int, Role>
      */
     public function switchableRoles(): array|Collection|\Illuminate\Support\Collection
     {
+        // @phpstan-ignore-next-line
         return Role::where('uro.user_id', '=', $this->user->id)
             ->leftJoin('user_role_organization_node as uro', 'uro.role_id', '=', 'roles.id')
             ->distinct()
@@ -89,7 +90,7 @@ class AAuth
 
     /**
      * @param  int  $userId
-     * @return array|Collection|\Illuminate\Support\Collection<int, Role>
+     * @return array|Collection<int, Role>|\Illuminate\Support\Collection<int, Role>
      */
     public static function switchableRolesStatic(int $userId): array|Collection|\Illuminate\Support\Collection
     {
