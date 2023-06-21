@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Facade;
  * @static permissions(): \Illuminate\Support\Collection|array
  * @static organizationPermissions(): \Illuminate\Support\Collection|array
  * @static systemPermissions(): array|\Illuminate\Support\Collection
+ * @static organizationNodeIds(): array|null
  * @static can(string $string)
  * @static passOrAbort(string $string, string $message = 'No Permission')
  *

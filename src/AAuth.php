@@ -218,6 +218,14 @@ class AAuth
     }
 
     /**
+     * @return array|null
+     */
+    public function organizationNodeIds(): ?array
+    {
+        return $this->organizationNodeIds;
+    }
+
+    /**
      * Checks if tree has given child
      * No permission check.
      *
