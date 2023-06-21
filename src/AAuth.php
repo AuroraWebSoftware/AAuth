@@ -12,7 +12,6 @@ use AuroraWebSoftware\AAuth\Models\RoleModelAbacRule;
 use AuroraWebSoftware\AAuth\Models\User;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 use Throwable;
@@ -215,6 +214,14 @@ class AAuth
         }
         */
         throw new InvalidOrganizationNodeException();
+    }
+
+    /**
+     * @return array|null
+     */
+    public function organizationNodeIds(): ?array
+    {
+        return $this->organizationNodeIds;
     }
 
     /**
