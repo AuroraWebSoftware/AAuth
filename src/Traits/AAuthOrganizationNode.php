@@ -59,11 +59,11 @@ trait AAuthOrganizationNode
         // todo yetki kontrolü ? serviste mi olmalı?
         // gerekli validationlar, organization scope validationları vs.
         // commit rollback
-        $parentOrganizationNode = OrganizationNode::find($parentOrganizationNodeId)?->first();
+        $parentOrganizationNode = OrganizationNode::find($parentOrganizationNodeId);
 
         throw_if($parentOrganizationNode == null, new InvalidOrganizationNodeException());
 
-        $organizationScope = OrganizationScope::find($organizationScopeId)?->first();
+        $organizationScope = OrganizationScope::find($organizationScopeId);
 
         throw_if($organizationScope == null, new InvalidOrganizationScopeException());
 
