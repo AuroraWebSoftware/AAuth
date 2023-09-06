@@ -111,7 +111,7 @@ trait AAuthOrganizationNode
             'model_type' => self::getModelType(),
             'model_id' => $modelId,
         ];
-        $updateON = $organizationService->updateOrganizationNode($OrgNodeUpdateData,$nodeId);
+        $updateON = $organizationService->updateOrganizationNode($OrgNodeUpdateData, $nodeId);
 
         return $updatedModel;
     }

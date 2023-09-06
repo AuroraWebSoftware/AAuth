@@ -208,6 +208,7 @@ class AAuth
                 return $organizationNode;
             }
         }
+
         /*
         if ($organizationNodes->contains(fn($node, $key) => $node->id == $nodeId)) {
             return OrganizationNode::findOrFail($nodeId)->first();
