@@ -81,6 +81,41 @@ trait AAuthOrganizationNode
         return $createdModel;
     }
 
+    /**
+     * @throws Throwable
+     */
+    public static function updateWithAAuthOrganizationNode(int $modelId, int $nodeId, array $modelUpdateData, int $parentOrganizationNodeId, int $organizationScopeId)
+    {
+
+        $organizationService = new OrganizationService();
+
+        $parentOrganizationNode = OrganizationNode::find($parentOrganizationNodeId);
+
+        throw_if($parentOrganizationNode == null, new InvalidOrganizationNodeException());
+
+        $organizationScope = OrganizationScope::find($organizationScopeId);
+
+        throw_if($organizationScope == null, new InvalidOrganizationScopeException());
+
+
+        $modelInfo = self::find($modelId);
+
+        $updatedModel = $modelInfo->update($modelUpdateData);
+
+
+
+        $OrgNodeUpdateData = [
+            'name' => $modelInfo->getModelName(),
+            'organization_scope_id' => $organizationScope->id,
+            'parent_id' => $parentOrganizationNode->id,
+            'model_type' => self::getModelType(),
+            'model_id' => $modelId,
+        ];
+        $updateON = $organizationService->updateOrganizationNode($OrgNodeUpdateData,$nodeId);
+
+        return $updatedModel;
+    }
+
     public function deleteWithAAuthOrganizationNode(int $modelId)
     {
     }

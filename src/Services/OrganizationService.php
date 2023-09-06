@@ -145,12 +145,20 @@ class OrganizationService
     }
 
     /**
-     * @param  array  $organizationNode
-     * @param  int  $id
-     * @param  bool  $withValidation
-     * @return OrganizationNode|false
-     *
-     * @throws ValidationException
+     * @param mixed $node
+     * @return void
+     */
+    private function updateNodePath(mixed $node): void
+    {
+        $node->path = $this->getPath($node->parent_id) . $node->id;
+        $node->save();
+    }
+
+    /**
+     * @param array $organizationNode
+     * @param int $id
+     * @param bool $withValidation
+     * @return OrganizationNode|bool
      */
     public function updateOrganizationNode(array $organizationNode, int $id, bool $withValidation = true): OrganizationNode|bool
     {
@@ -164,12 +172,27 @@ class OrganizationService
             }
         }
 
+
         $organizationNodeModel = OrganizationNode::find($id);
 
-        $organizationNodeModel->path = $this->getPath($organizationNodeModel->parent_id).$organizationNodeModel->id;
+        $this->updateNodePath($organizationNodeModel);
+
+        $subNodeIds = OrganizationNode::whereParentId($id)->pluck('id');
+        if (!empty($subNodeIds)){
+
+            foreach ($subNodeIds as $subNodeId) {
+                $subNode = OrganizationNode::find($subNodeId);
+
+                if ($subNode) {
+                    $this->updateNodePath($subNode);
+                }
+            }
+        }
+
 
         return $organizationNodeModel->update($organizationNode) ? $organizationNodeModel : false;
     }
+
 
     /**
      * @param  int  $id
