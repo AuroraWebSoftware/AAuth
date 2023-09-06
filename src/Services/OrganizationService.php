@@ -178,15 +178,15 @@ class OrganizationService
         $this->updateNodePath($organizationNodeModel);
 
         $subNodeIds = OrganizationNode::whereParentId($id)->pluck('id');
-        if (! empty($subNodeIds)) {
 
-            foreach ($subNodeIds as $subNodeId) {
-                $subNode = OrganizationNode::find($subNodeId);
 
-                if ($subNode) {
-                    $this->updateNodePath($subNode);
-                }
+        foreach ($subNodeIds as $subNodeId) {
+            $subNode = OrganizationNode::find($subNodeId);
+
+            if ($subNode) {
+                $this->updateNodePath($subNode);
             }
+        }
 
 
         return $organizationNodeModel->update($organizationNode) ? $organizationNodeModel : false;
