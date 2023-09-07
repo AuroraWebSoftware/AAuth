@@ -9,7 +9,6 @@ use AuroraWebSoftware\AAuth\Http\Requests\UpdateOrganizationScopeRequest;
 use AuroraWebSoftware\AAuth\Models\OrganizationNode;
 use AuroraWebSoftware\AAuth\Models\OrganizationScope;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;

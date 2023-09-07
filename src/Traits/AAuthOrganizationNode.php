@@ -126,7 +126,7 @@ trait AAuthOrganizationNode
 
         $organizationService = new OrganizationService();
 
-        $organizationNode = OrganizationNode::where('model_id',$modelId)->first();
+        $organizationNode = OrganizationNode::where('model_id', $modelId)->first();
 
 
         throw_if($organizationNode == null, new InvalidOrganizationNodeException());
