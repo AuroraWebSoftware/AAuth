@@ -193,26 +193,31 @@ class OrganizationService
     }
 
     /**
-     * @param  int  $id
+     * @param int $id
      * @return bool
      */
     public function deleteOrganizationNode(int $id): bool
     {
-        // todo
-        // tamamen yeniden yazılacak.
-        /*
-        $rolePermissionService = new \App\Services\RolePermissionService();
+        try {
 
-        $PivotTable = DB::table('user_role_organization_node')
-            ->where('organization_node_id', $id)
-            ->get();
+            $subNodeIds = OrganizationNode::where('parent_id', $id)->pluck('id');
 
-        foreach ($PivotTable as $pivotrow) {
-            $rolePermissionService->detachOrganizationRoleFromUser($pivotrow->user_id, $pivotrow->role_id, $pivotrow->organization_node_id);
+            foreach ($subNodeIds as $subNodeId) {
+
+                $subNodeInfo = OrganizationNode::findOrFail($subNodeId);
+                $subNodeModel = $subNodeInfo->model_type;
+                $subNodeModel::findOrFail($subNodeInfo->model_id)->delete();
+                $subNodeInfo->delete();
+            }
+
+            $parentNode = OrganizationNode::findOrFail($id);
+            $parentNode->delete();
+
+            return true;
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $exception) {
+
+            return false;
         }
 
-        return OrganizationNode::find($id)->delete();
-        */
-        return false;
     }
 }

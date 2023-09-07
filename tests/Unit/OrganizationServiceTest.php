@@ -119,3 +119,28 @@ test('can create and update OrganizationNode', function () {
     $updatedCount = OrganizationNode::whereName($data['name'])->count();
     $this->assertEquals(1, $updatedCount);
 });
+
+test('can testing delete of an OrganizationNode ', function () {
+    $os = OrganizationScope::first();
+
+    $data = [
+        'name' => 'Updated Org Node 1',
+        'organization_scope_id' => $os->id,
+        'parent_id' => 1,
+    ];
+
+    $createdON = $this->service->createOrganizationNode($data);
+
+    $this->assertEquals($createdON->name, $data['name']);
+
+    $createdCount = OrganizationNode::whereName($data['name'])->count();
+    $this->assertEquals(1, $createdCount);
+
+
+    $deletedON = $this->service->deleteOrganizationNode($createdON->id);
+    $this->assertTrue($deletedON);
+
+    $deletedONCount = OrganizationNode::where('id', $createdON->id)->count();
+    $this->assertEquals(0, $deletedONCount);
+
+});

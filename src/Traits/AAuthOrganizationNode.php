@@ -116,7 +116,29 @@ trait AAuthOrganizationNode
         return $updatedModel;
     }
 
-    public function deleteWithAAuthOrganizationNode(int $modelId)
+    /**
+     * @param int $modelId
+     * @return bool
+     * @throws Throwable
+     */
+    public static function deleteWithAAuthOrganizationNode(int $modelId)
     {
+
+        $organizationService = new OrganizationService();
+
+        $organizationNode = OrganizationNode::where('model_id',$modelId)->first();
+
+
+        throw_if($organizationNode == null, new InvalidOrganizationNodeException());
+
+
+        $modelInfo = self::findOrFail($modelId);
+
+        $deleteModel = $modelInfo->delete($modelInfo);
+
+
+        $deleteON = $organizationService->deleteOrganizationNode($organizationNode->id);
+
+        return true;
     }
 }
