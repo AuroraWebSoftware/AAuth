@@ -6,10 +6,10 @@ use AuroraWebSoftware\AAuth\Http\Requests\StoreOrganizationNodeRequest;
 use AuroraWebSoftware\AAuth\Http\Requests\StoreOrganizationScopeRequest;
 use AuroraWebSoftware\AAuth\Http\Requests\UpdateOrganizationNodeRequest;
 use AuroraWebSoftware\AAuth\Http\Requests\UpdateOrganizationScopeRequest;
+use AuroraWebSoftware\AAuth\Interfaces\NodeUpdaterInterface;
 use AuroraWebSoftware\AAuth\Models\OrganizationNode;
 use AuroraWebSoftware\AAuth\Models\OrganizationScope;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,7 +17,7 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Organization Data Service
  */
-class OrganizationService
+class OrganizationService implements NodeUpdaterInterface
 {
     /**
      * Creates an org. scope with given array
@@ -145,10 +145,10 @@ class OrganizationService
     }
 
     /**
-     * @param mixed $node
+     * @param OrganizationNode $node
      * @return void
      */
-    private function updateNodePath(mixed $node): void
+    public function updateNodePath(OrganizationNode $node): void
     {
         $node->path = $this->getPath($node->parent_id) . $node->id;
         $node->save();
