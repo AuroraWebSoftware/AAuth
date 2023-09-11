@@ -6,7 +6,6 @@ use AuroraWebSoftware\AAuth\Http\Requests\StoreOrganizationNodeRequest;
 use AuroraWebSoftware\AAuth\Http\Requests\StoreOrganizationScopeRequest;
 use AuroraWebSoftware\AAuth\Http\Requests\UpdateOrganizationNodeRequest;
 use AuroraWebSoftware\AAuth\Http\Requests\UpdateOrganizationScopeRequest;
-use AuroraWebSoftware\AAuth\Interfaces\NodeUpdaterInterface;
 use AuroraWebSoftware\AAuth\Models\OrganizationNode;
 use AuroraWebSoftware\AAuth\Models\OrganizationScope;
 use Illuminate\Database\Eloquent\Model;
@@ -17,13 +16,13 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Organization Data Service
  */
-class OrganizationService implements NodeUpdaterInterface
+class OrganizationService
 {
     /**
      * Creates an org. scope with given array
      *
-     * @param  array  $organizationScope
-     * @param  bool  $withValidation
+     * @param array $organizationScope
+     * @param bool $withValidation
      * @return OrganizationScope
      *
      * @throws ValidationException
@@ -45,9 +44,9 @@ class OrganizationService implements NodeUpdaterInterface
     /**
      * Updates a Perm.
      *
-     * @param  array  $organizationScope
-     * @param  int  $id
-     * @param  bool  $withValidation
+     * @param array $organizationScope
+     * @param int $id
+     * @param bool $withValidation
      * @return ?OrganizationScope
      *
      * @throws ValidationException
@@ -71,7 +70,7 @@ class OrganizationService implements NodeUpdaterInterface
     /**
      * deletes perm.
      *
-     * @param  int  $id
+     * @param int $id
      * @return bool|null
      */
     public function deleteOrganizationScope(int $id): ?bool
@@ -82,8 +81,8 @@ class OrganizationService implements NodeUpdaterInterface
     /**
      * Creates an org. node with given array
      *
-     * @param  array  $organizationNode
-     * @param  bool  $withValidation
+     * @param array $organizationNode
+     * @param bool $withValidation
      * @return OrganizationNode
      *
      * @throws ValidationException
@@ -103,19 +102,19 @@ class OrganizationService implements NodeUpdaterInterface
         $parentPath = $this->getPath($organizationNode['parent_id'] ?? null);
 
         // add temp path before determine actual path
-        $organizationNode['path'] = $parentPath.'/?';
+        $organizationNode['path'] = $parentPath . '/?';
         $organizationNode = OrganizationNode::create($organizationNode);
 
         // todo , can be add inside model's created event
-        $organizationNode->path = $parentPath.$organizationNode->id;
+        $organizationNode->path = $parentPath . $organizationNode->id;
         $organizationNode->save();
 
         return $organizationNode;
     }
 
     /**
-     * @param  Model  $model
-     * @param  int  $parentOrganizationId
+     * @param Model $model
+     * @param int $parentOrganizationId
      * @return OrganizationNode|null
      */
     public function createOrganizationNodeForModel(Model $model, int $parentOrganizationId): ?OrganizationNode
@@ -124,7 +123,7 @@ class OrganizationService implements NodeUpdaterInterface
     }
 
     /**
-     * @param  int|null  $organizationNodeId
+     * @param int|null $organizationNodeId
      * @return string|null
      */
     public function getPath(?int $organizationNodeId): ?string
@@ -133,11 +132,11 @@ class OrganizationService implements NodeUpdaterInterface
             return '';
         }
 
-        return OrganizationNode::find($organizationNodeId)?->path.'/';
+        return OrganizationNode::find($organizationNodeId)?->path . '/';
     }
 
     /**
-     * @param  int  $organizationNodeId
+     * @param int $organizationNodeId
      */
     public function calculatePath(int $organizationNodeId): void
     {
