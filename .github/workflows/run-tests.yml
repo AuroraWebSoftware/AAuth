@@ -42,7 +42,7 @@ jobs:
           mysql --host 127.0.0.1 --port ${{ job.services.mysql.ports['3306'] }} -uaauth -paauth -e "SHOW DATABASES"
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
