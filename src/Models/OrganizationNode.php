@@ -31,6 +31,7 @@ use Illuminate\Support\Facades\DB;
  * @method static Builder|OrganizationNode query()
  * @method static Builder|OrganizationNode whereCreatedAt($value)
  * @method static Builder|OrganizationNode whereId($value)
+ * @method static Builder|OrganizationNode where($value)
  * @method static Builder|OrganizationNode whereModelId($value)
  * @method static Builder|OrganizationNode whereModelType($value)
  * @method static Builder|OrganizationNode whereName($value)
@@ -39,7 +40,7 @@ use Illuminate\Support\Facades\DB;
  * @method static Builder|OrganizationNode wherePath($value)
  * @method static Builder|OrganizationNode whereUpdatedAt($value)
  * @method static OrganizationNode find($value)
- * @mixin \Eloquent
+ * @mixin OrganizationNode
  */
 class OrganizationNode extends Model
 {

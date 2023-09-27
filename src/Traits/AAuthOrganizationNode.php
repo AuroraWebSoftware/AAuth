@@ -111,7 +111,7 @@ trait AAuthOrganizationNode
             'model_type' => self::getModelType(),
             'model_id' => $modelId,
         ];
-        $updateON = $organizationService->updateOrganizationNode($OrgNodeUpdateData, $nodeId);
+        $updateON = $organizationService->updateOrganizationNodesRecursively($OrgNodeUpdateData, $nodeId);
 
         return $updatedModel;
     }
@@ -137,7 +137,7 @@ trait AAuthOrganizationNode
         $deleteModel = $modelInfo->delete($modelInfo);
 
 
-        $deleteON = $organizationService->deleteOrganizationNode($organizationNode->id);
+        $deleteON = $organizationService->deleteOrganizationNodesRecursively($organizationNode->id);
 
         return true;
     }

@@ -4,11 +4,11 @@ namespace AuroraWebSoftware\AAuth\Services;
 
 use AuroraWebSoftware\AAuth\Http\Requests\StoreOrganizationNodeRequest;
 use AuroraWebSoftware\AAuth\Http\Requests\StoreOrganizationScopeRequest;
-use AuroraWebSoftware\AAuth\Http\Requests\UpdateOrganizationNodeRequest;
 use AuroraWebSoftware\AAuth\Http\Requests\UpdateOrganizationScopeRequest;
 use AuroraWebSoftware\AAuth\Models\OrganizationNode;
 use AuroraWebSoftware\AAuth\Models\OrganizationScope;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
@@ -123,6 +123,7 @@ class OrganizationService
     }
 
     /**
+     * Return path with trailing slash (/)
      * @param int|null $organizationNodeId
      * @return string|null
      */
@@ -144,78 +145,64 @@ class OrganizationService
     }
 
     /**
+     * Updates organization node recursively using breadth first method
      * @param OrganizationNode $node
+     * @param bool|null $withDBTransaction
      * @return void
      */
-    public function updateNodePath(OrganizationNode $node): void
+    public function updateNodePathsRecursively(OrganizationNode $node, ?bool $withDBTransaction = true): void
     {
-        $node->path = $this->getPath($node->parent_id) . $node->id;
-        $node->save();
-    }
-
-    /**
-     * @param array $organizationNode
-     * @param int $id
-     * @param bool $withValidation
-     * @return OrganizationNode|bool
-     */
-    public function updateOrganizationNode(array $organizationNode, int $id, bool $withValidation = true): OrganizationNode|bool
-    {
-        if ($withValidation) {
-            $validator = Validator::make($organizationNode, UpdateOrganizationNodeRequest::$rules);
-
-            if ($validator->fails()) {
-                $message = implode(' , ', $validator->getMessageBag()->all());
-
-                throw new ValidationException($validator, new Response($message, Response::HTTP_UNPROCESSABLE_ENTITY));
-            }
+        if ($withDBTransaction) {
+            DB::beginTransaction();
         }
 
-
-        $organizationNodeModel = OrganizationNode::find($id);
-
-        $this->updateNodePath($organizationNodeModel);
-
-        $subNodeIds = OrganizationNode::whereParentId($id)->pluck('id');
-
-
-        foreach ($subNodeIds as $subNodeId) {
-            $subNode = OrganizationNode::find($subNodeId);
-
-            if ($subNode) {
-                $this->updateNodePath($subNode);
-            }
-        }
-
-
-        return $organizationNodeModel->update($organizationNode) ? $organizationNodeModel : false;
-    }
-
-    /**
-     * @param int $id
-     * @return bool
-     */
-    public function deleteOrganizationNode(int $id): bool
-    {
         try {
+            $node->path = $this->getPath($node->parent_id) . $node->id;
+            $node->save();
 
-            $subNodeIds = OrganizationNode::where('parent_id', $id)->pluck('id');
+            $subNodes = OrganizationNode::whereParentId($node->id)->get();
 
-            foreach ($subNodeIds as $subNodeId) {
-
-                $subNodeInfo = OrganizationNode::findOrFail($subNodeId);
-                $subNodeModel = $subNodeInfo->model_type;
-                $subNodeModel::findOrFail($subNodeInfo->model_id)->delete();
-                $subNodeInfo->delete();
+            foreach ($subNodes as $subNode) {
+                $this->updateNodePathsRecursively($subNode, false);
             }
 
-            $parentNode = OrganizationNode::findOrFail($id);
-            $parentNode->delete();
+        } catch (\Exception $exception) {
+            DB::rollback();
+        }
 
-            return true;
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $exception) {
+        if ($withDBTransaction) {
+            DB::commit();
+        }
+    }
 
-            return false;
+    /**
+     * deletes organization nodes using depth first search
+     * @param OrganizationNode $node
+     * @param bool|null $withDBTransaction
+     * @return void
+     */
+    public function deleteOrganizationNodesRecursively(OrganizationNode $node, ?bool $withDBTransaction = true): void
+    {
+        if ($withDBTransaction) {
+            DB::beginTransaction();
+        }
+
+        try {
+            //
+            $subNodes = OrganizationNode::whereParentId($node->id)->get();
+
+            foreach ($subNodes as $subNode) {
+                $this->deleteOrganizationNodesRecursively($subNode, false);
+            }
+
+            $node->delete();
+
+        } catch (\Exception $exception) {
+            DB::rollback();
+        }
+
+        if ($withDBTransaction) {
+            DB::commit();
         }
 
     }

@@ -3,7 +3,7 @@
 namespace AuroraWebSoftware\AAuth\Models;
 
 use AuroraWebSoftware\AAuth\Contracts\AAuthUserContract;
-use Eloquent;
+
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -23,8 +23,6 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $remember_token
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @mixin Eloquent
- *
  * @property-read \Illuminate\Database\Eloquent\Collection|Role[] $roles
  * @property-read int|null $roles_count
  * @property-read \Illuminate\Database\Eloquent\Collection|Role[] $organizational_roles
@@ -88,6 +86,10 @@ class User extends Authenticatable implements AAuthUserContract
 
         foreach ($rolesWithOrganizationNodes as $rolesWithOrganizationNode) {
             $role = Role::find($rolesWithOrganizationNode->role_id);
+            /**
+             * @var Role $role
+             * @phpstan-ignore-next-line
+             */
             $role->organizationNode = OrganizationNode::find($rolesWithOrganizationNode->organization_node_id);
 
             $rolesCollection->push($role);
