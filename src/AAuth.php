@@ -181,7 +181,9 @@ class AAuth
                 $rootNode = OrganizationNode::find($organizationNodeId);
                 throw_unless($rootNode, new InvalidOrganizationNodeException());
                 $rootNodeChar = $includeRootNode ? '' : '/';
-
+                /**
+                 * @phpstan-ignore-next-line
+                 */
                 $query->orWhere('path', 'like', $rootNode->path.$rootNodeChar.'%');
             }
         })
@@ -208,6 +210,7 @@ class AAuth
                 return $organizationNode;
             }
         }
+
         /*
         if ($organizationNodes->contains(fn($node, $key) => $node->id == $nodeId)) {
             return OrganizationNode::findOrFail($nodeId)->first();

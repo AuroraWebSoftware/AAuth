@@ -21,7 +21,7 @@ use Illuminate\Support\Facades\DB;
  * @property Carbon|null $updated_at
  * @property int|null $organization_scope_id
  *
- * @method static find($role_id) : Role
+ * @method static Role find($role_id)
  */
 class Role extends Model
 {

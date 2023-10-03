@@ -4,7 +4,6 @@ namespace AuroraWebSoftware\AAuth\Services;
 
 use AuroraWebSoftware\AAuth\Http\Requests\StoreOrganizationNodeRequest;
 use AuroraWebSoftware\AAuth\Http\Requests\StoreOrganizationScopeRequest;
-use AuroraWebSoftware\AAuth\Http\Requests\UpdateOrganizationNodeRequest;
 use AuroraWebSoftware\AAuth\Http\Requests\UpdateOrganizationScopeRequest;
 use AuroraWebSoftware\AAuth\Models\OrganizationNode;
 use AuroraWebSoftware\AAuth\Models\OrganizationScope;
@@ -22,8 +21,8 @@ class OrganizationService
     /**
      * Creates an org. scope with given array
      *
-     * @param  array  $organizationScope
-     * @param  bool  $withValidation
+     * @param array $organizationScope
+     * @param bool $withValidation
      * @return OrganizationScope
      *
      * @throws ValidationException
@@ -45,9 +44,9 @@ class OrganizationService
     /**
      * Updates a Perm.
      *
-     * @param  array  $organizationScope
-     * @param  int  $id
-     * @param  bool  $withValidation
+     * @param array $organizationScope
+     * @param int $id
+     * @param bool $withValidation
      * @return ?OrganizationScope
      *
      * @throws ValidationException
@@ -71,7 +70,7 @@ class OrganizationService
     /**
      * deletes perm.
      *
-     * @param  int  $id
+     * @param int $id
      * @return bool|null
      */
     public function deleteOrganizationScope(int $id): ?bool
@@ -82,8 +81,8 @@ class OrganizationService
     /**
      * Creates an org. node with given array
      *
-     * @param  array  $organizationNode
-     * @param  bool  $withValidation
+     * @param array $organizationNode
+     * @param bool $withValidation
      * @return OrganizationNode
      *
      * @throws ValidationException
@@ -103,19 +102,19 @@ class OrganizationService
         $parentPath = $this->getPath($organizationNode['parent_id'] ?? null);
 
         // add temp path before determine actual path
-        $organizationNode['path'] = $parentPath.'/?';
+        $organizationNode['path'] = $parentPath . '/?';
         $organizationNode = OrganizationNode::create($organizationNode);
 
         // todo , can be add inside model's created event
-        $organizationNode->path = $parentPath.$organizationNode->id;
+        $organizationNode->path = $parentPath . $organizationNode->id;
         $organizationNode->save();
 
         return $organizationNode;
     }
 
     /**
-     * @param  Model  $model
-     * @param  int  $parentOrganizationId
+     * @param Model $model
+     * @param int $parentOrganizationId
      * @return OrganizationNode|null
      */
     public function createOrganizationNodeForModel(Model $model, int $parentOrganizationId): ?OrganizationNode
@@ -124,7 +123,8 @@ class OrganizationService
     }
 
     /**
-     * @param  int|null  $organizationNodeId
+     * Return path with trailing slash (/)
+     * @param int|null $organizationNodeId
      * @return string|null
      */
     public function getPath(?int $organizationNodeId): ?string
@@ -133,11 +133,11 @@ class OrganizationService
             return '';
         }
 
-        return OrganizationNode::find($organizationNodeId)?->path.'/';
+        return OrganizationNode::find($organizationNodeId)?->path . '/';
     }
 
     /**
-     * @param  int  $organizationNodeId
+     * @param int $organizationNodeId
      */
     public function calculatePath(int $organizationNodeId): void
     {
@@ -145,53 +145,65 @@ class OrganizationService
     }
 
     /**
-     * @param  array  $organizationNode
-     * @param  int  $id
-     * @param  bool  $withValidation
-     * @return OrganizationNode|false
-     *
-     * @throws ValidationException
+     * Updates organization node recursively using breadth first method
+     * @param OrganizationNode $node
+     * @param bool|null $withDBTransaction
+     * @return void
      */
-    public function updateOrganizationNode(array $organizationNode, int $id, bool $withValidation = true): OrganizationNode|bool
+    public function updateNodePathsRecursively(OrganizationNode $node, ?bool $withDBTransaction = true): void
     {
-        if ($withValidation) {
-            $validator = Validator::make($organizationNode, UpdateOrganizationNodeRequest::$rules);
-
-            if ($validator->fails()) {
-                $message = implode(' , ', $validator->getMessageBag()->all());
-
-                throw new ValidationException($validator, new Response($message, Response::HTTP_UNPROCESSABLE_ENTITY));
-            }
+        if ($withDBTransaction) {
+            DB::beginTransaction();
         }
 
-        $organizationNodeModel = OrganizationNode::find($id);
+        try {
+            $node->path = $this->getPath($node->parent_id) . $node->id;
+            $node->save();
 
-        $organizationNodeModel->path = $this->getPath($organizationNodeModel->parent_id).$organizationNodeModel->id;
+            $subNodes = OrganizationNode::whereParentId($node->id)->get();
 
-        return $organizationNodeModel->update($organizationNode) ? $organizationNodeModel : false;
+            foreach ($subNodes as $subNode) {
+                $this->updateNodePathsRecursively($subNode, false);
+            }
+
+        } catch (\Exception $exception) {
+            DB::rollback();
+        }
+
+        if ($withDBTransaction) {
+            DB::commit();
+        }
     }
 
     /**
-     * @param  int  $id
-     * @return bool
+     * deletes organization nodes using depth first search
+     * @param OrganizationNode $node
+     * @param bool|null $withDBTransaction
+     * @return void
      */
-    public function deleteOrganizationNode(int $id): bool
+    public function deleteOrganizationNodesRecursively(OrganizationNode $node, ?bool $withDBTransaction = true): void
     {
-        // todo
-        // tamamen yeniden yazılacak.
-        /*
-        $rolePermissionService = new \App\Services\RolePermissionService();
-
-        $PivotTable = DB::table('user_role_organization_node')
-            ->where('organization_node_id', $id)
-            ->get();
-
-        foreach ($PivotTable as $pivotrow) {
-            $rolePermissionService->detachOrganizationRoleFromUser($pivotrow->user_id, $pivotrow->role_id, $pivotrow->organization_node_id);
+        if ($withDBTransaction) {
+            DB::beginTransaction();
         }
 
-        return OrganizationNode::find($id)->delete();
-        */
-        return false;
+        try {
+            //
+            $subNodes = OrganizationNode::whereParentId($node->id)->get();
+
+            foreach ($subNodes as $subNode) {
+                $this->deleteOrganizationNodesRecursively($subNode, false);
+            }
+
+            $node->delete();
+
+        } catch (\Exception $exception) {
+            DB::rollback();
+        }
+
+        if ($withDBTransaction) {
+            DB::commit();
+        }
+
     }
 }
