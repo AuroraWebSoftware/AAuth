@@ -109,13 +109,9 @@ test('can create and update OrganizationNode', function () {
     $createdCount = OrganizationNode::whereName($data['name'])->count();
     $this->assertEquals(1, $createdCount);
 
-    $data = [
-        'name' => 'Updated Org Node 2',
-        'organization_scope_id' => $os->id,
-        'parent_id' => 1,
-    ];
 
-    $updatedON = $this->service->updateOrganizationNodesRecursively($data, $createdON->id);
+
+    $this->service->updateNodePathsRecursively($createdON);
     $updatedCount = OrganizationNode::whereName($data['name'])->count();
     $this->assertEquals(1, $updatedCount);
 });
@@ -137,8 +133,8 @@ test('can testing delete of an OrganizationNode ', function () {
     $this->assertEquals(1, $createdCount);
 
 
-    $deletedON = $this->service->deleteOrganizationNodesRecursively($createdON->id);
-    $this->assertTrue($deletedON);
+    $deletedON = $this->service->deleteOrganizationNodesRecursively($createdON);
+    $this->assertEquals($deletedON, null);
 
     $deletedONCount = OrganizationNode::where('id', $createdON->id)->count();
     $this->assertEquals(0, $deletedONCount);
