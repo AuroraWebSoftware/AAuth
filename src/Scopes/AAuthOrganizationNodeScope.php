@@ -15,7 +15,7 @@ class AAuthOrganizationNodeScope implements \Illuminate\Database\Eloquent\Scope
      */
     public function apply(Builder $builder, Model $model): void
     {
-        $organizationNodeIds = AAuth::organizationNodes(true, $model->id)->pluck('model_id');
+        $organizationNodeIds = AAuth::organizationNodes(true, $model::getModelType())->pluck('model_id');
         $builder->whereIn('id', $organizationNodeIds);
     }
 }
