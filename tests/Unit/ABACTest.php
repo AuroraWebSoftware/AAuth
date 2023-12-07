@@ -34,28 +34,45 @@ beforeEach(function () {
 test('can validate abac rule array', function () {
     $rules1 =
         [
-            '&&' => [
-                ['=' => ['attribute' => 'name', 'value' => 'Test Organization Nodeable 2.2']],
-                ['=' => ['attribute' => 'age', 'value' => '19']],
+            [
+                '&&' => [
+                    ['=' => ['attribute' => 'name', 'value' => 'Test Organization Nodeable 2.2']],
+                    ['=' => ['attribute' => 'age', 'value' => '19']],
+                ],
             ],
         ];
 
     $rules2 =
         [
-            '&&' => [
+            ['&&' => [
                 ['=' => ['attribute' => 'name', 'value' => 'Test Organization Nodeable 2.2']],
                 ['=' => ['attribute' => 'age', 'value' => '19']],
                 [
-                    '&&' => [
+                    ['&&' => [
                         ['=' => ['attribute' => 'name', 'value' => 'Test Organization Nodeable 2.2']],
                         ['=' => ['attribute' => 'age', 'value' => '19']],
-                    ],
+                    ]],
                 ],
-            ],
+            ]],
+        ];
+
+    $rules3 =
+        [
+            ['&&' => [
+                ['=' => ['attribute' => 'name', 'value' => 'Test Organization Nodeable 2.2']],
+                ['=' => ['attribute' => 'age', 'value' => '19']],
+                [
+                    ['&&' => [
+                        ['=' => ['attribute' => 'name', 'value' => 'Test Organization Nodeable 2.2']],
+                        ['=' => ['attribute' => 'age', 'value' => '19']],
+                    ]],
+                ],
+            ]],
         ];
 
     ABACUtil::validateAbacRuleArray($rules1);
     ABACUtil::validateAbacRuleArray($rules2);
+    ABACUtil::validateAbacRuleArray($rules3);
     $this->assertTrue(true);
 });
 
@@ -126,10 +143,10 @@ test('can get all model instances proper (and) conditions', function () {
     // 1 - 2 equals
     $rules1 =
         [
-            '&&' => [
+            ['&&' => [
                 ['=' => ['attribute' => 'name', 'value' => 'Test Organization Nodeable 2.2']],
                 ['=' => ['attribute' => 'age', 'value' => '19']],
-            ],
+            ]],
         ];
 
     $dataRule = [
@@ -147,9 +164,9 @@ test('can get all model instances proper (and) conditions', function () {
     // 2 - greater then
     $rules2 =
         [
-            '&&' => [
+            ['&&' => [
                 ['>' => ['attribute' => 'age', 'value' => '19']],
-            ],
+            ]],
         ];
 
     $roleModelAbacRuleModelInstance->rules_json = $rules2;
@@ -161,9 +178,9 @@ test('can get all model instances proper (and) conditions', function () {
     // 3 - greater than and equals to
     $rules3 =
         [
-            '&&' => [
+            ['&&' => [
                 ['>=' => ['attribute' => 'age', 'value' => '19']],
-            ],
+            ]],
         ];
 
     $roleModelAbacRuleModelInstance->rules_json = $rules3;
@@ -175,9 +192,9 @@ test('can get all model instances proper (and) conditions', function () {
     // 3 - like
     $rules3 =
         [
-            '&&' => [
+            ['&&' => [
                 ['like' => ['attribute' => 'name', 'value' => '%2.%']],
-            ],
+            ]],
         ];
 
     $roleModelAbacRuleModelInstance->rules_json = $rules3;
@@ -189,10 +206,10 @@ test('can get all model instances proper (and) conditions', function () {
     // 4 - 2 like
     $rules4 =
         [
-            '&&' => [
+            ['&&' => [
                 ['like' => ['attribute' => 'name', 'value' => '%2.%']],
                 ['like' => ['attribute' => 'name', 'value' => '%3.%']],
-            ],
+            ]],
         ];
 
     $roleModelAbacRuleModelInstance->rules_json = $rules4;
@@ -204,10 +221,10 @@ test('can get all model instances proper (and) conditions', function () {
     // 5 - like and equal
     $rules5 =
         [
-            '&&' => [
+            ['&&' => [
                 ['like' => ['attribute' => 'name', 'value' => '%2.%']],
                 ['=' => ['attribute' => 'age', 'value' => '19']],
-            ],
+            ]],
         ];
 
     $roleModelAbacRuleModelInstance->rules_json = $rules5;
@@ -221,10 +238,10 @@ test('can get all model instances proper (and) conditions', function () {
     // 20 - like or equal
     $rules20 =
         [
-            '||' => [
+            ['||' => [
                 ['like' => ['attribute' => 'name', 'value' => '%3.%']],
                 ['=' => ['attribute' => 'age', 'value' => '21']],
-            ],
+            ]],
         ];
 
     $roleModelAbacRuleModelInstance->rules_json = $rules20;
@@ -236,10 +253,10 @@ test('can get all model instances proper (and) conditions', function () {
     // 21 - greater or equal
     $rules21 =
         [
-            '||' => [
+            ['||' => [
                 ['>' => ['attribute' => 'age', 'value' => '21']],
                 ['=' => ['attribute' => 'age', 'value' => '19']],
-            ],
+            ]],
         ];
 
     $roleModelAbacRuleModelInstance->rules_json = $rules21;
@@ -251,22 +268,65 @@ test('can get all model instances proper (and) conditions', function () {
     // 22 - nested (or) and (and)
     $rules22 =
         [
-            '||' => [
+            ['||' => [
                 ['like' => ['attribute' => 'name', 'value' => '%3.%']],
-                '&&' => [
+                ['&&' => [
                     ['>=' => ['attribute' => 'age', 'value' => '20']],
                     ['<=' => ['attribute' => 'age', 'value' => '21']],
-                ],
-            ],
+                ]],
+            ]],
         ];
 
     $roleModelAbacRuleModelInstance->rules_json = $rules22;
     $roleModelAbacRuleModelInstance->save();
 
     $this->assertEquals(3, OrganizationNodeable::count());
-    // 22 end
+    //22 end
+
+    // 23 - nested (or) and (and)
+    $rules23 =
+        [
+            ['||' => [
+                ['like' => ['attribute' => 'name', 'value' => '%3.%']],
+                ['&&' => [
+                    ['>=' => ['attribute' => 'age', 'value' => '20']],
+                    ['<=' => ['attribute' => 'age', 'value' => '21']],
+                ]],
+                ['<' => ['attribute' => 'age', 'value' => '19']],
+            ]],
+        ];
+
+    $roleModelAbacRuleModelInstance->rules_json = $rules23;
+    $roleModelAbacRuleModelInstance->save();
+
+    $this->assertEquals(4, OrganizationNodeable::count());
+    //23 end
+
+    // 24 - nested (or) and (and)
+    $rules24 =
+        [
+            ['||' => [
+                ['like' => ['attribute' => 'name', 'value' => '%3.%']],
+                ['&&' => [
+                    ['>=' => ['attribute' => 'age', 'value' => '20']],
+                    ['<=' => ['attribute' => 'age', 'value' => '21']],
+                ]],
+                ['||' => [
+                        ['<' => ['attribute' => 'age', 'value' => '19']],
+                        ['like' => ['attribute' => 'name', 'value' => '%2.2']],
+                    ],
+                ],
+            ]],
+        ];
+
+    $roleModelAbacRuleModelInstance->rules_json = $rules24;
+    $roleModelAbacRuleModelInstance->save();
+
+    $this->assertEquals(5, OrganizationNodeable::count());
+    //24 end
 
     // DB::enableQueryLog();
     // OrganizationNodeable::all();
     // dd(DB::getQueryLog());
+
 });
