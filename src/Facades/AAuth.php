@@ -22,7 +22,7 @@ use Illuminate\Support\Facades\Facade;
  * @static switchableRolesStatic(int $userId): array|Collection|\Illuminate\Support\Collection
  *
  * @method static currentRole() \AuroraWebSoftware\AAuth\Models\Role|null
- * @method static ABACRules() array|null
+ * @method static ABACRules(string $modelType) array|null
  */
 class AAuth extends Facade
 {
