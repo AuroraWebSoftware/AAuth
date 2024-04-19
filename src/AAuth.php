@@ -88,7 +88,7 @@ class AAuth
     }
 
     /**
-     * @param  int  $userId
+     * @param int $userId
      * @return array|Collection<int, Role>|\Illuminate\Support\Collection<int, Role>
      */
     public static function switchableRolesStatic(int $userId): array|Collection|\Illuminate\Support\Collection
@@ -137,7 +137,7 @@ class AAuth
     /**
      * check if user can
      *
-     * @param  string  $permission
+     * @param string $permission
      * @return bool
      */
     public function can(string $permission): bool
@@ -149,8 +149,8 @@ class AAuth
     }
 
     /**
-     * @param  string  $permission
-     * @param  string  $message
+     * @param string $permission
+     * @param string $message
      * @return void
      */
     public function passOrAbort(string $permission, string $message = 'No Permission'): void
@@ -165,8 +165,8 @@ class AAuth
      * Returns user's current role's authorized organization nodes
      * if model type is given, returns only this model typed nodes.
      *
-     * @param  bool  $includeRootNode
-     * @param  string|null  $modelType
+     * @param bool $includeRootNode
+     * @param string|null $modelType
      * @return \Illuminate\Support\Collection<int, OrganizationNode>
      *
      * @throws Throwable
@@ -180,11 +180,19 @@ class AAuth
             foreach ($this->organizationNodeIds as $organizationNodeId) {
                 $rootNode = OrganizationNode::find($organizationNodeId);
                 throw_unless($rootNode, new InvalidOrganizationNodeException());
-                $rootNodeChar = $includeRootNode ? '' : '/';
+
                 /**
                  * @phpstan-ignore-next-line
                  */
-                $query->orWhere('path', 'like', $rootNode->path.$rootNodeChar.'%');
+                $query->orWhere('path', 'like', $rootNode->path . '/%');
+
+                if ($includeRootNode) {
+                    /**
+                     * @phpstan-ignore-next-line
+                     */
+                    $query->orWhere('path', $rootNode->path);
+                }
+
             }
         })
             ->when($modelType !== null, function ($query) use ($modelType) {
@@ -195,8 +203,8 @@ class AAuth
     /**
      * checks if current role authorized to access given node id
      *
-     * @param  int  $nodeId
-     * @param  string|null  $modelType
+     * @param int $nodeId
+     * @param string|null $modelType
      * @return OrganizationNode
      *
      * @throws InvalidOrganizationNodeException|Throwable
@@ -231,8 +239,8 @@ class AAuth
      * Checks if tree has given child
      * No permission check.
      *
-     * @param  int  $rootNodeId
-     * @param  int  $childNodeId
+     * @param int $rootNodeId
+     * @param int $childNodeId
      * @return bool
      *
      * @throws Throwable
@@ -242,12 +250,12 @@ class AAuth
         $subTreeRootNode = OrganizationNode::find($rootNodeId);
         throw_unless($subTreeRootNode, new InvalidOrganizationNodeException());
 
-        return OrganizationNode::where('path', 'like', $subTreeRootNode->path.'%')
+        return OrganizationNode::where('path', 'like', $subTreeRootNode->path . '%')
             ->where('id', '=', $childNodeId)->exists();
     }
 
     /**
-     * @param  string  $modelType
+     * @param string $modelType
      * @return array|null
      */
     public function ABACRules(string $modelType): ?array
