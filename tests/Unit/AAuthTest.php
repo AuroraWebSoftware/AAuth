@@ -63,7 +63,7 @@ test('passOrAbort', function () {
 });
 
 test('can get all permitted organization nodes', function () {
-    $organizationNodeCount = AAuth::organizationNodes()->count();
+    $organizationNodeCount = AAuth::organizationNodes(false)->count();
     $actualOrganizationNodeCount = OrganizationNode::where('parent_id', '!=', null)->get()->count();
 
     expect($organizationNodeCount)->toEqual($actualOrganizationNodeCount);

@@ -40,11 +40,6 @@ class User extends Authenticatable implements AAuthUserContract
     use HasFactory;
     use Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var string[]
-     */
     protected $fillable = [
         'name',
         'email',
