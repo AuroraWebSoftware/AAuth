@@ -211,6 +211,7 @@ class AAuth
     {
         $rootNodes = OrganizationNode::whereIn('id', $this->organizationNodeIds)->get();
         throw_unless($rootNodes->isNotEmpty(), new InvalidOrganizationNodeException());
+
         return OrganizationNode::where(function ($query) use ($rootNodes, $includeRootNode) {
             foreach ($rootNodes as $rootNode) {
                 $query->orWhere('path', 'like', $rootNode->path . '/%');
