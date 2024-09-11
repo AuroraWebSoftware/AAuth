@@ -11,6 +11,7 @@ use AuroraWebSoftware\AAuth\Models\Role;
 use AuroraWebSoftware\AAuth\Models\RoleModelAbacRule;
 use AuroraWebSoftware\AAuth\Models\User;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
@@ -198,6 +199,29 @@ class AAuth
             ->when($modelType !== null, function ($query) use ($modelType) {
                 return $query->where('model_type', '=', $modelType);
             })->get();
+    }
+
+    /**
+     * @param bool $includeRootNode
+     * @param string|null $modelType
+     * @return OrganizationNode|Builder
+     * @throws Throwable
+     */
+    public function organizationNodesQuery(bool $includeRootNode = false, ?string $modelType = null): OrganizationNode|Builder
+    {
+        $rootNodes = OrganizationNode::whereIn('id', $this->organizationNodeIds)->get();
+        throw_unless($rootNodes->isNotEmpty(), new InvalidOrganizationNodeException());
+        return OrganizationNode::where(function ($query) use ($rootNodes, $includeRootNode) {
+            foreach ($rootNodes as $rootNode) {
+                $query->orWhere('path', 'like', $rootNode->path . '/%');
+
+                if ($includeRootNode) {
+                    $query->orWhere('path', '=', $rootNode->path);
+                }
+            }
+        })->when($modelType !== null, function ($query) use ($modelType) {
+            return $query->where('model_type', '=', $modelType);
+        });
     }
 
     /**
