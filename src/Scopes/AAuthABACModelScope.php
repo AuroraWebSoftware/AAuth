@@ -98,8 +98,10 @@ class AAuthABACModelScope implements Scope
 
         $queryMethod = $parentOperator == '||' ? 'orWhere' : 'where';
 
+        $from = sprintf('%s.', is_string($builder->getQuery()->from) ? $builder->getQuery()->from : '');
+
         $builder->{$queryMethod}(
-            $rule[$operator]['attribute'],
+            $from.$rule[$operator]['attribute'],
             $operator,
             $rule[$operator]['value']
         );

@@ -2,6 +2,7 @@
 
 namespace AuroraWebSoftware\AAuth\Facades;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Facade;
 
 /**
@@ -23,6 +24,7 @@ use Illuminate\Support\Facades\Facade;
  *
  * @method static currentRole() \AuroraWebSoftware\AAuth\Models\Role|null
  * @method static ABACRules(string $modelType) array|null
+ * @method static organizationNodesQuery(bool $includeRootNode = false, ?string $modelType = null): OrganizationNode|Builder
  */
 class AAuth extends Facade
 {
