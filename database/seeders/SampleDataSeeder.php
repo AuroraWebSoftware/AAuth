@@ -19,6 +19,25 @@ class SampleDataSeeder extends Seeder
      */
     public function run()
     {
+        if (config('database.default') == 'pgsql') {
+            $tables = DB::select('SELECT table_name FROM information_schema.tables WHERE table_schema = \'public\' ORDER BY table_name;');
+
+            // Set the tables in the database you would like to ignore
+            $ignores = ['admin_setting', 'model_has_permissions', 'model_has_roles', 'password_resets', 'role_has_permissions', 'sessions', 'cache', 'cache_locks', 'job_batches', 'password_reset_tokens'];
+
+            // loop through the tables
+            foreach ($tables as $table) {
+                // if the table is not to be ignored then:
+                if (! in_array($table->table_name, $ignores)) {
+                    // Get the max id from that table and add 1 to it
+                    $seq = DB::table($table->table_name)->max('id') + 1;
+
+                    // alter the sequence to now RESTART WITH the new sequence index from above
+                    DB::select('ALTER SEQUENCE '.$table->table_name.'_id_seq RESTART WITH '.$seq);
+                }
+            }
+        }
+
         $user1 = User::create(
             [
                 'name' => 'Example User 1',
@@ -230,13 +249,13 @@ class SampleDataSeeder extends Seeder
             $tables = DB::select('SELECT table_name FROM information_schema.tables WHERE table_schema = \'public\' ORDER BY table_name;');
 
             // Set the tables in the database you would like to ignore
-            $ignores = ['admin_setting', 'model_has_permissions', 'model_has_roles', 'password_resets', 'role_has_permissions', 'sessions'];
+            $ignores = ['admin_setting', 'model_has_permissions', 'model_has_roles', 'password_resets', 'role_has_permissions', 'sessions', 'cache', 'cache_locks', 'job_batches', 'password_reset_tokens'];
 
-            //loop through the tables
+            // loop through the tables
             foreach ($tables as $table) {
                 // if the table is not to be ignored then:
                 if (! in_array($table->table_name, $ignores)) {
-                    //Get the max id from that table and add 1 to it
+                    // Get the max id from that table and add 1 to it
                     $seq = DB::table($table->table_name)->max('id') + 1;
 
                     // alter the sequence to now RESTART WITH the new sequence index from above
