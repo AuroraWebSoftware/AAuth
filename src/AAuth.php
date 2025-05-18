@@ -13,6 +13,7 @@ use AuroraWebSoftware\AAuth\Models\User;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 use Throwable;
@@ -143,10 +144,18 @@ class AAuth
      */
     public function can(string $permission): bool
     {
-        return Role::where('roles.id', '=', $this->role->id)
+        $permissions = Context::get('role_permissions');
+
+        if (is_null($permissions)) {
+            $permissions = Role::where('roles.id', '=', $this->role->id)
                 ->leftJoin('role_permission as rp', 'rp.role_id', '=', 'roles.id')
-                ->where('rp.permission', '=', $permission)
-                ->count() > 0;
+                ->pluck('rp.permission')
+                ->toArray();
+
+            Context::add('role_permissions', $permissions);
+        }
+
+        return in_array($permission, $permissions);
     }
 
     /**
