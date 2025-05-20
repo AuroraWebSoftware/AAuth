@@ -80,9 +80,11 @@ test('can attach to role and detach a permission from role', function () {
     });
 
     $this->service->attachPermissionToRole($permissionName, $role->id);
+    Context::forget('role_permissions');
     expect(AAuth::can($permissionName))->toBeTrue();
 
     $this->service->detachPermissionFromRole($permissionName, $role->id);
+    Context::forget('role_permissions');
     expect(AAuth::can($permissionName))->toBeFalse();
 });
 
@@ -100,15 +102,18 @@ test('can sync permission of role', function () {
     });
 
     $this->service->attachPermissionToRole($permissionName1, $role->id);
+    Context::forget('role_permissions');
     expect(AAuth::can($permissionName1))->toBeTrue();
 
     $this->service->attachPermissionToRole($permissionName2, $role->id);
+    Context::forget('role_permissions');
     expect(AAuth::can($permissionName2))->toBeTrue();
 
     $this->service->syncPermissionsOfRole(
         compact('permissionName1', 'permissionName3'),
         $role->id
     );
+    Context::forget('role_permissions');
 });
 
 test('can attach system role to user and detach from user', function () {
