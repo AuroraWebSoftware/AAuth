@@ -49,7 +49,7 @@ class AAuth
 
         // if user don't have this role, not assigned
         throw_if(
-            $user->roles()->where('roles.id', '=', $roleId)->count() < 1,
+            $user->roles()->where(DB::raw('roles.id'), '=', $roleId)->count() < 1,
             new UserHasNoAssignedRoleException()
         );
 
@@ -83,10 +83,10 @@ class AAuth
     public function switchableRoles(): array|Collection|\Illuminate\Support\Collection
     {
         // @phpstan-ignore-next-line
-        return Role::where('uro.user_id', '=', $this->user->id)
+        return Role::where(DB::raw('uro.user_id'), '=', $this->user->id)
             ->leftJoin('user_role_organization_node as uro', 'uro.role_id', '=', 'roles.id')
             ->distinct()
-            ->get(['roles.id', 'name']);
+            ->select(DB::raw('roles.id'), 'name')->get();
     }
 
     /**
@@ -96,10 +96,10 @@ class AAuth
     public static function switchableRolesStatic(int $userId): array|Collection|\Illuminate\Support\Collection
     {
         // todo test'i yazılacak
-        return Role::where('uro.user_id', '=', $userId)
+        return Role::where(DB::raw('uro.user_id'), '=', $userId)
             ->leftJoin('user_role_organization_node as uro', 'uro.role_id', '=', 'roles.id')
             ->distinct()
-            ->get(['roles.id', 'name']);
+            ->select(DB::raw('roles.id'), 'name')->get();
     }
 
     /**
@@ -109,9 +109,9 @@ class AAuth
      */
     public function permissions(): array
     {
-        return Role::where('roles.id', '=', $this->role->id)
+        return Role::where(DB::raw('roles.id'), '=', $this->role->id)
             ->leftJoin('role_permission as rp', 'rp.role_id', '=', 'roles.id')
-            ->pluck('permission')->toArray();
+            ->pluck(DB::raw('permission'))->toArray();
     }
 
     /**
@@ -119,10 +119,10 @@ class AAuth
      */
     public function organizationPermissions(): array
     {
-        return Role::where('roles.id', '=', $this->role->id)
+        return Role::where(DB::raw('roles.id'), '=', $this->role->id)
             ->where('type', '=', 'organization')
             ->leftJoin('role_permission as rp', 'rp.role_id', '=', 'roles.id')
-            ->pluck('permission')->toArray();
+            ->pluck(DB::raw('permission'))->toArray();
     }
 
     /**
@@ -130,10 +130,10 @@ class AAuth
      */
     public function systemPermissions(): array
     {
-        return Role::where('roles.id', '=', $this->role->id)
+        return Role::where(DB::raw('roles.id'), '=', $this->role->id)
             ->where('type', '=', 'system')
             ->leftJoin('role_permission as rp', 'rp.role_id', '=', 'roles.id')
-            ->pluck('permission')->toArray();
+            ->pluck(DB::raw('permission'))->toArray();
     }
 
     /**
@@ -147,9 +147,9 @@ class AAuth
         $permissions = Context::get('role_permissions');
 
         if (is_null($permissions)) {
-            $permissions = Role::where('roles.id', '=', $this->role->id)
+            $permissions = Role::where(DB::raw('roles.id'), '=', $this->role->id)
                 ->leftJoin('role_permission as rp', 'rp.role_id', '=', 'roles.id')
-                ->pluck('rp.permission')
+                ->pluck(DB::raw('rp.permission'))
                 ->toArray();
 
             Context::add('role_permissions', $permissions);

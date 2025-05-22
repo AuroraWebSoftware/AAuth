@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\DB;
  */
 class Role extends Model
 {
+    /** @use \Illuminate\Database\Eloquent\Factories\HasFactory<\Illuminate\Database\Eloquent\Factories\Factory<\AuroraWebSoftware\AAuth\Models\Role>> */
     use HasFactory;
 
     protected $fillable = ['organization_scope_id', 'type', 'name', 'status'];
@@ -36,11 +37,11 @@ class Role extends Model
     {
         return $this
             ->join('role_permission', 'role_permission.role_id', '=', 'roles.id')
-            ->pluck('permission')->toArray();
+            ->pluck(DB::raw('permission'))->toArray();
     }
 
     /**
-     * @return BelongsTo<OrganizationScope, Role>
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\AuroraWebSoftware\AAuth\Models\OrganizationScope, \AuroraWebSoftware\AAuth\Models\Role>
      */
     public function organization_scope(): BelongsTo
     {
@@ -48,7 +49,7 @@ class Role extends Model
     }
 
     /**
-     * @return BelongsToMany<OrganizationNode>
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\AuroraWebSoftware\AAuth\Models\OrganizationNode, \AuroraWebSoftware\AAuth\Models\Role, \Illuminate\Database\Eloquent\Relations\Pivot>
      */
     public function organization_nodes(): BelongsToMany
     {

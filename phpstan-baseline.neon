@@ -1,0 +1,11 @@
+parameters:
+    ignoreErrors:
+        - message: '#^Trait AuroraWebSoftware\\AAuth\\Traits\\AAuthABACModel is used zero times and is not analysed\.$#'
+          count: 1
+          path: src/Traits/AAuthABACModel.php
+        - message: '#^Trait AuroraWebSoftware\\AAuth\\Traits\\AAuthOrganizationNode is used zero times and is not analysed\.$#'
+          count: 1
+          path: src/Traits/AAuthOrganizationNode.php
+        - message: '#^Trait AuroraWebSoftware\\AAuth\\Traits\\AAuthUser is used zero times and is not analysed\.$#'
+          count: 1
+          path: src/Traits/AAuthUser.php

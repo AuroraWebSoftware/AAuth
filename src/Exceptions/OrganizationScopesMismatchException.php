@@ -16,6 +16,7 @@ class OrganizationScopesMismatchException extends Exception
     public function report()
     {
         //
+        return null;
     }
 
     /**

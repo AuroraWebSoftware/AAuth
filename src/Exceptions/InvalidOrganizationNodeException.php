@@ -16,6 +16,7 @@ class InvalidOrganizationNodeException extends Exception
     public function report()
     {
         //
+        return null;
     }
 
     /**

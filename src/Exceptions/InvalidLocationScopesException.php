@@ -16,6 +16,7 @@ class InvalidLocationScopesException extends Exception
     public function report()
     {
         //
+        return null;
     }
 
     /**

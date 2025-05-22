@@ -36,6 +36,7 @@ use Illuminate\Support\Facades\DB;
  */
 class User extends Authenticatable implements AAuthUserContract
 {
+    /** @use \Illuminate\Database\Eloquent\Factories\HasFactory<\Illuminate\Database\Eloquent\Factories\Factory<\AuroraWebSoftware\AAuth\Models\User>> */
     use HasFactory;
     use Notifiable;
 
@@ -61,7 +62,7 @@ class User extends Authenticatable implements AAuthUserContract
     ];
 
     /**
-     * @return BelongsToMany<Role>
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\AuroraWebSoftware\AAuth\Models\Role, \AuroraWebSoftware\AAuth\Models\User, \Illuminate\Database\Eloquent\Relations\Pivot>
      */
     public function roles(): BelongsToMany
     {
@@ -93,7 +94,7 @@ class User extends Authenticatable implements AAuthUserContract
     }
 
     /**
-     * @return BelongsToMany<Role>
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\AuroraWebSoftware\AAuth\Models\Role, \AuroraWebSoftware\AAuth\Models\User, \Illuminate\Database\Eloquent\Relations\Pivot>
      */
     public function system_roles(): BelongsToMany
     {
@@ -102,7 +103,7 @@ class User extends Authenticatable implements AAuthUserContract
     }
 
     /**
-     * @return BelongsToMany<Role>
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\AuroraWebSoftware\AAuth\Models\Role, \AuroraWebSoftware\AAuth\Models\User, \Illuminate\Database\Eloquent\Relations\Pivot>
      */
     public function organization_roles(): BelongsToMany
     {
