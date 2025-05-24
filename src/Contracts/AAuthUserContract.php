@@ -2,7 +2,6 @@
 
 namespace AuroraWebSoftware\AAuth\Contracts;
 
-use AuroraWebSoftware\AAuth\Models\Role;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
