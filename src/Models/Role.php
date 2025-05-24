@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * AuroraWebSoftware\AAuth\Models\Role
  *
- * @property int $id
+ * @property-read int $id
  * @property string $type
  * @property string $name
  * @property string $status
@@ -20,6 +20,7 @@ use Illuminate\Support\Facades\DB;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property int|null $organization_scope_id
+ * @property-read string|null $permission
  *
  * @method static Role find($role_id)
  */
@@ -37,7 +38,7 @@ class Role extends Model
     {
         return $this
             ->join('role_permission', 'role_permission.role_id', '=', 'roles.id')
-            ->pluck(DB::raw('permission'))->toArray();
+            ->pluck('permission')->toArray();
     }
 
     /**
