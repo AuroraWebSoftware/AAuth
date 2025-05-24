@@ -45,12 +45,13 @@ use Illuminate\Support\Facades\DB;
  */
 class OrganizationNode extends Model
 {
+    /** @use \Illuminate\Database\Eloquent\Factories\HasFactory<\Illuminate\Database\Eloquent\Factories\Factory<\AuroraWebSoftware\AAuth\Models\OrganizationNode>> */
     use HasFactory;
 
     protected $fillable = ['organization_scope_id', 'name', 'model_type', 'model_id', 'path', 'parent_id'];
 
     /**
-     * @return BelongsTo<OrganizationScope, OrganizationNode>
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\AuroraWebSoftware\AAuth\Models\OrganizationScope, static>
      */
     public function organization_scope(): BelongsTo
     {
@@ -105,6 +106,9 @@ class OrganizationNode extends Model
         return $breadCrumbs;
     }
 
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\MorphTo<\Illuminate\Database\Eloquent\Model, \AuroraWebSoftware\AAuth\Models\OrganizationNode>
+     */
     public function relatedModel(): MorphTo
     {
         return $this->morphTo(__FUNCTION__, 'model_type', 'model_id');

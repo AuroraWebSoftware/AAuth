@@ -22,6 +22,7 @@ use Illuminate\Support\Carbon;
  */
 class RoleModelAbacRule extends Model
 {
+    /** @use \Illuminate\Database\Eloquent\Factories\HasFactory<\Illuminate\Database\Eloquent\Factories\Factory<\AuroraWebSoftware\AAuth\Models\RoleModelAbacRule>> */
     use HasFactory;
 
     protected $casts = [
