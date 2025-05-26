@@ -143,7 +143,24 @@ Principal dynamically *without writing one line of code?*
 
 # Main Philosophy of AAuth ABAC
 
-// todo coming soon ....
+Attribute-Based Access Control (ABAC) is an access control model that grants access rights by evaluating rules against the attributes of subjects (users), objects (resources or data), and environmental conditions.
+
+**Core Components of ABAC:**
+
+*   **Attributes:** These are characteristics of the subject (e.g., user's role, department, security clearance), the object/resource being accessed (e.g., data classification, owner, creation date), or the environment (e.g., time of day, location of access). In AAuth, this primarily refers to the attributes of your Eloquent models.
+*   **Policies/Rules:** These are statements that define who can access what under which conditions. They combine attributes to express access logic. For example, "A user with the 'manager' role can access documents in their department created in the last 30 days." AAuth allows defining these rules in a way that can be applied to database queries.
+*   **Environment Conditions:** These are contextual factors that can influence access decisions, such as the current time, location of the user, or threat level. While a core part of ABAC, AAuth's current focus is more on model attribute-based rules.
+
+**Benefits of ABAC:**
+
+*   **Fine-Grained Control:** ABAC allows for highly specific access rules, moving beyond broad role-based permissions. You can control access down to individual data records or model attributes.
+*   **Flexibility & Dynamic Policies:** Access decisions can change dynamically as attributes change, without needing to redefine roles or permissions. For instance, if a document's status attribute changes to 'archived', access can be automatically restricted based on an ABAC policy.
+*   **Scalability:** ABAC scales well in complex environments with many users, resources, and varying access requirements. It reduces the need for a proliferation of roles that can occur in pure RBAC systems.
+*   **Context-Awareness:** By considering environmental conditions (though less emphasized in the current AAuth model attributes focus), ABAC can make access decisions that are sensitive to the context of the access request.
+
+**ABAC in AAuth:**
+
+AAuth implements ABAC by enabling you to define access rules based on the attributes of your Eloquent models. For example, you can specify that users can only access `Order` models where the `Order->status` is 'active' and `Order->customer_id` matches an attribute of the user or their organizational context. These rules are then automatically applied when querying data, ensuring that users only see the records they are authorized to access. This approach complements the OrBAC and RBAC features of AAuth, allowing for a powerful, multi-layered access control strategy.
 
 
 ---
@@ -196,7 +213,12 @@ an Organization Role.
 Organization Permissions should be added inside `aauth.php` config file's permission['organization'] array.
 
 ## ABAC
-// todo coming soon
+Attribute-Based Access Control. AAuth provides comprehensive ABAC features, allowing for fine-grained access control based on model attributes. For a detailed explanation, see the sections:
+- "Main Philosophy of AAuth ABAC"
+- "Using ABAC Interface and Trait with Eloquent Models"
+- "Defining ABAC Rules"
+- "Managing ABAC Rules and Associations"
+- "Automatic Query Filtering (ABAC)"
 
 ## Role
 
@@ -237,8 +259,223 @@ be an organization node and can be access controllable.
 It means that; Only Authorized User Role can be access the relating model, or in other words, Each role only can access
 the models which is on Authenticated Sub-Organization Tree of User's Role.
 
-### Model - ABAC rules
-// todo coming soon
+### Defining ABAC Rules
+
+Attribute-Based Access Control (ABAC) rules in AAuth determine whether a user has access to a specific Eloquent model instance based on its attributes. These rules are defined as a PHP array, which can also be represented as a JSON string that decodes into the equivalent array structure. This allows for dynamic rule creation and storage.
+
+The rules are typically defined within your ABAC-enabled Eloquent model by implementing the `getABACRules(): array` method from the `AAuthABACModelInterface`. These rules are then automatically applied by the `AAuthABACModelScope` when querying the model.
+
+**Overall Structure:**
+
+An ABAC rule set is fundamentally a nested array structure that always starts with a top-level logical operator, either `&&` (AND) or `||` (OR). This operator dictates how the conditions or condition groups directly under it are evaluated.
+
+*   If the top-level operator is `&&`, all direct child conditions/groups must evaluate to true.
+*   If the top-level operator is `||`, at least one direct child condition/group must evaluate to true.
+
+Each element within the top-level operator's array is either a single condition or another nested group of conditions (which itself starts with a logical operator).
+
+**Example of basic structure:**
+
+```php
+[
+    // Top-level logical operator
+    '&&' => [
+        // Condition 1
+        ['=' => ['attribute' => 'status', 'value' => 'active']],
+        // Condition 2
+        ['>' => ['attribute' => 'amount', 'value' => 100]],
+        // Nested group of conditions
+        ['||' => [
+            ['=' => ['attribute' => 'category', 'value' => 'electronics']],
+            ['=' => ['attribute' => 'category', 'value' => 'books']]
+        ]]
+    ]
+]
+```
+
+In this example:
+Access is granted if (`status` is 'active' **AND** `amount` is greater than 100) **AND** (`category` is 'electronics' **OR** `category` is 'books').
+
+**Logical Operators:**
+
+Logical operators define how multiple conditions are combined.
+
+*   **`&&` (AND):**
+    All conditions or nested groups within this block must be true for this part of the rule to be satisfied.
+    ```php
+    [
+        '&&' => [
+            // Condition A
+            // Condition B
+        ]
+    ]
+    // Both Condition A AND Condition B must be true.
+    ```
+
+*   **`||` (OR):**
+    At least one of the conditions or nested groups within this block must be true for this part of the rule to be satisfied.
+    ```php
+    [
+        '||' => [
+            // Condition X
+            // Condition Y
+        ]
+    ]
+    // Either Condition X OR Condition Y (or both) must be true.
+    ```
+
+**Nesting Logical Operators:**
+You can nest these operators to create complex logic:
+
+```php
+[
+    '&&' => [ // Outer AND
+        ['=' => ['attribute' => 'is_published', 'value' => true]], // Condition 1
+        ['||' => [ // Inner OR
+            ['=' => ['attribute' => 'visibility', 'value' => 'public']], // Condition 2a
+            ['=' => ['attribute' => 'owner_id', 'value' => '$USER_ID']] // Condition 2b (assuming $USER_ID is a placeholder you'd replace)
+        ]]
+    ]
+]
+// Access if: is_published is true AND (visibility is 'public' OR owner_id matches the user's ID)
+```
+
+**Conditional Operators:**
+
+Conditional operators are used to compare a model's attribute with a specific value. The `AAuthABACModelScope` leverages Laravel's underlying database query builder, so standard SQL comparison operators are generally available. Common ones include:
+
+*   `=` : Equal to.
+*   `!=` or `<>` : Not equal to.
+*   `>` : Greater than.
+*   `<` : Less than.
+*   `>=` : Greater than or equal to.
+*   `<=` : Less than or equal to.
+*   `LIKE` : Simple string matching (e.g., `value` can be `'%' . $searchTerm . '%'`).
+*   `NOT LIKE` : Negated string matching.
+*   `IN` : Value is within a given array. The `value` for an `IN` condition should be an array.
+*   `NOT IN` : Value is not within a given array. The `value` for a `NOT IN` condition should be an array.
+
+**Condition Structure:**
+
+Each individual condition is an array where the key is the conditional operator, and the value is another array containing `attribute` and `value` keys.
+
+```php
+[
+    // Conditional Operator (e.g., '=')
+    '=' => [
+        'attribute' => 'model_column_name', // The column name on your Eloquent model
+        'value'     => 'the_value_to_compare_against'
+    ]
+]
+```
+
+*   `attribute`: A string representing the name of the attribute (database column) on the Eloquent model being queried.
+*   `value`: The value to compare the attribute against. This can be a string, number, boolean, or an array (especially for `IN` and `NOT IN` operators).
+
+**Practical Examples:**
+
+1.  **Allow if `status` is 'active':**
+    ```php
+    [
+        '&&' => [
+            ['=' => ['attribute' => 'status', 'value' => 'active']]
+        ]
+    ]
+    ```
+    *(Note: Even for a single condition, it must be wrapped in a top-level logical operator.)*
+
+2.  **Allow if `order_value` is greater than or equal to 1000:**
+    ```php
+    [
+        '&&' => [
+            ['>=' => ['attribute' => 'order_value', 'value' => 1000]]
+        ]
+    ]
+    ```
+
+3.  **Allow if `is_urgent` is true AND `priority` is greater than 5:**
+    ```php
+    [
+        '&&' => [
+            ['=' => ['attribute' => 'is_urgent', 'value' => true]],
+            ['>' => ['attribute' => 'priority', 'value' => 5]]
+        ]
+    ]
+    ```
+
+4.  **Allow if `department` is 'sales' OR `department` is 'support':**
+    This can be written in two ways:
+    Using `||`:
+    ```php
+    [
+        '||' => [
+            ['=' => ['attribute' => 'department', 'value' => 'sales']],
+            ['=' => ['attribute' => 'department', 'value' => 'support']]
+        ]
+    ]
+    ```
+    Using `IN`:
+    ```php
+    [
+        '&&' => [ // Top level can be && if this is the only group
+            ['IN' => ['attribute' => 'department', 'value' => ['sales', 'support']]]
+        ]
+    ]
+    ```
+
+5.  **Complex: Allow if (`type` is 'document' AND `file_format` is 'pdf') OR (`type` is 'image' AND `resolution` is 'high'):**
+    ```php
+    [
+        '||' => [ // Top-level OR
+            [ // First group: document conditions
+                '&&' => [
+                    ['=' => ['attribute' => 'type', 'value' => 'document']],
+                    ['=' => ['attribute' => 'file_format', 'value' => 'pdf']]
+                ]
+            ],
+            [ // Second group: image conditions
+                '&&' => [
+                    ['=' => ['attribute' => 'type', 'value' => 'image']],
+                    ['=' => ['attribute' => 'resolution', 'value' => 'high']]
+                ]
+            ]
+        ]
+    ]
+    ```
+
+6.  **Example adapted from `README-abac.md` (made concrete):**
+    Original abstract idea:
+    ```json
+    // {
+    //     "&&": [
+    //         { "==": [ "$attribute", "asd" ] },
+    //         { "==": [ "$attribute", "asd" ] },
+    //         { "||": [
+    //                 { "==": [ "$attribute", "asd" ] },
+    //                 { "==": [ "$attribute", "asd" ] }
+    //             ]
+    //         }
+    //     ]
+    // }
+    ```
+    Concrete AAuth PHP array:
+    ```php
+    [
+        '&&' => [
+            ['=' => ['attribute' => 'product_category', 'value' => 'electronics']],
+            ['=' => ['attribute' => 'brand', 'value' => 'AwesomeBrand']],
+            [
+                '||' => [
+                    ['=' => ['attribute' => 'region', 'value' => 'EU']],
+                    ['=' => ['attribute' => 'region', 'value' => 'US']]
+                ]
+            ]
+        ]
+    ]
+    // Access if: category is 'electronics' AND brand is 'AwesomeBrand' AND (region is 'EU' OR region is 'US')
+    ```
+
+By defining these rules in the `getABACRules()` method of your ABAC-enabled models, AAuth will automatically filter database queries to ensure users can only access records that meet the specified attribute conditions for their role.
 
 
 # Usage
@@ -427,7 +664,68 @@ class ExampleModel extends Model implements AAuthOrganizationNodeInterface
 ```
 
 ## Using ABAC Interface and Trait with Eloquent Models
-// todo
+
+To make your Eloquent models controllable via Attribute-Based Access Control (ABAC) with AAuth, you need to implement an interface and use a specific trait. This allows AAuth to understand how to apply attribute-based rules to your models.
+
+**Requirements:**
+
+1.  Your Eloquent model **must** implement the `AuroraWebSoftware\AAuth\Contracts\AAuthABACModelInterface`.
+2.  Your Eloquent model **must** use the `AuroraWebSoftware\AAuth\Traits\AAuthABACModel` trait.
+
+**Implementation Example:**
+
+Here's an example of how to set up an Eloquent model (e.g., `Order`) for ABAC:
+
+```php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use AuroraWebSoftware\AAuth\Contracts\AAuthABACModelInterface;
+use AuroraWebSoftware\AAuth\Traits\AAuthABACModel;
+
+class Order extends Model implements AAuthABACModelInterface
+{
+    use AAuthABACModel;
+
+    // Your model's other properties and methods...
+
+    /**
+     * Get the type of the model for ABAC.
+     * This is typically a string that identifies your model.
+     *
+     * @return string
+     */
+    public static function getModelType(): string
+    {
+        return 'order'; // Or any unique string identifier for this model type
+    }
+
+    /**
+     * Define the ABAC rules for this model.
+     * These rules determine how access is granted based on attributes.
+     * The detailed structure and syntax for these rules are covered in the "Defining ABAC Rules" section.
+     * This method can serve as a fallback or default if no specific rule is found for the current user's role
+     * via the `RoleModelAbacRule` model, or it can be the primary source if role-specific ABAC rules are not used.
+     *
+     * @return array
+     */
+    public static function getABACRules(): array
+    {
+        // Example: Return an empty array as a placeholder, or define default/fallback rules here.
+        // For instance, to allow access if 'status' is 'active' by default:
+        // return [
+        //     '&&' => [
+        //         ['=' => ['attribute' => 'status', 'value' => 'active']]
+        //     ]
+        // ];
+        // If no role-specific rule is found via RoleModelAbacRule, these rules (if any) might be applied.
+        // If you exclusively use RoleModelAbacRule for all ABAC logic, this method can safely return an empty array.
+        return [];
+    }
+}
+```
+
+This setup prepares your model to have ABAC rules applied to it. The `getModelType()` method provides a string identifier for your model type, which can be used in rule definitions. The `getABACRules()` method is where you can define default or fallback attribute conditions for accessing instances of this model. While the primary mechanism for applying role-specific rules is via the `RoleModelAbacRule` model (see "Managing ABAC Rules and Associations"), these model-defined rules can act as a base or default. The detailed format for the rule syntax is covered in the "Defining ABAC Rules" section.
 
 ## AAuth Service and Facade Methods
 // todo
@@ -497,11 +795,193 @@ Thus, you can simply use any eloquent model method without adding anything
 ExampleModel::all();
 ```
 
-## Creating Role - ABAC Rules
-// todo
+## Managing ABAC Rules and Associations
 
-## Getting authorized Models only. (ABAC)
-// todo
+While the "Defining ABAC Rules" section explains the *structure* of ABAC rules, this section details how those rules are associated with specific roles and managed within the AAuth system. AAuth uses a dedicated Eloquent model to store these associations, allowing for dynamic and granular control over which rules apply to which roles for different types of models.
+
+**1. Association with Roles: The `RoleModelAbacRule` Model**
+
+ABAC rules are not globally applied or solely defined in the model's `getABACRules()` method (though that method can serve as a default or fallback). Instead, for role-specific ABAC, rules are linked to roles via the `AuroraWebSoftware\AAuth\Models\RoleModelAbacRule` Eloquent model.
+
+This model has the following key fields:
+
+*   `role_id`: The ID of the `Role` to which this specific ABAC rule applies.
+*   `model_type`: A string that identifies the ABAC-enabled Eloquent model. This string **must** match the value returned by the static `getModelType()` method on your ABAC-enabled model (e.g., `'order'`, `'post'`, `'product'`). This ensures the rules are applied to the correct model.
+*   `rules_json`: A JSON field where the actual ABAC rule array (as documented in "Defining ABAC Rules") is stored. When creating or updating, you can typically provide a PHP array, and Eloquent will handle the JSON conversion if the model's casts are set up appropriately (which is common for JSON fields).
+
+**2. Creating and Assigning Rules**
+
+To apply a specific set of ABAC rules to a role for a particular model, you create an instance of `RoleModelAbacRule`.
+
+**Example:**
+
+Let's say you have an `Order` model that is ABAC-enabled (implements `AAuthABACModelInterface` and uses `AAuthABACModel` trait, with `Order::getModelType()` returning `'order'`). You want to create a rule for a specific role (e.g., "Regional Manager") that only allows them to see 'approved' orders with an amount greater than or equal to 100.
+
+```php
+use AuroraWebSoftware\AAuth\Models\Role;
+use AuroraWebSoftware\AAuth\Models\RoleModelAbacRule;
+use App\Models\Order; // Your ABAC-enabled Order model
+
+// Assume $regionalManagerRole is an existing Role instance
+$regionalManagerRole = Role::where('name', 'Regional Manager')->first();
+
+if ($regionalManagerRole) {
+    // Define the ABAC rules for the 'Order' model specifically for this role
+    $orderRulesForRole = [
+        '&&' => [
+            ['=' => ['attribute' => 'status', 'value' => 'approved']],
+            ['>=' => ['attribute' => 'amount', 'value' => 100]]
+        ]
+    ];
+
+    // Create or update the rule for this role and model type
+    RoleModelAbacRule::updateOrCreate(
+        [
+            'role_id' => $regionalManagerRole->id,
+            'model_type' => Order::getModelType(), // This will return 'order'
+        ],
+        [
+            'rules_json' => $orderRulesForRole // Provide the array directly
+        ]
+    );
+
+    echo "ABAC rules for Orders assigned to Regional Manager role.\n";
+}
+```
+In this example, `updateOrCreate` is used to either create a new rule association or update an existing one if a rule for that specific `role_id` and `model_type` already exists.
+
+**3. Viewing, Modifying, and Deleting Rules**
+
+Since `RoleModelAbacRule` is a standard Eloquent model, you can manage these rule associations using familiar Eloquent methods:
+
+*   **Viewing:**
+    ```php
+    // Get all rules for a specific role
+    $rulesForRole = RoleModelAbacRule::where('role_id', $role->id)->get();
+
+    // Get the rule for a specific role and model
+    $specificRule = RoleModelAbacRule::where('role_id', $role->id)
+                                     ->where('model_type', Order::getModelType())
+                                     ->first();
+    if ($specificRule) {
+        $rulesArray = $specificRule->rules_json; // Accesses the casted array
+    }
+    ```
+
+*   **Modifying:**
+    ```php
+    $ruleToUpdate = RoleModelAbacRule::find(1); // Or fetch by role_id and model_type
+    if ($ruleToUpdate) {
+        $newRules = [ /* ... new rule definition ... */ ];
+        $ruleToUpdate->update(['rules_json' => $newRules]);
+    }
+    ```
+
+*   **Deleting:**
+    ```php
+    $ruleToDelete = RoleModelAbacRule::find(1);
+    if ($ruleToDelete) {
+        $ruleToDelete->delete();
+    }
+
+    // Or delete by role and model type
+    RoleModelAbacRule::where('role_id', $role->id)
+                     ->where('model_type', Order::getModelType())
+                     ->delete();
+    ```
+
+**4. Facade Method for Rule Retrieval: `AAuth::ABACRules()`**
+
+AAuth provides a facade method to retrieve the applicable ABAC rules for the currently authenticated user's active role and a specific model type:
+
+`AAuth::ABACRules(string $modelType): ?array`
+
+*   `$modelType`: The string identifier for the model (e.g., `'order'`, as returned by `YourModel::getModelType()`).
+
+This method is primarily used internally by the `AAuthABACModelScope`. When you query an ABAC-enabled model (e.g., `Order::all()`), the scope automatically calls `AAuth::ABACRules(Order::getModelType())`.
+
+Here's how it works:
+1.  AAuth identifies the current user (typically via `Auth::user()`).
+2.  It determines the user's currently active role. This is usually set via `Session::get('roleId')` when the AAuth service is initialized (see "AAuth Services, Service Provider and `roleId` Session and Facade").
+3.  It then queries the `role_model_abac_rules` table for an entry matching the active `role_id` and the provided `$modelType`.
+4.  If a matching rule is found, it returns the `rules_json` content as a PHP array.
+5.  If no specific rule is found for that role and model type, it may return `null` (or potentially fall back to default rules defined in the model's `getABACRules()` method, depending on the full implementation logic of `AAuthABACModelScope` and `AAuth::ABACRules()`).
+
+This mechanism ensures that the ABAC rules applied are specific to the user's current operational role, providing a powerful and flexible way to manage data access.
+
+## Automatic Query Filtering (ABAC)
+
+A key strength of AAuth's Attribute-Based Access Control (ABAC) implementation is its ability to automatically filter Eloquent queries. This ensures that users only retrieve model records that they are authorized to access based on the ABAC rules defined for their current role, without needing to manually add conditions to every query.
+
+**1. Introduction to Global Scope: `AAuthABACModelScope`**
+
+When you use the `AuroraWebSoftware\AAuth\Traits\AAuthABACModel` trait in your Eloquent model, AAuth automatically registers a global Eloquent scope called `AuroraWebSoftware\AAuth\Scopes\AAuthABACModelScope`. This scope is responsible for intercepting database queries for that model and applying the necessary ABAC rule conditions.
+
+**2. Automatic Filtering in Action**
+
+Once your model is correctly set up with the `AAuthABACModel` trait, and you have defined ABAC rules and associated them with a user's current role via the `RoleModelAbacRule` model (as described in "Managing ABAC Rules and Associations"), the filtering is seamless:
+
+*   Any standard Eloquent query you execute, such as `YourModel::all()`, `YourModel::where('some_column', 'some_value')->get()`, `YourModel::find($id)`, or even queries through relationships, will automatically have the ABAC rules applied.
+*   The `AAuthABACModelScope` fetches the relevant ABAC rules for the active user's role and the model being queried (using `AAuth::ABACRules(YourModel::getModelType())`).
+*   These rules are then translated into `WHERE` clauses that are added to your database query.
+*   Consequently, the query results will only include records that satisfy the conditions defined in the applicable ABAC rules. If no rules are defined for the role, or if the rules permit all access, then all records will be returned (subject to other query conditions).
+
+**3. Example Scenario**
+
+Let's illustrate with an `Order` model that is ABAC-enabled:
+
+*   The `App\Models\Order` model uses the `AAuthABACModel` trait.
+*   The user's currently active role has an ABAC rule associated with the `'order'` model type (Order::getModelType() returns 'order'). This rule is:
+    ```php
+    // Rule stored in RoleModelAbacRule for the user's role and 'order' model_type:
+    // [
+    //     '&&' => [
+    //         ['=' => ['attribute' => 'status', 'value' => 'completed']]
+    //     ]
+    // ]
+    ```
+*   The `orders` table in your database contains orders with various statuses: 'pending', 'processing', 'completed', 'cancelled'.
+
+Now, when the user performs queries:
+
+```php
+use App\Models\Order;
+
+// Fetch all orders
+// Despite no explicit where('status', 'completed') here,
+// AAuth will automatically add this condition based on the user's role's ABAC rules.
+// $completedOrders will only contain orders where status is 'completed'.
+$completedOrders = Order::all();
+
+foreach ($completedOrders as $order) {
+    // echo $order->status; // Will always output 'completed'
+}
+
+// Fetch a specific order by ID
+$order1 = Order::find(1); // If Order ID 1 has status 'pending', $order1 will be null.
+$order2 = Order::find(2); // If Order ID 2 has status 'completed', $order2 will be the Order model.
+
+// Even more complex queries are filtered:
+$highValueCompletedOrders = Order::where('amount', '>', 500)->get();
+// This will return orders where amount > 500 AND status is 'completed'.
+```
+This automatic filtering significantly enhances security and simplifies development, as the access control logic is centralized and consistently applied without requiring developers to remember to add specific `WHERE` clauses for authorization in every query.
+
+**4. Bypassing the ABAC Scope**
+
+There might be rare situations (e.g., in administrative tools or specific internal processes) where you need to retrieve all records without ABAC filtering. You can bypass the global `AAuthABACModelScope` just like any other global Eloquent scope:
+
+```php
+use AuroraWebSoftware\AAuth\Scopes\AAuthABACModelScope;
+use App\Models\Order;
+
+// Retrieve all orders, ignoring ABAC rules for this specific query
+$allOrdersIncludingNonCompleted = Order::withoutGlobalScope(AAuthABACModelScope::class)->get();
+
+// Find a specific order by ID, ignoring ABAC rules
+$anyOrder = Order::withoutGlobalScope(AAuthABACModelScope::class)->find(1);
+```
+The `withoutGlobalScopes()->all()` method mentioned earlier in the "Getting All Model Collection without any access control" section also effectively bypasses this and all other global scopes. Use this capability judiciously, as it circumvents the defined access controls.
 
 ## Getting All Model Collection without any access control
 ```php

@@ -5,7 +5,6 @@
 - pint, github actions
 - can fonkisyonlarında yetki 1 kez çekilebilir
 - Readme contribution
-- ABAC
 
 
 ## Done
@@ -46,8 +45,5 @@
 - config'ler
 - migr. ve seeder'ların çalıştırılması
 - github pages docs
-- ABAC docs
-
-
 ## backlog
 - github pages ?
