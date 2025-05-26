@@ -16,6 +16,7 @@ class InvalidOrganizationScopeException extends Exception
     public function report()
     {
         //
+        return null;
     }
 
     /**

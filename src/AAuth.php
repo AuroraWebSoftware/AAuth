@@ -86,7 +86,7 @@ class AAuth
         return Role::where('uro.user_id', '=', $this->user->id)
             ->leftJoin('user_role_organization_node as uro', 'uro.role_id', '=', 'roles.id')
             ->distinct()
-            ->get(['roles.id', 'name']);
+            ->select('roles.id', 'name')->get();
     }
 
     /**
@@ -99,7 +99,7 @@ class AAuth
         return Role::where('uro.user_id', '=', $userId)
             ->leftJoin('user_role_organization_node as uro', 'uro.role_id', '=', 'roles.id')
             ->distinct()
-            ->get(['roles.id', 'name']);
+            ->select('roles.id', 'name')->get();
     }
 
     /**
@@ -149,7 +149,8 @@ class AAuth
         if (is_null($permissions)) {
             $permissions = Role::where('roles.id', '=', $this->role->id)
                 ->leftJoin('role_permission as rp', 'rp.role_id', '=', 'roles.id')
-                ->pluck('rp.permission')
+                ->select('rp.permission as permission_from_rp')
+                ->pluck('permission_from_rp')
                 ->toArray();
 
             Context::add('role_permissions', $permissions);

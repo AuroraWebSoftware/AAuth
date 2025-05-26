@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 /**
  * AuroraWebSoftware\AAuth\Models\Role
  *
- * @property int $id
+ * @property-read int $id
  * @property string $type
  * @property string $name
  * @property string $status
@@ -20,11 +20,13 @@ use Illuminate\Support\Facades\DB;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property int|null $organization_scope_id
+ * @property-read string|null $permission
  *
  * @method static Role find($role_id)
  */
 class Role extends Model
 {
+    /** @use \Illuminate\Database\Eloquent\Factories\HasFactory<\Illuminate\Database\Eloquent\Factories\Factory<\AuroraWebSoftware\AAuth\Models\Role>> */
     use HasFactory;
 
     protected $fillable = ['organization_scope_id', 'type', 'name', 'status'];
@@ -40,7 +42,7 @@ class Role extends Model
     }
 
     /**
-     * @return BelongsTo<OrganizationScope, Role>
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\AuroraWebSoftware\AAuth\Models\OrganizationScope, \AuroraWebSoftware\AAuth\Models\Role>
      */
     public function organization_scope(): BelongsTo
     {
@@ -48,7 +50,7 @@ class Role extends Model
     }
 
     /**
-     * @return BelongsToMany<OrganizationNode>
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\AuroraWebSoftware\AAuth\Models\OrganizationNode, \AuroraWebSoftware\AAuth\Models\Role, \Illuminate\Database\Eloquent\Relations\Pivot>
      */
     public function organization_nodes(): BelongsToMany
     {
