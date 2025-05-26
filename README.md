@@ -532,3 +532,23 @@ Please review [our security policy](../../security/policy) on how to report secu
 ## License
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+
+## Development Environment using Dev Containers
+
+This project includes a [Dev Container](https://containers.dev/) configuration, which allows you to use a Docker container as a fully-featured development environment.
+
+### Prerequisites
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running.
+- [Visual Studio Code](https://code.visualstudio.com/) installed.
+- [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) for VS Code installed.
+
+### Getting Started
+
+1.  Clone this repository to your local machine.
+2.  Open the cloned repository in Visual Studio Code.
+3.  When prompted with "Reopen in Container", click the button. (If you don't see the prompt, open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`) and run "Dev Containers: Reopen in Container".)
+
+This will build the dev container and install all necessary dependencies. You can then develop and run the application from within this isolated environment.
+
+[![Open in Dev Containers](https://img.shields.io/static/v1?label=Dev%20Containers&message=Open&color=blue&logo=visualstudiocode)](https://vscode.dev/redirect?url=vscode://ms-vscode-remote.remote-containers/cloneInVolume?url=https://github.com/AuroraWebSoftware/AAuth)

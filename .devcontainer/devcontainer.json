@@ -1,0 +1,28 @@
+{
+	"name": "PHP & MariaDB",
+	"dockerComposeFile": [
+		"../docker-compose.yml"
+	],
+	"service": "app",
+	"workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+	"features": {
+		"ghcr.io/devcontainers/features/php:1": {
+			"version": "8.2",
+			"installComposer": true,
+			"composerVersion": "latest"
+		}
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"bmewburn.vscode-intelephense-client",
+				"xdebug.php-debug",
+				"ms-azuretools.vscode-docker",
+				"EditorConfig.EditorConfig",
+				"streetsidesoftware.code-spell-checker"
+			]
+		}
+	},
+	"postCreateCommand": "composer install && cp .env.example .env && php artisan key:generate",
+	"remoteUser": "vscode"
+}
