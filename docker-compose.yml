@@ -1,12 +1,10 @@
-version: '3.7'
-
 services:
   mariadb:
     image: mariadb:10.8
     ports:
       - "33062:3306"
     volumes:
-      - ~/apps/mariadb:/var/lib/mysql
+      - aurora_aauth_root_mariadb_data:/var/lib/mysql
     environment:
       - MYSQL_ROOT_PASSWORD=aauth
       - MYSQL_PASSWORD=aauth
@@ -18,3 +16,6 @@ networks:
     ipam:
       config:
         - subnet: 172.16.57.0/24
+
+volumes:
+  aurora_aauth_root_mariadb_data:
