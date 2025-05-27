@@ -3,7 +3,7 @@ FROM mcr.microsoft.com/devcontainers/php:1-8.2-bullseye
 
 # Install system dependencies
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get -y install --no-install-recommends default-mysql-client libonig-dev libxml2-dev
+    && apt-get -y install --no-install-recommends default-mysql-client libonig-dev libxml2-dev php8.2-dev php-pear
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql mbstring xml tokenizer ctype json curl dom fileinfo session bcmath
