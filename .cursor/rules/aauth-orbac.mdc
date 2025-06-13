@@ -1,0 +1,312 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# AAuth Package Usage Rules
+
+## OrBAC Core Concepts
+
+### Organization Structure
+- Every model that needs organization-based access control must implement the organization node structure
+- Organization nodes form a hierarchical tree with unlimited depth
+- Each node can be polymorphically related to any Eloquent model
+- Organization scopes determine the level and access boundaries
+- Each node can have multiple roles and permissions assigned
+- Supports multi-tenant applications with data isolation
+
+### Understanding Organization Nodes
+
+#### What is an Organization Node?
+An Organization Node is any Laravel Eloquent model that implements `AuroraWebSoftware\AAuth\Contracts\OrganizationNodeContract` interface and uses `AuroraWebSoftware\AAuth\Traits\OrganizationNode` trait. When a model implements these requirements, it automatically becomes an organization node and gains the ability to participate in the hierarchical access control system. The model will be automatically filtered based on the user's organization permissions and role assignments.
+
+#### Important Note About Relationships
+When implementing organization nodes, it's crucial to understand that hierarchical relationships between nodes should be established through the `organization_nodes` table, not through Laravel's standard relationships (like hasMany, belongsTo, etc.). While you can still use Laravel's relationships for other purposes (like data integrity or convenience), the actual hierarchical structure and access control should be managed through the organization_nodes table.
+
+#### Organization Scope Requirement
+Every organization node must have an organization scope. The organization scope determines the level and boundaries of access control for that node. This is implemented through the `organizationScope()` relationship in the OrganizationNode trait.
+
+For example:
+```php
+// ❌ Missing organization scope
+class School extends Model implements OrganizationNodeContract
+{
+    use OrganizationNode;
+    // Missing organizationScope relationship
+}
+
+// ✅ Correct implementation with organization scope
+class School extends Model implements OrganizationNodeContract
+{
+    use OrganizationNode;
+
+    public function organizationScope()
+    {
+        return $this->belongsTo(OrganizationScope::class);
+    }
+}
+```
+
+The organization scope is used to:
+1. Define the access boundaries for the node
+2. Control which users can access the node
+3. Determine the level of access control
+4. Manage permission inheritance
+5. Control data visibility across the organization hierarchy
+
+#### Database Structure
+1. Organization Node Table:
+   - Each model that implements OrganizationNodeContract has a corresponding record in the `organization_nodes` table
+   - The relationship is polymorphic (morphable)
+   - Contains organization scope information
+   - Stores hierarchical relationships
+   - Maintains path information for efficient querying
+   - Uses proper indexes for performance optimization
+
+2. Model Scope Implementation:
+   - Laravel's global scopes are automatically applied through the OrganizationNode trait
+   - No need to manually add scopes when the trait is used
+   - Global scopes handle all organization-based filtering automatically
+
+#### When to Use Organization Nodes?
+1. Hierarchical Data Access:
+   - When you need to control access to data based on organizational hierarchy
+   - When different users should see different subsets of data based on their position
+   - When you need to implement multi-tenant functionality
+   - When you need to implement role-based access control at different levels
+   - When you need data isolation between different organizational units
+
+2. Common Use Cases in School System:
+   - School Districts
+   - Schools
+   - Departments
+   - Classes
+   - Students
+   - Teachers
+   - Administrative Staff
+   - Programs
+   - Grade Levels
+
+#### Which Models Should Be Organization Nodes?
+1. Primary Organization Models:
+   - School District
+   - School
+   - Department
+   - Administrative Units
+   - Regional Offices
+   - Class
+   - Section
+   - Grade Level
+   - Program
+   - Course
+   - Student Group
+
+   
+
+3. Criteria for Organization Node:
+   - Model represents a hierarchical unit
+   - Model needs access control based on hierarchy
+   - Model's data should be accessible only to specific users/groups
+   - Model has parent-child relationships
+   - Model needs to participate in permission inheritance
+   - Model requires data isolation
+
+4. When NOT to Use Organization Nodes:
+   - Models that don't need hierarchical access control
+   - Models that are accessible to all users
+   - Models that don't have organizational context
+   - Models that don't need data isolation
+   - Models that are purely reference data
+   - Models that are used for system-wide settings
+
+#### Organization Node Implementation Examples
+
+1. School Model:
+```php
+use AuroraWebSoftware\AAuth\Contracts\OrganizationNodeContract;
+use AuroraWebSoftware\AAuth\Traits\OrganizationNode;
+
+class School extends Model implements OrganizationNodeContract
+{
+    use OrganizationNode;
+
+    protected $fillable = [
+        'name',
+        'address',
+        'phone',
+        'email',
+    ];
+
+    /**
+     * Get the unique identifier of the model.
+     * This ID is used in two ways:
+     * 1. Stored in the organization_nodes table as model_id
+     * 2. Used by AAuth's global scope to filter models based on user's organization permissions
+     * 
+     * The relationship between model and organization_nodes is polymorphic:
+     * - model_type: The model's class name
+     * - model_id: The value returned by this method
+     *
+     * @return int The unique identifier of the model
+     */
+    public function getModelId(): int
+    {
+        return $this->id;
+    }
+
+    /**
+     * Get the display name of the model.
+     * This name is used in the organization hierarchy display and logs.
+     *
+     * @return string|null The display name of the model or null if not set
+     */
+    public function getModelName(): ?string
+    {
+        return $this->name;
+    }
+
+
+}
+```
+
+2. Department Model:
+```php
+use AuroraWebSoftware\AAuth\Contracts\OrganizationNodeContract;
+use AuroraWebSoftware\AAuth\Traits\OrganizationNode;
+
+class Department extends Model implements OrganizationNodeContract
+{
+    use OrganizationNode;
+
+    protected $fillable = [
+        'name',
+        'code',
+        'description',
+    ];
+
+
+    public function getModelId(): int
+    {
+        return $this->id;
+    }
+
+    public function getModelName(): ?string
+    {
+        return $this->name;
+    }
+}
+```
+
+3. Student Model:
+```php
+use AuroraWebSoftware\AAuth\Contracts\OrganizationNodeContract;
+use AuroraWebSoftware\AAuth\Traits\OrganizationNode;
+
+class Student extends Model implements OrganizationNodeContract
+{
+    use OrganizationNode;
+
+    protected $fillable = [
+        'first_name',
+        'last_name',
+        'student_id',
+        'grade_level',
+    ];
+
+
+    public function getModelId(): int
+    {
+        return $this->id;
+    }
+
+    public function getModelName(): ?string
+    {
+        return $this->first_name . ' ' . $this->last_name;
+    }
+}
+```
+
+#### How Organization Node Filtering Works
+
+1. Materialized Path Structure:
+   - Each organization node has a `path` column in the `organization_nodes` table
+   - Path format: `1/5/7/` (parent IDs separated by slashes)
+   - Example hierarchy:
+     ```
+     ID: 1 (School District)
+     ├── ID: 5 (School A)
+     │   ├── ID: 7 (Department A)
+     │   │   └── ID: 9 (Student 1)
+     │   └── ID: 8 (Department B)
+     │       └── ID: 10 (Student 2)
+     └── ID: 6 (School B)
+         ├── ID: 11 (Department A)
+         └── ID: 12 (Department B)
+     ```
+   - Path examples:
+     - School District (ID: 1): `1/`
+     - School A (ID: 5): `1/5/`
+     - Department A (ID: 7): `1/5/7/`
+     - Student 1 (ID: 9): `1/5/7/9/`
+
+2. Access Control Flow:
+   - Teacher is assigned a role for a specific department
+   - System stores the department's path in teacher's accessible paths
+   - Global scope automatically filters models based on these paths
+   - Teacher can access:
+     - The assigned department
+     - All students in that department
+     - All related department data
+   - Access is automatically inherited down the hierarchy
+   - Access can be restricted to specific levels
+   - Permissions are cached for better performance
+
+#### Organization Node Benefits
+
+1. Hierarchical Access Control:
+   - Control who can access what data
+   - Implement role-based access at different levels
+   - Manage permissions across the organization tree
+
+2. Data Isolation:
+   - Keep data separate between different units
+   - Prevent unauthorized access across boundaries
+   - Maintain data privacy and security
+
+3. Flexible Structure:
+   - Support unlimited depth of hierarchy
+   - Allow different types of organizational units
+   - Enable dynamic organizational changes
+   - Support complex organizational structures
+   - Adapt to changing business requirements
+
+
+#### Common Organization Node Patterns
+
+School System Hierarchy:
+```
+School District (Root)
+├── School A
+│   ├── Department A
+│   │   └── Student 1
+│   └── Department B
+│       └── Student 2
+└── School B
+    ├── Department A
+    └── Department B
+```
+
+## Implementation Rules
+
+### Model Requirements
+
+1. User Model Requirements:
+   - Must implement `AuroraWebSoftware\AAuth\Contracts\AAuthUserContract`
+   - Must use `AuroraWebSoftware\AAuth\Traits\AAuthUser` trait
+   - Must extend `Illuminate\Foundation\Auth\User`
+   - Must support role switching functionality
+
+2. Organization Node Model Requirements:
+   - Must implement `AuroraWebSoftware\AAuth\Contracts\OrganizationNodeContract`
+   - Must use `AuroraWebSoftware\AAuth\Traits\OrganizationNode` trait
+   - Must implement `getModelId()` and `getModelName()` methods

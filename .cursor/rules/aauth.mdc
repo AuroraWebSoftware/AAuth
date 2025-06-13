@@ -1,0 +1,139 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# AAuth Core Concepts
+
+## Combined Access Control: OrBAC + ABAC
+
+AAuth provides a powerful combination of Organization-Based Access Control (OrBAC) and Attribute-Based Access Control (ABAC) that can be used simultaneously to create sophisticated access control systems. This combination allows for both hierarchical organization-based access and fine-grained attribute-based filtering.
+
+### How They Work Together
+
+1. **OrBAC (Organization-Based Access Control)**
+   - Controls access based on organizational hierarchy
+   - Manages permissions at different organizational levels
+   - Handles data isolation between organizations
+   - Provides role-based access within organizations
+
+2. **ABAC (Attribute-Based Access Control)**
+   - Controls access based on model attributes
+   - Provides fine-grained filtering of data
+   - Allows dynamic access rules based on data properties
+   - Enables complex business rule implementation
+
+### Implementation Example
+
+Here's how to implement both OrBAC and ABAC in a single model:
+
+```php
+use AuroraWebSoftware\AAuth\Contracts\OrganizationNodeContract;
+use AuroraWebSoftware\AAuth\Contracts\AAuthABACModelInterface;
+use AuroraWebSoftware\AAuth\Traits\OrganizationNode;
+use AuroraWebSoftware\AAuth\Traits\AAuthABACModel;
+
+class Order extends Model implements OrganizationNodeContract, AAuthABACModelInterface
+{
+    use OrganizationNode, AAuthABACModel;
+
+    protected $fillable = [
+        'name',
+        'amount',
+        'status',
+        'organization_id'
+    ];
+
+    public static function getModelType(): string
+    {
+        return 'order';
+    }
+
+        public function getModelId(): int
+    {
+        return $this->id;
+    }
+
+    public static function getABACRules(): array
+    {
+        return [
+            '&&' => [
+                ['=' => ['attribute' => 'status', 'value' => 'active']]
+            ]
+        ];
+    }
+}
+```
+
+### Access Control Flow
+
+When both OrBAC and ABAC are implemented:
+
+1. **First Layer: OrBAC**
+   - Checks if the user has access to the organization
+   - Verifies organizational hierarchy permissions
+   - Filters data based on organizational structure
+
+2. **Second Layer: ABAC**
+   - Applies attribute-based rules to the filtered data
+   - Further refines access based on model attributes
+   - Implements business-specific access rules
+
+### Example Scenarios
+
+1. **School System Example**
+```php
+class Student extends Model implements OrganizationNodeContract, AAuthABACModelInterface
+{
+    use OrganizationNode, AAuthABACModel;
+
+    // OrBAC: Teacher can only see students in their department
+    // ABAC: Teacher can only see active students with grade > 70
+
+    public static function getABACRules(): array
+    {
+        return [
+            '&&' => [
+                ['=' => ['attribute' => 'status', 'value' => 'active']],
+                ['>' => ['attribute' => 'grade', 'value' => 70]]
+            ]
+        ];
+    }
+}
+```
+
+2. **E-commerce Example**
+```php
+class Order extends Model implements OrganizationNodeContract, AAuthABACModelInterface
+{
+    use OrganizationNode, AAuthABACModel;
+
+    // OrBAC: Regional manager can only see orders in their region
+    // ABAC: Can only see orders with amount > 1000 and status = 'completed'
+
+    public static function getABACRules(): array
+    {
+        return [
+            '&&' => [
+                ['>' => ['attribute' => 'amount', 'value' => 1000]],
+                ['=' => ['attribute' => 'status', 'value' => 'completed']]
+            ]
+        ];
+    }
+}
+```
+
+
+### Common Use Cases
+
+1. **School Management Systems**
+   - OrBAC: Department/Class access
+   - ABAC: Grade/Status filtering
+
+2. **E-commerce Platforms**
+   - OrBAC: Regional access
+   - ABAC: Order status/amount rules
+
+3. **Healthcare Systems**
+   - OrBAC: Department access
+   - ABAC: Patient age data filtering
