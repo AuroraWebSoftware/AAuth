@@ -1,8 +1,8 @@
 # AAuth for Laravel
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/aurorawebsoftware/aauth.svg?style=flat-square)](https://packagist.org/packages/aurorawebsoftware/aauth)
-[![Tests](https://github.com/aurorawebsoftware/aauth/actions/workflows/tests.yml/badge.svg)](https://github.com/aurorawebsoftware/aauth/actions/workflows/tests.yml)
-[![Code Style](https://github.com/aurorawebsoftware/aauth/actions/workflows/code-style.yml/badge.svg)](https://github.com/aurorawebsoftware/aauth/actions/workflows/code-style.yml)
+[![Tests](https://github.com/aurorawebsoftware/aauth/actions/workflows/run-tests.yml/badge.svg?branch=main)](https://github.com/aurorawebsoftware/aauth/actions/workflows/run-tests.yml)
+[![Code Style](https://github.com/aurorawebsoftware/aauth/actions/workflows/php-cs-fixer.yml/badge.svg?branch=main)](https://github.com/aurorawebsoftware/aauth/actions/workflows/php-cs-fixer.yml)
 [![Total Downloads](https://img.shields.io/packagist/dt/aurorawebsoftware/aauth.svg?style=flat-square)](https://packagist.org/packages/aurora/aauth)
 
 Organization Based (OrBAC) , Attibute Based (ABAC) , Rol-Permission (RBAC)  Based Authentication Methods Combined **Laravel Auth Package** with Limitless Hierarchical Level of Organizations and Limitless Attribute Conditions
