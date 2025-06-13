@@ -23,8 +23,6 @@ Organization Based (OrBAC) , Attibute Based (ABAC) , Rol-Permission (RBAC)  Base
 ---
 
 
-[<img src="https://banners.beyondco.de/AAuth%20for%20Laravel.png?theme=light&packageManager=composer+require&packageName=aurorawebsoftware%2Faauth&pattern=jigsaw&style=style_1&description=OrBAC, ABAC, RBAC Combined Laravel Auth Package&md=1&showWatermark=0&fontSize=175px&images=shield-check&widths=auto" />](https://github.com/AuroraWebSoftware/AAuth)
-
 # Installation
 
 You can install the package via composer:
