@@ -1,8 +1,8 @@
 # AAuth for Laravel
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/aurorawebsoftware/aauth.svg?style=flat-square)](https://packagist.org/packages/aurorawebsoftware/aauth)
-[![GitHub Tests Action Status](https://img.shields.io/github/workflow/status/aurorawebsoftware/aauth/run-tests?label=tests)](https://github.com/aurorawebsoftware/aauth/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/workflow/status/aurorawebsoftware/aauth/Check%20&%20fix%20styling?label=code%20style)](https://github.com/aurorawebsoftware/aauth/actions?query=workflow%3A"Check+%26+fix+styling"+branch%3Amain)
+[![Tests](https://github.com/aurorawebsoftware/aauth/actions/workflows/tests.yml/badge.svg)](https://github.com/aurorawebsoftware/aauth/actions/workflows/tests.yml)
+[![Code Style](https://github.com/aurorawebsoftware/aauth/actions/workflows/code-style.yml/badge.svg)](https://github.com/aurorawebsoftware/aauth/actions/workflows/code-style.yml)
 [![Total Downloads](https://img.shields.io/packagist/dt/aurorawebsoftware/aauth.svg?style=flat-square)](https://packagist.org/packages/aurora/aauth)
 
 Organization Based (OrBAC) , Attibute Based (ABAC) , Rol-Permission (RBAC)  Based Authentication Methods Combined **Laravel Auth Package** with Limitless Hierarchical Level of Organizations and Limitless Attribute Conditions
