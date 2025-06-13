@@ -1,0 +1,339 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# AAuth ABAC Documentation
+
+## What is ABAC in AAuth?
+
+Attribute-Based Access Control (ABAC) in AAuth is an advanced system for creating dynamic, attribute-based filtering scopes for your Eloquent models. It allows you to define granular access rules that operate directly on the attributes of the models themselves. When a user attempts to retrieve data, these rules are automatically applied to the database queries, ensuring that only records matching the specified attribute conditions for the user's current role are returned.
+
+## Core Concepts
+
+### Model Attributes
+- These are the characteristics of your Eloquent model instances
+- Directly correspond to the columns in your database tables
+- Examples: `status`, `amount`, `created_at`, `customer_id`
+- ABAC rules are built around evaluating these attributes
+
+### Rules/Policies
+- Structured statements that define conditions based on model attributes
+- Stored and associated with user roles
+- Conditions operate on the attributes of the Eloquent model being queried
+- Can be complex with nested logical operators
+
+## Implementation
+
+### 1. Model Setup
+
+To make your Eloquent models controllable via ABAC:
+
+```php
+use AuroraWebSoftware\AAuth\Contracts\AAuthABACModelInterface;
+use AuroraWebSoftware\AAuth\Traits\AAuthABACModel;
+
+class Order extends Model implements AAuthABACModelInterface
+{
+    use AAuthABACModel;
+
+    /**
+     * Get the type of the model for ABAC.
+     * This is typically a string that identifies your model.
+     *
+     * @return string
+     */
+    public static function getModelType(): string
+    {
+        return 'order';
+    }
+
+    /**
+     * Define the ABAC rules for this model.
+     * These rules determine how access is granted based on attributes.
+     *
+     * @return array
+     */
+    public static function getABACRules(): array
+    {
+        return [
+            '&&' => [
+                ['=' => ['attribute' => 'status', 'value' => 'active']]
+            ]
+        ];
+    }
+}
+```
+
+### 2. Rule Structure
+
+ABAC rules are defined as PHP arrays with the following structure:
+
+```php
+[
+    '&&' => [ // Top-level logical operator (AND)
+        ['=' => ['attribute' => 'status', 'value' => 'active']], // Condition 1
+        ['>' => ['attribute' => 'amount', 'value' => 100]], // Condition 2
+        ['||' => [ // Nested logical operator (OR)
+            ['=' => ['attribute' => 'category', 'value' => 'electronics']],
+            ['=' => ['attribute' => 'category', 'value' => 'books']]
+        ]]
+    ]
+]
+```
+
+### 3. Logical Operators
+
+#### AND (&&)
+All conditions within the block must be true:
+```php
+[
+    '&&' => [
+        ['=' => ['attribute' => 'status', 'value' => 'active']],
+        ['>' => ['attribute' => 'amount', 'value' => 100]]
+    ]
+]
+```
+
+#### OR (||)
+At least one condition must be true:
+```php
+[
+    '||' => [
+        ['=' => ['attribute' => 'status', 'value' => 'active']],
+        ['=' => ['attribute' => 'status', 'value' => 'pending']]
+    ]
+]
+```
+
+### 4. Conditional Operators
+
+- `=` : Equal to
+- `!=` or `<>` : Not equal to
+- `>` : Greater than
+- `<` : Less than
+- `>=` : Greater than or equal to
+- `<=` : Less than or equal to
+- `LIKE` : String matching (e.g., `'%' . $searchTerm . '%'`)
+- `NOT LIKE` : Negated string matching
+- `IN` : Value is within a given array
+- `NOT IN` : Value is not within a given array
+
+### 5. Rule Examples
+
+1. Simple Equality:
+```php
+[
+    '&&' => [
+        ['=' => ['attribute' => 'status', 'value' => 'active']]
+    ]
+]
+```
+
+2. Multiple Conditions:
+```php
+[
+    '&&' => [
+        ['=' => ['attribute' => 'status', 'value' => 'active']],
+        ['>=' => ['attribute' => 'amount', 'value' => 1000]]
+    ]
+]
+```
+
+3. Pattern Matching:
+```php
+[
+    '&&' => [
+        ['like' => ['attribute' => 'name', 'value' => '%test%']]
+    ]
+]
+```
+
+4. Complex Nested Conditions:
+```php
+[
+    '&&' => [
+        ['=' => ['attribute' => 'is_published', 'value' => true]],
+        ['||' => [
+            ['=' => ['attribute' => 'visibility', 'value' => 'public']],
+            ['=' => ['attribute' => 'owner_id', 'value' => '$USER_ID']]
+        ]]
+    ]
+]
+```
+
+## Managing ABAC Rules
+
+### 1. Creating Rules
+
+Rules are stored in the `role_model_abac_rules` table:
+
+```php
+use AuroraWebSoftware\AAuth\Models\RoleModelAbacRule;
+
+$rules = [
+    '&&' => [
+        ['=' => ['attribute' => 'status', 'value' => 'active']],
+        ['>=' => ['attribute' => 'amount', 'value' => 100]]
+    ]
+];
+
+RoleModelAbacRule::create([
+    'role_id' => $roleId,
+    'model_type' => Order::getModelType(),
+    'rules_json' => $rules
+]);
+```
+
+### 2. Updating Rules
+
+```php
+$rule = RoleModelAbacRule::where('role_id', $roleId)
+    ->where('model_type', Order::getModelType())
+    ->first();
+
+$rule->update([
+    'rules_json' => $newRules
+]);
+```
+
+### 3. Deleting Rules
+
+```php
+RoleModelAbacRule::where('role_id', $roleId)
+    ->where('model_type', Order::getModelType())
+    ->delete();
+```
+
+## Automatic Query Filtering
+
+The `AAuthABACModelScope` automatically applies ABAC rules to all queries:
+
+```php
+// This query will automatically include ABAC conditions
+$orders = Order::all();
+
+// Complex queries are also filtered
+$highValueOrders = Order::where('amount', '>', 500)->get();
+```
+
+### Bypassing ABAC Scope
+
+To bypass ABAC filtering:
+
+```php
+use AuroraWebSoftware\AAuth\Scopes\AAuthABACModelScope;
+
+// Retrieve all records without ABAC filtering
+$allOrders = Order::withoutGlobalScope(AAuthABACModelScope::class)->get();
+```
+
+## Best Practices
+
+
+
+
+4. Maintenance:
+   - Document rule changes
+   - Version control rules
+   - Regular rule reviews
+   - Clean up unused rules
+   - Monitor rule effectiveness
+
+## Testing
+
+### Unit Tests
+
+```php
+test('can validate abac rule array', function () {
+    $rules = [
+        '&&' => [
+            ['=' => ['attribute' => 'name', 'value' => 'Test']],
+            ['=' => ['attribute' => 'age', 'value' => '19']],
+        ]
+    ];
+
+    ABACUtil::validateAbacRuleArray($rules);
+    $this->assertTrue(true);
+});
+```
+
+### Integration Tests
+
+```php
+test('can get filtered model instances', function () {
+    // Create test data
+    $order1 = Order::create(['status' => 'active', 'amount' => 100]);
+    $order2 = Order::create(['status' => 'pending', 'amount' => 200]);
+
+    // Create ABAC rule
+    $rules = [
+        '&&' => [
+            ['=' => ['attribute' => 'status', 'value' => 'active']]
+        ]
+    ];
+
+    RoleModelAbacRule::create([
+        'role_id' => $roleId,
+        'model_type' => Order::getModelType(),
+        'rules_json' => $rules
+    ]);
+
+    // Test filtering
+    $this->assertEquals(1, Order::count());
+    $this->assertEquals('active', Order::first()->status);
+});
+```
+
+## Common Use Cases
+
+1. Status-Based Access:
+```php
+[
+    '&&' => [
+        ['=' => ['attribute' => 'status', 'value' => 'active']]
+    ]
+]
+```
+
+2. Amount-Based Access:
+```php
+[
+    '&&' => [
+        ['>=' => ['attribute' => 'amount', 'value' => 1000]]
+    ]
+]
+```
+
+3. Category-Based Access:
+```php
+[
+    '||' => [
+        ['=' => ['attribute' => 'category', 'value' => 'electronics']],
+        ['=' => ['attribute' => 'category', 'value' => 'books']]
+    ]
+]
+```
+
+4. Date-Based Access:
+```php
+[
+    '&&' => [
+        ['>=' => ['attribute' => 'created_at', 'value' => '2024-01-01']]
+    ]
+]
+```
+
+5. Complex Business Rules:
+```php
+[
+    '&&' => [
+        ['=' => ['attribute' => 'status', 'value' => 'active']],
+        ['>=' => ['attribute' => 'amount', 'value' => 1000]],
+        ['||' => [
+            ['=' => ['attribute' => 'region', 'value' => 'EU']],
+            ['=' => ['attribute' => 'region', 'value' => 'US']]
+        ]]
+    ]
+]
+```
