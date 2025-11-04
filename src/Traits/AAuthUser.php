@@ -71,4 +71,23 @@ trait AAuthUser
         // todo new syntax
         return $this->getAssignedUserCountAttribute() == 0;
     }
+
+    public function can($abilities, $arguments = []): bool
+    {
+        if (is_string($abilities)) {
+            return app('aauth')->can($abilities);
+        }
+
+        if (is_array($abilities)) {
+            foreach ($abilities as $ability) {
+                if (! app('aauth')->can($ability)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        return parent::can($abilities, $arguments);
+    }
 }
