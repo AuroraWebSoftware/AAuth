@@ -5,6 +5,7 @@ namespace AuroraWebSoftware\AAuth;
 use AuroraWebSoftware\AAuth\Commands\AAuthCommand;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Session;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -50,6 +51,10 @@ class AAuthServiceProvider extends PackageServiceProvider
                 Auth::user(), // @phpstan-ignore-line
                 Session::get('roleId')
             );
+        });
+
+        Gate::before(function ($user, $ability, $arguments = []) {
+            return app('aauth')->can($ability) ?: null;
         });
 
         Blade::directive('aauth', function ($permission) {
