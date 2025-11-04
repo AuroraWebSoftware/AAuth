@@ -80,10 +80,11 @@ trait AAuthUser
 
         if (is_array($abilities)) {
             foreach ($abilities as $ability) {
-                if (!app('aauth')->can($ability)) {
+                if (! app('aauth')->can($ability)) {
                     return false;
                 }
             }
+
             return true;
         }
 
