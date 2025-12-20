@@ -75,12 +75,23 @@ trait AAuthUser
     public function can($abilities, $arguments = []): bool
     {
         if (is_string($abilities)) {
-            return app('aauth')->can($abilities);
+            // First check if AAuth has this permission
+            try {
+                if (app('aauth')->can($abilities)) {
+                    return true;
+                }
+            } catch (\Throwable $e) {
+                // If AAuth is not properly initialized, fall through to Laravel's Gate
+            }
+
+            // If AAuth doesn't have this permission, delegate to Laravel's Gate system
+            // This allows Laravel's native gates and policies to be checked
+            return parent::can($abilities, $arguments);
         }
 
         if (is_array($abilities)) {
             foreach ($abilities as $ability) {
-                if (! app('aauth')->can($ability)) {
+                if (! $this->can($ability, $arguments)) {
                     return false;
                 }
             }
