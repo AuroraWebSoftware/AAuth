@@ -53,8 +53,22 @@ class AAuthServiceProvider extends PackageServiceProvider
             );
         });
 
+        // Register AAuth permissions with Laravel's Gate system
+        // This allows AAuth permissions to work alongside Laravel's native gates and policies
         Gate::before(function ($user, $ability, $arguments = []) {
-            return app('aauth')->can($ability) ?: null;
+            // Only return true if AAuth explicitly grants this permission
+            // Return null to allow Laravel's gate/policy checks to continue
+            try {
+                if (app('aauth')->can($ability)) {
+                    return true;
+                }
+            } catch (\Throwable $e) {
+                // If AAuth service is not properly initialized, let Laravel's gates handle it
+                return null;
+            }
+
+            // Return null instead of false to allow Laravel's gates and policies to be checked
+            return null;
         });
 
         Blade::directive('aauth', function ($permission) {
