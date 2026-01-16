@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
 use Throwable;
 
@@ -115,25 +116,63 @@ class AAuth
     }
 
     /**
+     * Get organization permissions for current role
+     * Defensive: supports both old 'type' column and new organization_scope_id approach
+     *
      * @return array
      */
     public function organizationPermissions(): array
     {
-        return Role::where('roles.id', '=', $this->role->id)
-            ->where('type', '=', 'organization')
+        $query = Role::where('roles.id', '=', $this->role->id);
+
+        // Defensive: check if old 'type' column exists
+        if ($this->hasRolesTypeColumn()) {
+            $query->where('type', '=', 'organization');
+        } else {
+            $query->whereNotNull('organization_scope_id');
+        }
+
+        return $query
             ->leftJoin('role_permission as rp', 'rp.role_id', '=', 'roles.id')
             ->pluck('permission')->toArray();
     }
 
     /**
+     * Get system permissions for current role
+     * Defensive: supports both old 'type' column and new organization_scope_id approach
+     *
      * @return array
      */
     public function systemPermissions(): array
     {
-        return Role::where('roles.id', '=', $this->role->id)
-            ->where('type', '=', 'system')
+        $query = Role::where('roles.id', '=', $this->role->id);
+
+        // Defensive: check if old 'type' column exists
+        if ($this->hasRolesTypeColumn()) {
+            $query->where('type', '=', 'system');
+        } else {
+            $query->whereNull('organization_scope_id');
+        }
+
+        return $query
             ->leftJoin('role_permission as rp', 'rp.role_id', '=', 'roles.id')
             ->pluck('permission')->toArray();
+    }
+
+    /**
+     * Check if type column exists in roles table (for backward compatibility)
+     *
+     * @return bool
+     */
+    protected function hasRolesTypeColumn(): bool
+    {
+        static $hasType = null;
+
+        if ($hasType === null) {
+            $hasType = Schema::hasColumn('roles', 'type');
+        }
+
+        return $hasType;
     }
 
     /**

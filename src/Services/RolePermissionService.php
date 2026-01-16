@@ -11,6 +11,7 @@ use AuroraWebSoftware\AAuth\Models\OrganizationNode;
 use AuroraWebSoftware\AAuth\Models\Role;
 use AuroraWebSoftware\AAuth\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
@@ -213,9 +214,14 @@ class RolePermissionService
         throw_unless(User::whereId($userId)
             ->exists(), new InvalidUserException());
 
-        throw_unless(Role::whereId($roleIdOrIds)
-            ->where('type', '=', 'system')
-            ->exists(), new InvalidRoleException());
+        // Defensive: check if old 'type' column exists
+        $roleQuery = Role::whereId($roleIdOrIds);
+        if ($this->hasRolesTypeColumn()) {
+            $roleQuery->where('type', '=', 'system');
+        } else {
+            $roleQuery->whereNull('organization_scope_id');
+        }
+        throw_unless($roleQuery->exists(), new InvalidRoleException());
 
         return User::find($userId)->system_roles()->sync($roleIdOrIds, false);
     }
@@ -237,9 +243,14 @@ class RolePermissionService
         throw_unless(User::whereId($userId)
             ->exists(), new InvalidUserException());
 
-        throw_unless(Role::whereId($roleIdOrIds)
-            ->where('type', '=', 'system')
-            ->exists(), new InvalidRoleException());
+        // Defensive: check if old 'type' column exists
+        $roleQuery = Role::whereId($roleIdOrIds);
+        if ($this->hasRolesTypeColumn()) {
+            $roleQuery->where('type', '=', 'system');
+        } else {
+            $roleQuery->whereNull('organization_scope_id');
+        }
+        throw_unless($roleQuery->exists(), new InvalidRoleException());
 
         return User::find($userId)->system_roles()->detach($roleIdOrIds);
     }
@@ -272,9 +283,14 @@ class RolePermissionService
         throw_unless(User::whereId($userId)
             ->exists(), new InvalidUserException());
 
-        throw_unless(Role::whereId($roleId)
-            ->where('type', '=', 'organization')
-            ->exists(), new InvalidRoleException());
+        // Defensive: check if old 'type' column exists
+        $roleQuery = Role::whereId($roleId);
+        if ($this->hasRolesTypeColumn()) {
+            $roleQuery->where('type', '=', 'organization');
+        } else {
+            $roleQuery->whereNotNull('organization_scope_id');
+        }
+        throw_unless($roleQuery->exists(), new InvalidRoleException());
 
         throw_unless(OrganizationNode::whereId($organizationNodeId)
             ->exists(), new InvalidOrganizationNodeException());
@@ -301,9 +317,14 @@ class RolePermissionService
         throw_unless(User::whereId($userId)
             ->exists(), new InvalidUserException());
 
-        throw_unless(Role::whereId($roleId)
-            ->where('type', '=', 'organization')
-            ->exists(), new InvalidRoleException());
+        // Defensive: check if old 'type' column exists
+        $roleQuery = Role::whereId($roleId);
+        if ($this->hasRolesTypeColumn()) {
+            $roleQuery->where('type', '=', 'organization');
+        } else {
+            $roleQuery->whereNotNull('organization_scope_id');
+        }
+        throw_unless($roleQuery->exists(), new InvalidRoleException());
 
         throw_unless(OrganizationNode::whereId($organizationNodeId)
             ->exists(), new InvalidOrganizationNodeException());
@@ -315,5 +336,21 @@ class RolePermissionService
                 'organization_node_id' => $organizationNodeId, ])
             ->delete();
         // todo attach ve sync ile olmayacak gibi direk db query yazmank lazım
+    }
+
+    /**
+     * Check if type column exists in roles table (for backward compatibility)
+     *
+     * @return bool
+     */
+    protected function hasRolesTypeColumn(): bool
+    {
+        static $hasType = null;
+
+        if ($hasType === null) {
+            $hasType = Schema::hasColumn('roles', 'type');
+        }
+
+        return $hasType;
     }
 }
