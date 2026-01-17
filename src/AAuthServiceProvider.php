@@ -10,7 +10,6 @@ use AuroraWebSoftware\AAuth\Models\Role;
 use AuroraWebSoftware\AAuth\Models\RolePermission;
 use AuroraWebSoftware\AAuth\Observers\RoleObserver;
 use AuroraWebSoftware\AAuth\Observers\RolePermissionObserver;
-use Illuminate\Contracts\Http\Kernel;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
