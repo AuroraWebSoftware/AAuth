@@ -2,19 +2,29 @@
 
 namespace AuroraWebSoftware\AAuth\Observers;
 
+use AuroraWebSoftware\AAuth\Events\RoleCreatedEvent;
+use AuroraWebSoftware\AAuth\Events\RoleDeletedEvent;
+use AuroraWebSoftware\AAuth\Events\RoleUpdatedEvent;
 use AuroraWebSoftware\AAuth\Models\Role;
 use Illuminate\Support\Facades\Cache;
 
 class RoleObserver
 {
+    public function created(Role $role): void
+    {
+        event(new RoleCreatedEvent($role));
+    }
+
     public function updated(Role $role): void
     {
         $this->clearRoleCache($role);
+        event(new RoleUpdatedEvent($role));
     }
 
     public function deleted(Role $role): void
     {
         $this->clearRoleCache($role);
+        event(new RoleDeletedEvent($role));
     }
 
     protected function clearRoleCache(Role $role): void
