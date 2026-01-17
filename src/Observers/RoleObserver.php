@@ -19,7 +19,7 @@ class RoleObserver
 
     protected function clearRoleCache(Role $role): void
     {
-        if (!config('aauth.cache.enabled', true)) {
+        if (! config('aauth.cache.enabled', true)) {
             return;
         }
 

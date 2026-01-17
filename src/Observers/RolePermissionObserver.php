@@ -24,7 +24,7 @@ class RolePermissionObserver
 
     protected function clearPermissionCache(RolePermission $permission): void
     {
-        if (!config('aauth.cache.enabled', true)) {
+        if (! config('aauth.cache.enabled', true)) {
             return;
         }
 
