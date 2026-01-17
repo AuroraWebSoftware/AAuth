@@ -2,7 +2,6 @@
 
 namespace AuroraWebSoftware\AAuth;
 
-use AuroraWebSoftware\AAuth\Commands\AAuthCommand;
 use AuroraWebSoftware\AAuth\Http\Middleware\AAuthOrganizationScope;
 use AuroraWebSoftware\AAuth\Http\Middleware\AAuthPermission;
 use AuroraWebSoftware\AAuth\Http\Middleware\AAuthRole;
@@ -29,9 +28,6 @@ class AAuthServiceProvider extends PackageServiceProvider
         $package
             ->name('aauth')
             ->hasConfigFile()
-            // ->hasViews()
-            // ->hasMigration()
-            // ->hasCommand(AAuthCommand::class)
         ;
     }
 
