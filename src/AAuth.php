@@ -22,24 +22,15 @@ use Throwable;
 
 class AAuth
 {
-    /**
-     * @throws Throwable
-     */
+    private const CONTEXT_KEY = 'aauth_context';
 
-    /**
-     * current logged in user model
-     */
     public AAuthUserContract $user;
 
-    /**
-     * current logged in user's role model
-     */
     public Role $role;
 
-    /**
-     * @var array|null
-     */
     public ?array $organizationNodeIds;
+
+    protected array $requestCache = [];
 
     /**
      * @throws Throwable
@@ -49,25 +40,22 @@ class AAuth
         throw_unless($user, new AuthenticationException());
         throw_unless($roleId, new MissingRoleException());
 
-        // if user don't have this role, not assigned
         throw_if(
             $user->roles()->where('roles.id', '=', $roleId)->count() < 1,
             new UserHasNoAssignedRoleException()
         );
 
         $this->user = $user;
-        $this->role = Role::find($roleId);
+        $this->role = Role::with(['rolePermissions', 'abacRules'])->find($roleId);
 
         throw_unless($this->role, new MissingRoleException());
-
-        /**
-         * @var User $user
-         */
 
         $this->organizationNodeIds = DB::table('user_role_organization_node')
             ->where('user_id', '=', $user->id)
             ->where('role_id', '=', $roleId)
             ->pluck('organization_node_id')->toArray();
+
+        $this->loadAndCacheContext();
     }
 
     /**
@@ -183,77 +171,104 @@ class AAuth
      */
     public function can(string $permission, mixed ...$arguments): bool
     {
-        if ($this->isSuperAdmin()) {
+        $cacheKey = $this->getPermissionCacheKey($permission, $arguments);
+
+        if (isset($this->requestCache[$cacheKey])) {
+            return $this->requestCache[$cacheKey];
+        }
+
+        $context = $this->getAuthContext();
+
+        if ($context['is_super_admin']) {
+            $this->requestCache[$cacheKey] = true;
             return true;
         }
 
-        $permissionsWithParams = $this->getPermissionsWithParameters();
-
-        if (!isset($permissionsWithParams[$permission])) {
+        if (!isset($context['permissions'][$permission])) {
+            $this->requestCache[$cacheKey] = false;
             return false;
         }
 
         if (empty($arguments)) {
+            $this->requestCache[$cacheKey] = true;
             return true;
         }
 
-        $roleParameters = $permissionsWithParams[$permission];
-        if (!empty($roleParameters)) {
-            return $this->validateParameters($roleParameters, $arguments);
-        }
+        $roleParameters = $context['permissions'][$permission];
+        $result = empty($roleParameters) || $this->validateParameters($roleParameters, $arguments);
 
-        return true;
+        $this->requestCache[$cacheKey] = $result;
+        return $result;
     }
 
     /**
-     * Check if current user is a super admin
-     *
      * @return bool
      */
     public function isSuperAdmin(): bool
     {
-        if (!config('aauth.super_admin.enabled', false)) {
-            return false;
-        }
-
-        $column = config('aauth.super_admin.column', 'is_super_admin');
-        return (bool) ($this->user->{$column} ?? false);
+        $context = $this->getAuthContext();
+        return $context['is_super_admin'];
     }
 
-    /**
-     * Get permissions with their parameters from cache or DB
-     *
-     * @return array<string, array|null>
-     */
-    protected function getPermissionsWithParameters(): array
+    protected function loadAndCacheContext(): void
     {
-        $cacheKey = 'role_permissions_with_params';
-        $permissions = Context::get($cacheKey);
-
-        if (is_null($permissions)) {
-            $permissions = [];
-            $rolePermissions = RolePermission::where('role_id', $this->role->id)->get();
-
-            foreach ($rolePermissions as $rp) {
-                $permissions[$rp->permission] = $rp->parameters;
-            }
-
-            Context::add($cacheKey, $permissions);
+        $permissions = [];
+        foreach ($this->role->rolePermissions as $rp) {
+            $permissions[$rp->permission] = $rp->parameters;
         }
 
-        return $permissions;
+        $abacRules = [];
+        foreach ($this->role->abacRules as $rule) {
+            $abacRules[$rule->model_type] = $rule->rules_json;
+        }
+
+        $isSuperAdmin = false;
+        if (config('aauth.super_admin.enabled', false)) {
+            $column = config('aauth.super_admin.column', 'is_super_admin');
+            $isSuperAdmin = (bool) ($this->user->{$column} ?? false);
+        }
+
+        $context = [
+            'user_id' => $this->user->id,
+            'role_id' => $this->role->id,
+            'role_name' => $this->role->name,
+            'organization_node_ids' => $this->organizationNodeIds,
+            'permissions' => $permissions,
+            'abac_rules' => $abacRules,
+            'is_super_admin' => $isSuperAdmin,
+        ];
+
+        Context::addHidden(self::CONTEXT_KEY, $context);
     }
 
-    /**
-     * @param array $roleParameters
-     * @param array $arguments
-     * @return bool
-     */
+    protected function getAuthContext(): array
+    {
+        $context = Context::getHidden(self::CONTEXT_KEY);
+
+        if ($context === null) {
+            $this->loadAndCacheContext();
+            $context = Context::getHidden(self::CONTEXT_KEY);
+        }
+
+        return $context;
+    }
+
+    public function clearContext(): void
+    {
+        $this->requestCache = [];
+        Context::forgetHidden(self::CONTEXT_KEY);
+    }
+
+    protected function getPermissionCacheKey(string $permission, array $arguments): string
+    {
+        return $permission . ':' . md5(serialize($arguments));
+    }
+
     protected function validateParameters(array $roleParameters, array $arguments): bool
     {
         foreach ($roleParameters as $paramName => $roleValue) {
             $argIndex = array_search($paramName, array_keys($roleParameters));
-            
+
             if (!isset($arguments[$argIndex])) {
                 continue;
             }
@@ -276,6 +291,16 @@ class AAuth
         }
 
         return true;
+    }
+
+    /**
+     * @deprecated Use getAuthContext() instead
+     * @return array<string, array|null>
+     */
+    protected function getPermissionsWithParameters(): array
+    {
+        $context = $this->getAuthContext();
+        return $context['permissions'];
     }
 
     /**

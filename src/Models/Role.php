@@ -57,6 +57,14 @@ class Role extends Model
     }
 
     /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\AuroraWebSoftware\AAuth\Models\RoleModelAbacRule, \AuroraWebSoftware\AAuth\Models\Role>
+     */
+    public function abacRules(): HasMany
+    {
+        return $this->hasMany(RoleModelAbacRule::class);
+    }
+
+    /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\AuroraWebSoftware\AAuth\Models\OrganizationScope, \AuroraWebSoftware\AAuth\Models\Role>
      */
     public function organization_scope(): BelongsTo
