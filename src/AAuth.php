@@ -189,7 +189,7 @@ class AAuth
 
         $permissionsWithParams = $this->getPermissionsWithParameters();
 
-        if (!isset($permissionsWithParams[$permission])) {
+        if (! isset($permissionsWithParams[$permission])) {
             return false;
         }
 
@@ -198,7 +198,7 @@ class AAuth
         }
 
         $roleParameters = $permissionsWithParams[$permission];
-        if (!empty($roleParameters)) {
+        if (! empty($roleParameters)) {
             return $this->validateParameters($roleParameters, $arguments);
         }
 
@@ -212,11 +212,12 @@ class AAuth
      */
     public function isSuperAdmin(): bool
     {
-        if (!config('aauth.super_admin.enabled', false)) {
+        if (! config('aauth.super_admin.enabled', false)) {
             return false;
         }
 
         $column = config('aauth.super_admin.column', 'is_super_admin');
+
         return (bool) ($this->user->{$column} ?? false);
     }
 
@@ -253,8 +254,8 @@ class AAuth
     {
         foreach ($roleParameters as $paramName => $roleValue) {
             $argIndex = array_search($paramName, array_keys($roleParameters));
-            
-            if (!isset($arguments[$argIndex])) {
+
+            if (! isset($arguments[$argIndex])) {
                 continue;
             }
 
@@ -265,7 +266,7 @@ class AAuth
                     return false;
                 }
             } elseif (is_array($roleValue)) {
-                if (!in_array($runtimeValue, $roleValue)) {
+                if (! in_array($runtimeValue, $roleValue)) {
                     return false;
                 }
             } elseif (is_bool($roleValue)) {

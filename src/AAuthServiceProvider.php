@@ -56,11 +56,11 @@ class AAuthServiceProvider extends PackageServiceProvider
             try {
                 /** @var AAuth $aauth */
                 $aauth = app('aauth');
-                
+
                 if ($aauth->isSuperAdmin()) {
                     return true;
                 }
-                
+
                 return $aauth->can($ability, ...$arguments) ?: null;
             } catch (\Throwable $e) {
                 return null;
