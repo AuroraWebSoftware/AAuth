@@ -3,10 +3,15 @@
 namespace AuroraWebSoftware\AAuth;
 
 use AuroraWebSoftware\AAuth\Commands\AAuthCommand;
+use AuroraWebSoftware\AAuth\Http\Middleware\AAuthOrganizationScope;
+use AuroraWebSoftware\AAuth\Http\Middleware\AAuthPermission;
+use AuroraWebSoftware\AAuth\Http\Middleware\AAuthRole;
 use AuroraWebSoftware\AAuth\Models\Role;
 use AuroraWebSoftware\AAuth\Models\RolePermission;
 use AuroraWebSoftware\AAuth\Observers\RoleObserver;
 use AuroraWebSoftware\AAuth\Observers\RolePermissionObserver;
+use Illuminate\Contracts\Http\Kernel;
+use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
@@ -50,6 +55,7 @@ class AAuthServiceProvider extends PackageServiceProvider
         ], 'aauth-config');
 
         $this->registerObservers();
+        $this->registerMiddleware();
 
         $this->app->singleton('aauth', function ($app) {
             return new AAuth(
@@ -80,6 +86,15 @@ class AAuthServiceProvider extends PackageServiceProvider
     {
         Role::observe(RoleObserver::class);
         RolePermission::observe(RolePermissionObserver::class);
+    }
+
+    protected function registerMiddleware(): void
+    {
+        $router = $this->app->make(Router::class);
+
+        $router->aliasMiddleware('aauth.permission', AAuthPermission::class);
+        $router->aliasMiddleware('aauth.role', AAuthRole::class);
+        $router->aliasMiddleware('aauth.organization', AAuthOrganizationScope::class);
     }
 
     protected function registerBladeDirectives(): void
