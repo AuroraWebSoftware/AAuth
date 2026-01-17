@@ -9,6 +9,7 @@ use AuroraWebSoftware\AAuth\Exceptions\UserHasNoAssignedRoleException;
 use AuroraWebSoftware\AAuth\Models\OrganizationNode;
 use AuroraWebSoftware\AAuth\Models\Role;
 use AuroraWebSoftware\AAuth\Models\RoleModelAbacRule;
+use AuroraWebSoftware\AAuth\Models\RolePermission;
 use AuroraWebSoftware\AAuth\Models\User;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\Builder;
@@ -176,26 +177,105 @@ class AAuth
     }
 
     /**
-     * check if user can
-     *
      * @param string $permission
+     * @param mixed ...$arguments
      * @return bool
      */
-    public function can(string $permission): bool
+    public function can(string $permission, mixed ...$arguments): bool
     {
-        $permissions = Context::get('role_permissions');
-
-        if (is_null($permissions)) {
-            $permissions = Role::where('roles.id', '=', $this->role->id)
-                ->leftJoin('role_permission as rp', 'rp.role_id', '=', 'roles.id')
-                ->select('rp.permission as permission_from_rp')
-                ->pluck('permission_from_rp')
-                ->toArray();
-
-            Context::add('role_permissions', $permissions);
+        if ($this->isSuperAdmin()) {
+            return true;
         }
 
-        return in_array($permission, $permissions);
+        $permissionsWithParams = $this->getPermissionsWithParameters();
+
+        if (!isset($permissionsWithParams[$permission])) {
+            return false;
+        }
+
+        if (empty($arguments)) {
+            return true;
+        }
+
+        $roleParameters = $permissionsWithParams[$permission];
+        if (!empty($roleParameters)) {
+            return $this->validateParameters($roleParameters, $arguments);
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if current user is a super admin
+     *
+     * @return bool
+     */
+    public function isSuperAdmin(): bool
+    {
+        if (!config('aauth.super_admin.enabled', false)) {
+            return false;
+        }
+
+        $column = config('aauth.super_admin.column', 'is_super_admin');
+        return (bool) ($this->user->{$column} ?? false);
+    }
+
+    /**
+     * Get permissions with their parameters from cache or DB
+     *
+     * @return array<string, array|null>
+     */
+    protected function getPermissionsWithParameters(): array
+    {
+        $cacheKey = 'role_permissions_with_params';
+        $permissions = Context::get($cacheKey);
+
+        if (is_null($permissions)) {
+            $permissions = [];
+            $rolePermissions = RolePermission::where('role_id', $this->role->id)->get();
+
+            foreach ($rolePermissions as $rp) {
+                $permissions[$rp->permission] = $rp->parameters;
+            }
+
+            Context::add($cacheKey, $permissions);
+        }
+
+        return $permissions;
+    }
+
+    /**
+     * @param array $roleParameters
+     * @param array $arguments
+     * @return bool
+     */
+    protected function validateParameters(array $roleParameters, array $arguments): bool
+    {
+        foreach ($roleParameters as $paramName => $roleValue) {
+            $argIndex = array_search($paramName, array_keys($roleParameters));
+            
+            if (!isset($arguments[$argIndex])) {
+                continue;
+            }
+
+            $runtimeValue = $arguments[$argIndex];
+
+            if (is_int($roleValue) && is_numeric($runtimeValue)) {
+                if ($runtimeValue > $roleValue) {
+                    return false;
+                }
+            } elseif (is_array($roleValue)) {
+                if (!in_array($runtimeValue, $roleValue)) {
+                    return false;
+                }
+            } elseif (is_bool($roleValue)) {
+                if ((bool) $runtimeValue !== $roleValue) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     /**

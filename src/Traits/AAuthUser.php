@@ -107,15 +107,15 @@ trait AAuthUser
         return $this->getAssignedUserCountAttribute() == 0;
     }
 
-    public function can($abilities, $arguments = []): bool
+    public function can($abilities, ...$arguments): bool
     {
         if (is_string($abilities)) {
-            return app('aauth')->can($abilities);
+            return app('aauth')->can($abilities, ...$arguments);
         }
 
         if (is_array($abilities)) {
             foreach ($abilities as $ability) {
-                if (! app('aauth')->can($ability)) {
+                if (! app('aauth')->can($ability, ...$arguments)) {
                     return false;
                 }
             }
@@ -123,6 +123,6 @@ trait AAuthUser
             return true;
         }
 
-        return parent::can($abilities, $arguments);
+        return parent::can($abilities, ...$arguments);
     }
 }

@@ -34,7 +34,6 @@ class AAuthServiceProvider extends PackageServiceProvider
     {
         parent::boot();
 
-        // load packages migrations
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
         $this->publishes([
@@ -42,10 +41,10 @@ class AAuthServiceProvider extends PackageServiceProvider
         ], 'aauth-seeders');
 
         $this->publishes([
-            __DIR__.'/../config' => config_path(),
+            __DIR__.'/../config/aauth.php' => config_path('aauth.php'),
+            __DIR__.'/../config/aauth-permissions.php' => config_path('aauth-permissions.php'),
         ], 'aauth-config');
 
-        // todo singleton bind ??
         $this->app->singleton('aauth', function ($app) {
             return new AAuth(
                 Auth::user(), // @phpstan-ignore-line
@@ -54,14 +53,42 @@ class AAuthServiceProvider extends PackageServiceProvider
         });
 
         Gate::before(function ($user, $ability, $arguments = []) {
-            return app('aauth')->can($ability) ?: null;
+            try {
+                /** @var AAuth $aauth */
+                $aauth = app('aauth');
+                
+                if ($aauth->isSuperAdmin()) {
+                    return true;
+                }
+                
+                return $aauth->can($ability, ...$arguments) ?: null;
+            } catch (\Throwable $e) {
+                return null;
+            }
         });
 
+        $this->registerBladeDirectives();
+    }
+
+    protected function registerBladeDirectives(): void
+    {
         Blade::directive('aauth', function ($permission) {
             return "<?php if(\AuroraWebSoftware\AAuth\Facades\AAuth::can($permission)){ ?>";
         });
         Blade::directive('endaauth', function () {
             return '<?php } ?>';
+        });
+
+        Blade::if('aauth_can', function ($permission, ...$arguments) {
+            return app('aauth')->can($permission, ...$arguments);
+        });
+
+        Blade::if('aauth_role', function ($roleName) {
+            return app('aauth')->currentRole()?->name === $roleName;
+        });
+
+        Blade::if('aauth_super_admin', function () {
+            return app('aauth')->isSuperAdmin();
         });
     }
 }
