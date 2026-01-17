@@ -9,7 +9,6 @@ use AuroraWebSoftware\AAuth\Exceptions\UserHasNoAssignedRoleException;
 use AuroraWebSoftware\AAuth\Models\OrganizationNode;
 use AuroraWebSoftware\AAuth\Models\Role;
 use AuroraWebSoftware\AAuth\Models\RoleModelAbacRule;
-use AuroraWebSoftware\AAuth\Models\RolePermission;
 use AuroraWebSoftware\AAuth\Models\User;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\Builder;
@@ -181,16 +180,19 @@ class AAuth
 
         if ($context['is_super_admin']) {
             $this->requestCache[$cacheKey] = true;
+
             return true;
         }
 
-        if (!isset($context['permissions'][$permission])) {
+        if (! isset($context['permissions'][$permission])) {
             $this->requestCache[$cacheKey] = false;
+
             return false;
         }
 
         if (empty($arguments)) {
             $this->requestCache[$cacheKey] = true;
+
             return true;
         }
 
@@ -198,6 +200,7 @@ class AAuth
         $result = empty($roleParameters) || $this->validateParameters($roleParameters, $arguments);
 
         $this->requestCache[$cacheKey] = $result;
+
         return $result;
     }
 
@@ -207,6 +210,7 @@ class AAuth
     public function isSuperAdmin(): bool
     {
         $context = $this->getAuthContext();
+
         return $context['is_super_admin'];
     }
 
@@ -269,7 +273,7 @@ class AAuth
         foreach ($roleParameters as $paramName => $roleValue) {
             $argIndex = array_search($paramName, array_keys($roleParameters));
 
-            if (!isset($arguments[$argIndex])) {
+            if (! isset($arguments[$argIndex])) {
                 continue;
             }
 
@@ -280,7 +284,7 @@ class AAuth
                     return false;
                 }
             } elseif (is_array($roleValue)) {
-                if (!in_array($runtimeValue, $roleValue)) {
+                if (! in_array($runtimeValue, $roleValue)) {
                     return false;
                 }
             } elseif (is_bool($roleValue)) {
@@ -300,6 +304,7 @@ class AAuth
     protected function getPermissionsWithParameters(): array
     {
         $context = $this->getAuthContext();
+
         return $context['permissions'];
     }
 
