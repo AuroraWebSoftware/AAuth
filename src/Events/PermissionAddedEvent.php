@@ -8,11 +8,13 @@ use Illuminate\Queue\SerializesModels;
 
 class PermissionAddedEvent
 {
-    use Dispatchable, SerializesModels;
+    use Dispatchable;
+    use SerializesModels;
 
     public function __construct(
         public Role $role,
         public string $permission,
         public ?array $parameters = null
-    ) {}
+    ) {
+    }
 }
