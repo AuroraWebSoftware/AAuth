@@ -20,7 +20,7 @@ class AAuthPermission
         try {
             $aauth = app('aauth');
 
-            if (!$aauth->can($permission, ...$parameters)) {
+            if (! $aauth->can($permission, ...$parameters)) {
                 abort(403, 'Unauthorized action.');
             }
         } catch (\Throwable $e) {
