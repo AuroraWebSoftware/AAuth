@@ -8,9 +8,11 @@ use Illuminate\Queue\SerializesModels;
 
 class RoleUpdatedEvent
 {
-    use Dispatchable, SerializesModels;
+    use Dispatchable;
+    use SerializesModels;
 
     public function __construct(
         public Role $role
-    ) {}
+    ) {
+    }
 }

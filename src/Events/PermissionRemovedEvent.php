@@ -8,10 +8,12 @@ use Illuminate\Queue\SerializesModels;
 
 class PermissionRemovedEvent
 {
-    use Dispatchable, SerializesModels;
+    use Dispatchable;
+    use SerializesModels;
 
     public function __construct(
         public Role $role,
         public string $permission
-    ) {}
+    ) {
+    }
 }
