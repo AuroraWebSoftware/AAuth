@@ -176,11 +176,25 @@ class AAuth
     }
 
     /**
-     * Get current panel ID
+     * Get role's panel ID from database
      *
      * @return string|null
      */
     public function getPanelId(): ?string
+    {
+        if (! $this->hasRolesPanelIdColumn()) {
+            return null;
+        }
+
+        return $this->role->panel_id;
+    }
+
+    /**
+     * Get current Filament panel context
+     *
+     * @return string|null
+     */
+    public function getCurrentPanel(): ?string
     {
         return $this->panelId;
     }

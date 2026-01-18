@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 class UpdateOrganizationNodeRequest extends FormRequest
 {
     public static array $rules = [
-        'name' => ['required', 'min:5'],
+        'name' => ['required', 'min:3'],
         'parent_id' => ['required', 'int'],
     ];
 

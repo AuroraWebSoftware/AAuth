@@ -82,6 +82,13 @@ if (! function_exists('aauth_in_panel')) {
 if (! function_exists('aauth_current_panel')) {
     function aauth_current_panel(): ?string
     {
+        return app('aauth')->getCurrentPanel();
+    }
+}
+
+if (! function_exists('aauth_role_panel')) {
+    function aauth_role_panel(): ?string
+    {
         return app('aauth')->getPanelId();
     }
 }
