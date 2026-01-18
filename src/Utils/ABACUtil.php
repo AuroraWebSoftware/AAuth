@@ -4,7 +4,6 @@ namespace AuroraWebSoftware\AAuth\Utils;
 
 use AuroraWebSoftware\AAuth\Enums\ABACCondition;
 use Exception;
-use Illuminate\Support\Facades\Validator;
 
 class ABACUtil
 {
