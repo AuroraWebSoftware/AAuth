@@ -23,17 +23,39 @@ class MissingRoleException extends Exception
     /**
      * Create a new authentication exception.
      *
-     * @param  string  $message
+     * @param  string|null  $message
      * @param  array  $guards
      * @param  string|null  $redirectTo
      * @return void
      */
-    public function __construct($message = 'Current Role Missing.', array $guards = [], $redirectTo = null)
+    public function __construct($message = null, array $guards = [], $redirectTo = null)
     {
+        $message = $message ?? $this->getDefaultMessage();
         parent::__construct($message);
 
         $this->guards = $guards;
         $this->redirectTo = $redirectTo;
+    }
+
+    /**
+     * Get default translated message
+     *
+     * @return string
+     */
+    protected function getDefaultMessage(): string
+    {
+        if (! function_exists('trans')) {
+            return 'Current Role Missing.';
+        }
+
+        $translated = trans('aauth::exceptions.missing_role');
+
+        // If translation not found, Laravel returns the key itself
+        if ($translated === 'aauth::exceptions.missing_role') {
+            return 'Current Role Missing.';
+        }
+
+        return $translated;
     }
 
     /**

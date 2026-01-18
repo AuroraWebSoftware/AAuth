@@ -664,6 +664,76 @@ class AAuth
     }
 
     /**
+     * Get accessible organization nodes with depth and scope filtering
+     *
+     * @param int|null $minDepthFromRoot Minimum depth from root (inclusive, 0-based)
+     * @param int|null $maxDepthFromRoot Maximum depth from root (inclusive, 0-based)
+     * @param string|null $scopeName Organization scope name filter
+     * @param int|null $scopeLevel Organization scope level filter
+     * @param bool $includeRootNode Include root nodes in results
+     * @param string|null $modelType Filter by model type
+     * @return \Illuminate\Support\Collection
+     * @throws Throwable
+     */
+    public function getAccessibleOrganizationNodes(
+        ?int $minDepthFromRoot = null,
+        ?int $maxDepthFromRoot = null,
+        ?string $scopeName = null,
+        ?int $scopeLevel = null,
+        bool $includeRootNode = false,
+        ?string $modelType = null
+    ): \Illuminate\Support\Collection {
+        return OrganizationNode::where(function ($query) use ($includeRootNode) {
+            foreach ($this->organizationNodeIds as $organizationNodeId) {
+                $rootNode = OrganizationNode::find($organizationNodeId);
+                throw_unless($rootNode, new InvalidOrganizationNodeException());
+
+                /**
+                 * @phpstan-ignore-next-line
+                 */
+                $query->orWhere('path', 'like', $rootNode->path . '/%');
+
+                if ($includeRootNode) {
+                    /**
+                     * @phpstan-ignore-next-line
+                     */
+                    $query->orWhere('path', $rootNode->path);
+                }
+            }
+        })
+            // Depth filtering using path length calculation
+            // Depth = (number of slashes in path) - 1
+            // Examples: "/" = depth 0, "/1/" = depth 1, "/1/3/" = depth 2
+            ->when($minDepthFromRoot !== null || $maxDepthFromRoot !== null, function ($query) use ($minDepthFromRoot, $maxDepthFromRoot) {
+                if ($minDepthFromRoot !== null) {
+                    // MySQL and PostgreSQL compatible
+                    $query->whereRaw('(LENGTH(path) - LENGTH(REPLACE(path, ?, ?))) - 1 >= ?', ['/', '', $minDepthFromRoot]);
+                }
+
+                if ($maxDepthFromRoot !== null) {
+                    $query->whereRaw('(LENGTH(path) - LENGTH(REPLACE(path, ?, ?))) - 1 <= ?', ['/', '', $maxDepthFromRoot]);
+                }
+            })
+            // Scope name filtering
+            ->when($scopeName !== null, function ($query) use ($scopeName) {
+                $query->whereHas('organizationScope', function ($q) use ($scopeName) {
+                    $q->where('name', $scopeName);
+                });
+            })
+            // Scope level filtering
+            ->when($scopeLevel !== null, function ($query) use ($scopeLevel) {
+                $query->whereHas('organizationScope', function ($q) use ($scopeLevel) {
+                    $q->where('level', $scopeLevel);
+                });
+            })
+            // Model type filtering
+            ->when($modelType !== null, function ($query) use ($modelType) {
+                $query->where('model_type', '=', $modelType);
+            })
+            ->get();
+    }
+
+    /**
      * Checks if tree has given child
      * No permission check.
      *
