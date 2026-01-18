@@ -53,9 +53,12 @@ class AAuthServiceProvider extends PackageServiceProvider
         $this->registerMiddleware();
 
         $this->app->singleton('aauth', function ($app) {
+            $panelId = AAuth::detectCurrentPanelId();
+
             return new AAuth(
                 Auth::user(), // @phpstan-ignore-line
-                Session::get('roleId')
+                Session::get('roleId'),
+                $panelId
             );
         });
 
@@ -111,6 +114,21 @@ class AAuthServiceProvider extends PackageServiceProvider
 
         Blade::if('aauth_super_admin', function () {
             return app('aauth')->isSuperAdmin();
+        });
+
+        Blade::directive('panel', function ($panelId) {
+            return "<?php if(app('aauth')->isInPanel($panelId)): ?>";
+        });
+        Blade::directive('endpanel', function () {
+            return '<?php endif; ?>';
+        });
+
+        Blade::if('aauth_panel_can', function ($panelId, $permission, ...$arguments) {
+            if (! app('aauth')->isInPanel($panelId)) {
+                return false;
+            }
+
+            return app('aauth')->can($permission, ...$arguments);
         });
     }
 }

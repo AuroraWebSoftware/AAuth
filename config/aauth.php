@@ -27,14 +27,4 @@ return [
         'store' => null, // null = default cache driver
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Filament Integration
-    |--------------------------------------------------------------------------
-    | Enable Filament panel support. When enabled, roles can be scoped
-    | to specific Filament panels and session keys will be panel-based.
-    */
-    'filament' => [
-        'enabled' => false,
-    ],
 ];
