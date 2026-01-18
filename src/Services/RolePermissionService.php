@@ -10,6 +10,7 @@ use AuroraWebSoftware\AAuth\Http\Requests\UpdateRoleRequest;
 use AuroraWebSoftware\AAuth\Models\OrganizationNode;
 use AuroraWebSoftware\AAuth\Models\Role;
 use AuroraWebSoftware\AAuth\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
@@ -214,7 +215,6 @@ class RolePermissionService
         throw_unless(User::whereId($userId)
             ->exists(), new InvalidUserException());
 
-        // Defensive: check if old 'type' column exists
         $roleQuery = Role::whereId($roleIdOrIds);
         if ($this->hasRolesTypeColumn()) {
             $roleQuery->where('type', '=', 'system');
@@ -223,7 +223,12 @@ class RolePermissionService
         }
         throw_unless($roleQuery->exists(), new InvalidRoleException());
 
-        return User::find($userId)->system_roles()->sync($roleIdOrIds, false);
+        $result = User::find($userId)->system_roles()->sync($roleIdOrIds, false);
+
+        // Clear user's switchable_roles cache
+        $this->clearUserRoleCache($userId);
+
+        return $result;
     }
 
     /**
@@ -252,7 +257,11 @@ class RolePermissionService
         }
         throw_unless($roleQuery->exists(), new InvalidRoleException());
 
-        return User::find($userId)->system_roles()->detach($roleIdOrIds);
+        $result = User::find($userId)->system_roles()->detach($roleIdOrIds);
+
+        $this->clearUserRoleCache($userId);
+
+        return $result;
     }
 
     /**
@@ -264,7 +273,11 @@ class RolePermissionService
     {
         // todo
         // to be unit tested
-        return User::find($userId)->system_roles()->sync($roleIds);
+        $result = User::find($userId)->system_roles()->sync($roleIds);
+
+        $this->clearUserRoleCache($userId);
+
+        return $result;
     }
 
     /**
@@ -283,7 +296,6 @@ class RolePermissionService
         throw_unless(User::whereId($userId)
             ->exists(), new InvalidUserException());
 
-        // Defensive: check if old 'type' column exists
         $roleQuery = Role::whereId($roleId);
         if ($this->hasRolesTypeColumn()) {
             $roleQuery->where('type', '=', 'organization');
@@ -295,12 +307,16 @@ class RolePermissionService
         throw_unless(OrganizationNode::whereId($organizationNodeId)
             ->exists(), new InvalidOrganizationNodeException());
 
-        return DB::table('user_role_organization_node')
+        $result = DB::table('user_role_organization_node')
             ->updateOrInsert([
                 'user_id' => $userId,
                 'role_id' => $roleId,
                 'organization_node_id' => $organizationNodeId,
             ]);
+
+        $this->clearUserRoleCache($userId);
+
+        return $result;
     }
 
     /**
@@ -317,7 +333,6 @@ class RolePermissionService
         throw_unless(User::whereId($userId)
             ->exists(), new InvalidUserException());
 
-        // Defensive: check if old 'type' column exists
         $roleQuery = Role::whereId($roleId);
         if ($this->hasRolesTypeColumn()) {
             $roleQuery->where('type', '=', 'organization');
@@ -329,12 +344,16 @@ class RolePermissionService
         throw_unless(OrganizationNode::whereId($organizationNodeId)
             ->exists(), new InvalidOrganizationNodeException());
 
-        return DB::table('user_role_organization_node')
+        $result = DB::table('user_role_organization_node')
             ->where([
                 'user_id' => $userId,
                 'role_id' => $roleId,
                 'organization_node_id' => $organizationNodeId, ])
             ->delete();
+
+        $this->clearUserRoleCache($userId);
+
+        return $result;
         // todo attach ve sync ile olmayacak gibi direk db query yazmank lazım
     }
 
@@ -352,5 +371,22 @@ class RolePermissionService
         }
 
         return $hasType;
+    }
+
+    /**
+     * Clear user's role-related cache
+     *
+     * @param int $userId
+     * @return void
+     */
+    protected function clearUserRoleCache(int $userId): void
+    {
+        if (! config('aauth.cache.enabled', false)) {
+            return;
+        }
+
+        $prefix = config('aauth.cache.prefix', 'aauth');
+
+        Cache::forget("{$prefix}:user:{$userId}:switchable_roles");
     }
 }

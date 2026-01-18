@@ -13,6 +13,7 @@ use AuroraWebSoftware\AAuth\Models\User;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -49,15 +50,9 @@ class AAuth
         $this->user = $user;
         $this->panelId = $panelId;
 
-        $query = Role::with(['rolePermissions', 'abacRules']);
-
-        if ($this->panelId && $this->hasRolesPanelIdColumn()) {
-            $query->where(function ($q) {
-                $q->where('panel_id', $this->panelId)->orWhereNull('panel_id');
-            });
-        }
-
-        $this->role = $query->find($roleId);
+        $this->role = config('aauth.cache.enabled', false)
+            ? $this->getCachedRole($roleId)
+            : $this->loadRole($roleId);
 
         throw_unless($this->role, new MissingRoleException());
 
@@ -130,11 +125,11 @@ class AAuth
      */
     public function switchableRoles(): array|Collection|\Illuminate\Support\Collection
     {
-        // @phpstan-ignore-next-line
-        return Role::where('uro.user_id', '=', $this->user->id)
-            ->leftJoin('user_role_organization_node as uro', 'uro.role_id', '=', 'roles.id')
-            ->distinct()
-            ->select('roles.id', 'name')->get();
+        if (config('aauth.cache.enabled', false)) {
+            return $this->getCachedSwitchableRoles();
+        }
+
+        return $this->loadSwitchableRoles();
     }
 
     /**
@@ -332,6 +327,84 @@ class AAuth
         }
 
         return $hasPanelId;
+    }
+
+    /**
+     * Get cached role with permissions and ABAC rules
+     *
+     * @param int $roleId
+     * @return Role|null
+     */
+    protected function getCachedRole(int $roleId): ?Role
+    {
+        $prefix = config('aauth.cache.prefix', 'aauth');
+        $ttl = config('aauth.cache.ttl', 3600);
+        $store = config('aauth.cache.store');
+
+        $cacheKey = "{$prefix}:role:{$roleId}";
+
+        if ($this->panelId) {
+            $cacheKey .= ":panel:{$this->panelId}";
+        }
+
+        $cache = $store ? Cache::store($store) : Cache::store();
+
+        return $cache->remember($cacheKey, $ttl, function () use ($roleId) {
+            return $this->loadRole($roleId);
+        });
+    }
+
+    /**
+     * Load role from database with permissions and ABAC rules
+     *
+     * @param int $roleId
+     * @return Role|null
+     */
+    protected function loadRole(int $roleId): ?Role
+    {
+        $query = Role::with(['rolePermissions', 'abacRules']);
+
+        if ($this->panelId && $this->hasRolesPanelIdColumn()) {
+            $query->where(function ($q) {
+                $q->where('panel_id', $this->panelId)->orWhereNull('panel_id');
+            });
+        }
+
+        return $query->find($roleId);
+    }
+
+    /**
+     * Get cached switchable roles for current user
+     *
+     * @return Collection<int, Role>
+     */
+    protected function getCachedSwitchableRoles(): Collection
+    {
+        $prefix = config('aauth.cache.prefix', 'aauth');
+        $ttl = config('aauth.cache.ttl', 3600);
+        $store = config('aauth.cache.store');
+
+        $cacheKey = "{$prefix}:user:{$this->user->id}:switchable_roles";
+
+        $cache = $store ? Cache::store($store) : Cache::store();
+
+        return $cache->remember($cacheKey, $ttl, function () {
+            return $this->loadSwitchableRoles();
+        });
+    }
+
+    /**
+     * Load switchable roles from database
+     *
+     * @return Collection<int, Role>
+     */
+    protected function loadSwitchableRoles(): Collection
+    {
+        // @phpstan-ignore-next-line
+        return Role::where('uro.user_id', '=', $this->user->id)
+            ->leftJoin('user_role_organization_node as uro', 'uro.role_id', '=', 'roles.id')
+            ->distinct()
+            ->select('roles.id', 'name')->get();
     }
 
     /**

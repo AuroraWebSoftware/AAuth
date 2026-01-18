@@ -42,11 +42,18 @@ class RolePermissionObserver
 
     protected function clearPermissionCache(RolePermission $permission): void
     {
-        if (! config('aauth.cache.enabled', true)) {
+        if (! config('aauth.cache.enabled', false)) {
             return;
         }
 
         $prefix = config('aauth.cache.prefix', 'aauth');
+
+        Cache::forget("{$prefix}:role:{$permission->role_id}");
+
+        $role = $permission->role;
+        if ($role && isset($role->panel_id)) {
+            Cache::forget("{$prefix}:role:{$permission->role_id}:panel:{$role->panel_id}");
+        }
 
         Cache::forget("{$prefix}:role:{$permission->role_id}:permissions");
     }
