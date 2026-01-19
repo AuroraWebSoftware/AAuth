@@ -50,7 +50,7 @@ class AAuth
         $this->user = $user;
         $this->panelId = $panelId;
 
-        $this->role = config('aauth.cache.enabled', false)
+        $this->role = config('aauth-advanced.cache.enabled', false)
             ? $this->getCachedRole($roleId)
             : $this->loadRole($roleId);
 
@@ -125,7 +125,7 @@ class AAuth
      */
     public function switchableRoles(): array|Collection|\Illuminate\Support\Collection
     {
-        if (config('aauth.cache.enabled', false)) {
+        if (config('aauth-advanced.cache.enabled', false)) {
             return $this->getCachedSwitchableRoles();
         }
 
@@ -337,9 +337,9 @@ class AAuth
      */
     protected function getCachedRole(int $roleId): ?Role
     {
-        $prefix = config('aauth.cache.prefix', 'aauth');
-        $ttl = config('aauth.cache.ttl', 3600);
-        $store = config('aauth.cache.store');
+        $prefix = config('aauth-advanced.cache.prefix', 'aauth');
+        $ttl = config('aauth-advanced.cache.ttl', 3600);
+        $store = config('aauth-advanced.cache.store');
 
         $cacheKey = "{$prefix}:role:{$roleId}";
 
@@ -380,9 +380,9 @@ class AAuth
      */
     protected function getCachedSwitchableRoles(): Collection
     {
-        $prefix = config('aauth.cache.prefix', 'aauth');
-        $ttl = config('aauth.cache.ttl', 3600);
-        $store = config('aauth.cache.store');
+        $prefix = config('aauth-advanced.cache.prefix', 'aauth');
+        $ttl = config('aauth-advanced.cache.ttl', 3600);
+        $store = config('aauth-advanced.cache.store');
 
         $cacheKey = "{$prefix}:user:{$this->user->id}:switchable_roles";
 
@@ -428,7 +428,7 @@ class AAuth
             return true;
         }
 
-        if (! isset($context['permissions'][$permission])) {
+        if (! array_key_exists($permission, $context['permissions'])) {
             $this->requestCache[$cacheKey] = false;
 
             return false;
@@ -460,6 +460,9 @@ class AAuth
 
     protected function loadAndCacheContext(): void
     {
+        // Refresh relationships from database to get latest data
+        $this->role->load(['rolePermissions', 'abacRules']);
+
         $permissions = [];
         foreach ($this->role->rolePermissions as $rp) {
             $permissions[$rp->permission] = $rp->parameters;
@@ -471,8 +474,8 @@ class AAuth
         }
 
         $isSuperAdmin = false;
-        if (config('aauth.super_admin.enabled', false)) {
-            $column = config('aauth.super_admin.column', 'is_super_admin');
+        if (config('aauth-advanced.super_admin.enabled', false)) {
+            $column = config('aauth-advanced.super_admin.column', 'is_super_admin');
             $isSuperAdmin = (bool) ($this->user->{$column} ?? false);
         }
 
@@ -716,13 +719,13 @@ class AAuth
             })
             // Scope name filtering
             ->when($scopeName !== null, function ($query) use ($scopeName) {
-                $query->whereHas('organizationScope', function ($q) use ($scopeName) {
+                $query->whereHas('organization_scope', function ($q) use ($scopeName) {
                     $q->where('name', $scopeName);
                 });
             })
             // Scope level filtering
             ->when($scopeLevel !== null, function ($query) use ($scopeLevel) {
-                $query->whereHas('organizationScope', function ($q) use ($scopeLevel) {
+                $query->whereHas('organization_scope', function ($q) use ($scopeLevel) {
                     $q->where('level', $scopeLevel);
                 });
             })

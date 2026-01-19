@@ -7,6 +7,7 @@ use AuroraWebSoftware\AAuth\Events\PermissionRemovedEvent;
 use AuroraWebSoftware\AAuth\Events\PermissionUpdatedEvent;
 use AuroraWebSoftware\AAuth\Models\RolePermission;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Context;
 
 class RolePermissionObserver
 {
@@ -42,11 +43,21 @@ class RolePermissionObserver
 
     protected function clearPermissionCache(RolePermission $permission): void
     {
-        if (! config('aauth.cache.enabled', false)) {
+        // Clear AAuth instance's request cache and context
+        try {
+            if (app()->bound('aauth')) {
+                app('aauth')->clearContext();
+            }
+        } catch (\Throwable $e) {
+            // AAuth not initialized yet, just clear context directly
+            Context::forgetHidden('aauth_context');
+        }
+
+        if (! config('aauth-advanced.cache.enabled', false)) {
             return;
         }
 
-        $prefix = config('aauth.cache.prefix', 'aauth');
+        $prefix = config('aauth-advanced.cache.prefix', 'aauth');
 
         Cache::forget("{$prefix}:role:{$permission->role_id}");
 

@@ -27,7 +27,7 @@ class AAuthServiceProvider extends PackageServiceProvider
     {
         $package
             ->name('aauth')
-            ->hasConfigFile()
+            ->hasConfigFile(['aauth', 'aauth-advanced'])
         ;
     }
 
@@ -47,7 +47,15 @@ class AAuthServiceProvider extends PackageServiceProvider
         $this->publishes([
             __DIR__.'/../config/aauth.php' => config_path('aauth.php'),
             __DIR__.'/../config/aauth-permissions.php' => config_path('aauth-permissions.php'),
+            __DIR__.'/../config/aauth-advanced.php' => config_path('aauth-advanced.php'),
         ], 'aauth-config');
+
+        // Language files
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'aauth');
+
+        $this->publishes([
+            __DIR__.'/../resources/lang' => resource_path('lang/vendor/aauth'),
+        ], 'aauth-lang');
 
         $this->registerObservers();
         $this->registerMiddleware();

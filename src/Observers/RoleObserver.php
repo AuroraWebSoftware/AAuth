@@ -29,11 +29,11 @@ class RoleObserver
 
     protected function clearRoleCache(Role $role): void
     {
-        if (! config('aauth.cache.enabled', false)) {
+        if (! config('aauth-advanced.cache.enabled', false)) {
             return;
         }
 
-        $prefix = config('aauth.cache.prefix', 'aauth');
+        $prefix = config('aauth-advanced.cache.prefix', 'aauth');
 
         Cache::forget("{$prefix}:role:{$role->id}");
 

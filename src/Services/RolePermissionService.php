@@ -9,6 +9,7 @@ use AuroraWebSoftware\AAuth\Http\Requests\StoreRoleRequest;
 use AuroraWebSoftware\AAuth\Http\Requests\UpdateRoleRequest;
 use AuroraWebSoftware\AAuth\Models\OrganizationNode;
 use AuroraWebSoftware\AAuth\Models\Role;
+use AuroraWebSoftware\AAuth\Models\RolePermission;
 use AuroraWebSoftware\AAuth\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -124,16 +125,11 @@ class RolePermissionService
                 $this->attachPermissionToRole($permission, $roleId);
             }
         } else {
-            $permissionQueryBuilder = DB::table('role_permission')
-                ->where('role_id', $roleId)
-                ->where('permission', $permissionOrPermissions);
-
-            if ($permissionQueryBuilder->doesntExist()) {
-                return DB::table('role_permission')->insert([
-                    'role_id' => $roleId,
-                    'permission' => $permissionOrPermissions,
-                ]);
-            }
+            // Use Eloquent to trigger observers
+            RolePermission::firstOrCreate([
+                'role_id' => $roleId,
+                'permission' => $permissionOrPermissions,
+            ]);
         }
 
         return true;
@@ -153,10 +149,11 @@ class RolePermissionService
                 $this->detachPermissionFromRole($permission, $roleId);
             }
         } else {
-            DB::table('role_permission')->where([
+            // Use Eloquent to trigger observers
+            RolePermission::where([
                 'role_id' => $roleId,
                 'permission' => $permissions,
-            ])->delete();
+            ])->get()->each->delete();
         }
 
         return true;
@@ -170,9 +167,8 @@ class RolePermissionService
     {
         $roleId = Role::find($roleId)->id;
 
-        DB::table('role_permission')->where([
-            'role_id' => $roleId,
-        ])->delete();
+        // Use Eloquent to trigger observers
+        RolePermission::where('role_id', $roleId)->get()->each->delete();
 
         return true;
     }
@@ -381,11 +377,11 @@ class RolePermissionService
      */
     protected function clearUserRoleCache(int $userId): void
     {
-        if (! config('aauth.cache.enabled', false)) {
+        if (! config('aauth-advanced.cache.enabled', false)) {
             return;
         }
 
-        $prefix = config('aauth.cache.prefix', 'aauth');
+        $prefix = config('aauth-advanced.cache.prefix', 'aauth');
 
         Cache::forget("{$prefix}:user:{$userId}:switchable_roles");
     }
