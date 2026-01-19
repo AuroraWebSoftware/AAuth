@@ -1,68 +1,163 @@
 parameters:
-    ignoreErrors:
-        # Existing entries for unused traits (preserved with ~ delimiter for now, will see if PHPStan complains)
-        - message: "~^Trait AuroraWebSoftware\\\\AAuth\\\\Traits\\\\AAuthABACModel is used zero times and is not analysed\\.$~"
-          count: 1
-          path: src/Traits/AAuthABACModel.php
-        - message: "~^Trait AuroraWebSoftware\\\\AAuth\\\\Traits\\\\AAuthOrganizationNode is used zero times and is not analysed\\.$~"
-          count: 1
-          path: src/Traits/AAuthOrganizationNode.php
-        - message: "~^Trait AuroraWebSoftware\\\\AAuth\\\\Traits\\\\AAuthUser is used zero times and is not analysed\\.$~"
-          count: 1
-          path: src/Traits/AAuthUser.php
+	ignoreErrors:
+		-
+			message: '#^Call to function method_exists\(\) with ''Illuminate\\\\Support\\\\Facades\\\\Schema'' and ''getIndexes'' will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: database/migrations/2024_01_01_000004_add_performance_indexes.php
 
-        # Entries for src/AAuth.php (preserved with ~ delimiter for now)
-        - message: "~^Parameter #1 \\$column of method Illuminate\\\\Database\\\\Eloquent\\\\Builder<AuroraWebSoftware\\\\AAuth\\\\Models\\\\Role>::where\\(\\) expects .* 'roles\\.id' given\\.$~"
-          count: 1 # For line 52 (non-static call) in AAuth.php
-          path: src/AAuth.php
-        - message: "~^Parameter #1 \\$column of static method Illuminate\\\\Database\\\\Eloquent\\\\Builder<AuroraWebSoftware\\\\AAuth\\\\Models\\\\Role>::where\\(\\) expects .* 'uro\\.user_id' given\\.$~"
-          count: 1 # For line 99 in AAuth.php
-          path: src/AAuth.php
-        - message: "~^Parameter #1 \\$column of static method Illuminate\\\\Database\\\\Eloquent\\\\Builder<AuroraWebSoftware\\\\AAuth\\\\Models\\\\Role>::where\\(\\) expects .* 'roles\\.id' given\\.$~"
-          count: 4 # Combined count for lines 112, 122, 133, 150 in AAuth.php
-          path: src/AAuth.php
-        - message: "~^Parameter #1 \\$column of method Illuminate\\\\Database\\\\Eloquent\\\\Builder<AuroraWebSoftware\\\\AAuth\\\\Models\\\\Role>::pluck\\(\\) expects .* string given\\.$~"
-          count: 1 # For pluck('permission_from_rp') on line 153 in AAuth.php
-          path: src/AAuth.php
+		-
+			message: '#^Access to an undefined property AuroraWebSoftware\\AAuth\\Contracts\\AAuthUserContract\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 4
+			path: src/AAuth.php
 
-        # Model Relationship Signatures - using patterns from phpstan-baseline.tmp.neon
-        -
-            message: '#^Method AuroraWebSoftware\\AAuth\\Models\\OrganizationNode\:\:organization_scope\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<AuroraWebSoftware\\AAuth\\Models\\OrganizationScope, static\(AuroraWebSoftware\\AAuth\\Models\\OrganizationNode\)\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<AuroraWebSoftware\\AAuth\\Models\\OrganizationScope, \$this\(AuroraWebSoftware\\AAuth\\Models\\OrganizationNode\)\>\.$#'
-            identifier: return.type
-            count: 1
-            path: src/Models/OrganizationNode.php
-        -
-            message: '#^Method AuroraWebSoftware\\AAuth\\Models\\OrganizationNode\:\:relatedModel\(\) should return Illuminate\\Database\\Eloquent\\Relations\\MorphTo\<Illuminate\\Database\\Eloquent\\Model, AuroraWebSoftware\\AAuth\\Models\\OrganizationNode\> but returns Illuminate\\Database\\Eloquent\\Relations\\MorphTo\<Illuminate\\Database\\Eloquent\\Model, \$this\(AuroraWebSoftware\\AAuth\\Models\\OrganizationNode\)\>\.$#'
-            identifier: return.type
-            count: 1
-            path: src/Models/OrganizationNode.php
-        -
-            message: '#^Method AuroraWebSoftware\\AAuth\\Models\\OrganizationScope\:\:organization_nodes\(\) should return Illuminate\\Database\\Eloquent\\Relations\\HasMany\<AuroraWebSoftware\\AAuth\\Models\\OrganizationNode, AuroraWebSoftware\\AAuth\\Models\\OrganizationScope\> but returns Illuminate\\Database\\Eloquent\\Relations\\HasMany\<AuroraWebSoftware\\AAuth\\Models\\OrganizationNode, \$this\(AuroraWebSoftware\\AAuth\\Models\\OrganizationScope\)\>\.$#'
-            identifier: return.type
-            count: 1
-            path: src/Models/OrganizationScope.php
-        -
-            message: '#^Method AuroraWebSoftware\\AAuth\\Models\\Role\:\:organization_scope\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<AuroraWebSoftware\\AAuth\\Models\\OrganizationScope, AuroraWebSoftware\\AAuth\\Models\\Role\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<AuroraWebSoftware\\AAuth\\Models\\OrganizationScope, \$this\(AuroraWebSoftware\\AAuth\\Models\\Role\)\>\.$#'
-            identifier: return.type
-            count: 1
-            path: src/Models/Role.php
-        -
-            message: '#^Method AuroraWebSoftware\\AAuth\\Models\\Role\:\:organization_nodes\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<AuroraWebSoftware\\AAuth\\Models\\OrganizationNode, AuroraWebSoftware\\AAuth\\Models\\Role, Illuminate\\Database\\Eloquent\\Relations\\Pivot, ''pivot''\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<AuroraWebSoftware\\AAuth\\Models\\OrganizationNode, \$this\(AuroraWebSoftware\\AAuth\\Models\\Role\), Illuminate\\Database\\Eloquent\\Relations\\Pivot, ''pivot''\>\.$#'
-            identifier: return.type
-            count: 1
-            path: src/Models/Role.php
-        -
-            message: '#^Method AuroraWebSoftware\\AAuth\\Models\\User\:\:roles\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<AuroraWebSoftware\\AAuth\\Models\\Role, AuroraWebSoftware\\AAuth\\Models\\User, Illuminate\\Database\\Eloquent\\Relations\\Pivot, ''pivot''\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<AuroraWebSoftware\\AAuth\\Models\\Role, \$this\(AuroraWebSoftware\\AAuth\\Models\\User\), Illuminate\\Database\\Eloquent\\Relations\\Pivot, ''pivot''\>\.$#'
-            identifier: return.type
-            count: 1
-            path: src/Models/User.php
-        -
-            message: '#^Method AuroraWebSoftware\\AAuth\\Models\\User\:\:system_roles\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<AuroraWebSoftware\\AAuth\\Models\\Role, AuroraWebSoftware\\AAuth\\Models\\User, Illuminate\\Database\\Eloquent\\Relations\\Pivot, ''pivot''\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<AuroraWebSoftware\\AAuth\\Models\\Role, \$this\(AuroraWebSoftware\\AAuth\\Models\\User\), Illuminate\\Database\\Eloquent\\Relations\\Pivot, ''pivot''\>\.$#'
-            identifier: return.type
-            count: 1
-            path: src/Models/User.php
-        -
-            message: '#^Method AuroraWebSoftware\\AAuth\\Models\\User\:\:organization_roles\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<AuroraWebSoftware\\AAuth\\Models\\Role, AuroraWebSoftware\\AAuth\\Models\\User, Illuminate\\Database\\Eloquent\\Relations\\Pivot, ''pivot''\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<AuroraWebSoftware\\AAuth\\Models\\Role, \$this\(AuroraWebSoftware\\AAuth\\Models\\User\), Illuminate\\Database\\Eloquent\\Relations\\Pivot, ''pivot''\>\.$#'
-            identifier: return.type
-            count: 1
-            path: src/Models/User.php
+		-
+			message: '#^Method AuroraWebSoftware\\AAuth\\AAuth\:\:getAccessibleOrganizationNodes\(\) return type with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/AAuth.php
+
+		-
+			message: '#^Method AuroraWebSoftware\\AAuth\\AAuth\:\:switchableRolesForCurrentPanel\(\) should return Illuminate\\Database\\Eloquent\\Collection\<int, AuroraWebSoftware\\AAuth\\Models\\Role\> but returns array\|Illuminate\\Support\\Collection\<int, AuroraWebSoftware\\AAuth\\Models\\Role\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/AAuth.php
+
+		-
+			message: '#^Parameter \#1 \$column of method Illuminate\\Database\\Eloquent\\Builder\<AuroraWebSoftware\\AAuth\\Models\\Role\>\:\:where\(\) expects array\<int\|model property of AuroraWebSoftware\\AAuth\\Models\\Role, mixed\>\|\(Closure\(Illuminate\\Database\\Eloquent\\Builder\<AuroraWebSoftware\\AAuth\\Models\\Role\>\)\: Illuminate\\Database\\Eloquent\\Builder\<AuroraWebSoftware\\AAuth\\Models\\Role\>\)\|\(Closure\(Illuminate\\Database\\Eloquent\\Builder\<AuroraWebSoftware\\AAuth\\Models\\Role\>\)\: void\)\|Illuminate\\Contracts\\Database\\Query\\Expression\|model property of AuroraWebSoftware\\AAuth\\Models\\Role, ''roles\.id'' given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/AAuth.php
+
+		-
+			message: '#^Parameter \#1 \$column of method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:where\(\) expects array\<int\|model property of Illuminate\\Database\\Eloquent\\Model, mixed\>\|\(Closure\(Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\)\: Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\)\|\(Closure\(Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\)\: void\)\|Illuminate\\Contracts\\Database\\Query\\Expression\|model property of Illuminate\\Database\\Eloquent\\Model, ''level'' given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/AAuth.php
+
+		-
+			message: '#^Parameter \#1 \$column of method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:where\(\) expects array\<int\|model property of Illuminate\\Database\\Eloquent\\Model, mixed\>\|\(Closure\(Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\)\: Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\)\|\(Closure\(Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\)\: void\)\|Illuminate\\Contracts\\Database\\Query\\Expression\|model property of Illuminate\\Database\\Eloquent\\Model, ''name'' given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/AAuth.php
+
+		-
+			message: '#^Parameter \#1 \$column of static method Illuminate\\Database\\Eloquent\\Builder\<AuroraWebSoftware\\AAuth\\Models\\Role\>\:\:where\(\) expects array\<int\|model property of AuroraWebSoftware\\AAuth\\Models\\Role, mixed\>\|\(Closure\(Illuminate\\Database\\Eloquent\\Builder\<AuroraWebSoftware\\AAuth\\Models\\Role\>\)\: Illuminate\\Database\\Eloquent\\Builder\<AuroraWebSoftware\\AAuth\\Models\\Role\>\)\|\(Closure\(Illuminate\\Database\\Eloquent\\Builder\<AuroraWebSoftware\\AAuth\\Models\\Role\>\)\: void\)\|Illuminate\\Contracts\\Database\\Query\\Expression\|model property of AuroraWebSoftware\\AAuth\\Models\\Role, ''roles\.id'' given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/AAuth.php
+
+		-
+			message: '#^Parameter \#1 \$column of static method Illuminate\\Database\\Eloquent\\Builder\<AuroraWebSoftware\\AAuth\\Models\\Role\>\:\:where\(\) expects array\<int\|model property of AuroraWebSoftware\\AAuth\\Models\\Role, mixed\>\|\(Closure\(Illuminate\\Database\\Eloquent\\Builder\<AuroraWebSoftware\\AAuth\\Models\\Role\>\)\: Illuminate\\Database\\Eloquent\\Builder\<AuroraWebSoftware\\AAuth\\Models\\Role\>\)\|\(Closure\(Illuminate\\Database\\Eloquent\\Builder\<AuroraWebSoftware\\AAuth\\Models\\Role\>\)\: void\)\|Illuminate\\Contracts\\Database\\Query\\Expression\|model property of AuroraWebSoftware\\AAuth\\Models\\Role, ''uro\.user_id'' given\.$#'
+			identifier: argument.type
+			count: 3
+			path: src/AAuth.php
+
+		-
+			message: '#^Method AuroraWebSoftware\\AAuth\\Models\\OrganizationNode\:\:organization_scope\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<AuroraWebSoftware\\AAuth\\Models\\OrganizationScope, static\(AuroraWebSoftware\\AAuth\\Models\\OrganizationNode\)\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<AuroraWebSoftware\\AAuth\\Models\\OrganizationScope, \$this\(AuroraWebSoftware\\AAuth\\Models\\OrganizationNode\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Models/OrganizationNode.php
+
+		-
+			message: '#^Method AuroraWebSoftware\\AAuth\\Models\\OrganizationNode\:\:relatedModel\(\) should return Illuminate\\Database\\Eloquent\\Relations\\MorphTo\<Illuminate\\Database\\Eloquent\\Model, AuroraWebSoftware\\AAuth\\Models\\OrganizationNode\> but returns Illuminate\\Database\\Eloquent\\Relations\\MorphTo\<Illuminate\\Database\\Eloquent\\Model, \$this\(AuroraWebSoftware\\AAuth\\Models\\OrganizationNode\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Models/OrganizationNode.php
+
+		-
+			message: '#^Method AuroraWebSoftware\\AAuth\\Models\\OrganizationScope\:\:organization_nodes\(\) should return Illuminate\\Database\\Eloquent\\Relations\\HasMany\<AuroraWebSoftware\\AAuth\\Models\\OrganizationNode, AuroraWebSoftware\\AAuth\\Models\\OrganizationScope\> but returns Illuminate\\Database\\Eloquent\\Relations\\HasMany\<AuroraWebSoftware\\AAuth\\Models\\OrganizationNode, \$this\(AuroraWebSoftware\\AAuth\\Models\\OrganizationScope\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Models/OrganizationScope.php
+
+		-
+			message: '#^Method AuroraWebSoftware\\AAuth\\Models\\Role\:\:abacRules\(\) should return Illuminate\\Database\\Eloquent\\Relations\\HasMany\<AuroraWebSoftware\\AAuth\\Models\\RoleModelAbacRule, AuroraWebSoftware\\AAuth\\Models\\Role\> but returns Illuminate\\Database\\Eloquent\\Relations\\HasMany\<AuroraWebSoftware\\AAuth\\Models\\RoleModelAbacRule, \$this\(AuroraWebSoftware\\AAuth\\Models\\Role\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Models/Role.php
+
+		-
+			message: '#^Method AuroraWebSoftware\\AAuth\\Models\\Role\:\:organization_nodes\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<AuroraWebSoftware\\AAuth\\Models\\OrganizationNode, AuroraWebSoftware\\AAuth\\Models\\Role, Illuminate\\Database\\Eloquent\\Relations\\Pivot, ''pivot''\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<AuroraWebSoftware\\AAuth\\Models\\OrganizationNode, \$this\(AuroraWebSoftware\\AAuth\\Models\\Role\), Illuminate\\Database\\Eloquent\\Relations\\Pivot, ''pivot''\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Models/Role.php
+
+		-
+			message: '#^Method AuroraWebSoftware\\AAuth\\Models\\Role\:\:organization_scope\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<AuroraWebSoftware\\AAuth\\Models\\OrganizationScope, AuroraWebSoftware\\AAuth\\Models\\Role\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<AuroraWebSoftware\\AAuth\\Models\\OrganizationScope, \$this\(AuroraWebSoftware\\AAuth\\Models\\Role\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Models/Role.php
+
+		-
+			message: '#^Method AuroraWebSoftware\\AAuth\\Models\\Role\:\:rolePermissions\(\) should return Illuminate\\Database\\Eloquent\\Relations\\HasMany\<AuroraWebSoftware\\AAuth\\Models\\RolePermission, AuroraWebSoftware\\AAuth\\Models\\Role\> but returns Illuminate\\Database\\Eloquent\\Relations\\HasMany\<AuroraWebSoftware\\AAuth\\Models\\RolePermission, \$this\(AuroraWebSoftware\\AAuth\\Models\\Role\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Models/Role.php
+
+		-
+			message: '#^Method AuroraWebSoftware\\AAuth\\Models\\RolePermission\:\:role\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<AuroraWebSoftware\\AAuth\\Models\\Role, AuroraWebSoftware\\AAuth\\Models\\RolePermission\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<AuroraWebSoftware\\AAuth\\Models\\Role, \$this\(AuroraWebSoftware\\AAuth\\Models\\RolePermission\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Models/RolePermission.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property AuroraWebSoftware\\AAuth\\Models\\RolePermission\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: src/Models/RolePermission.php
+
+		-
+			message: '#^Method AuroraWebSoftware\\AAuth\\Models\\User\:\:organization_roles\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<AuroraWebSoftware\\AAuth\\Models\\Role, AuroraWebSoftware\\AAuth\\Models\\User, Illuminate\\Database\\Eloquent\\Relations\\Pivot, ''pivot''\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<AuroraWebSoftware\\AAuth\\Models\\Role, \$this\(AuroraWebSoftware\\AAuth\\Models\\User\), Illuminate\\Database\\Eloquent\\Relations\\Pivot, ''pivot''\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Models/User.php
+
+		-
+			message: '#^Method AuroraWebSoftware\\AAuth\\Models\\User\:\:roles\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<AuroraWebSoftware\\AAuth\\Models\\Role, AuroraWebSoftware\\AAuth\\Models\\User, Illuminate\\Database\\Eloquent\\Relations\\Pivot, ''pivot''\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<AuroraWebSoftware\\AAuth\\Models\\Role, \$this\(AuroraWebSoftware\\AAuth\\Models\\User\), Illuminate\\Database\\Eloquent\\Relations\\Pivot, ''pivot''\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Models/User.php
+
+		-
+			message: '#^Method AuroraWebSoftware\\AAuth\\Models\\User\:\:system_roles\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<AuroraWebSoftware\\AAuth\\Models\\Role, AuroraWebSoftware\\AAuth\\Models\\User, Illuminate\\Database\\Eloquent\\Relations\\Pivot, ''pivot''\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany\<AuroraWebSoftware\\AAuth\\Models\\Role, \$this\(AuroraWebSoftware\\AAuth\\Models\\User\), Illuminate\\Database\\Eloquent\\Relations\\Pivot, ''pivot''\>\.$#'
+			identifier: return.type
+			count: 1
+			path: src/Models/User.php
+
+		-
+			message: '#^Trait AuroraWebSoftware\\AAuth\\Traits\\AAuthABACModel is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/Traits/AAuthABACModel.php
+
+		-
+			message: '#^Trait AuroraWebSoftware\\AAuth\\Traits\\AAuthOrganizationNode is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/Traits/AAuthOrganizationNode.php
+
+		-
+			message: '#^Trait AuroraWebSoftware\\AAuth\\Traits\\AAuthUser is used zero times and is not analysed\.$#'
+			identifier: trait.unused
+			count: 1
+			path: src/Traits/AAuthUser.php
+
+		-
+			message: '#^Function aauth_active_organization\(\) should return AuroraWebSoftware\\AAuth\\Models\\OrganizationNode\|null but returns AuroraWebSoftware\\AAuth\\Models\\OrganizationNode\|Illuminate\\Database\\Eloquent\\Collection\<int, AuroraWebSoftware\\AAuth\\Models\\OrganizationNode\>\|null\.$#'
+			identifier: return.type
+			count: 1
+			path: src/helpers.php
+
+		-
+			message: '#^Function aauth_panel_roles\(\) return type with generic class Illuminate\\Database\\Eloquent\\Collection does not specify its types\: TKey, TModel$#'
+			identifier: missingType.generics
+			count: 1
+			path: src/helpers.php
+
+		-
+			message: '#^Parameter \#1 \$user of class AuroraWebSoftware\\AAuth\\AAuth constructor expects AuroraWebSoftware\\AAuth\\Contracts\\AAuthUserContract\|null, Illuminate\\Foundation\\Auth\\User\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: src/helpers.php
