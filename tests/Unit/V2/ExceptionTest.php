@@ -177,7 +177,7 @@ test('passOrAbort throws HttpException with custom message', function () {
     $user = User::find(1);
     $role = Role::whereName('Root Role 1')->first();
 
-    $this->app->singleton('aauth', fn() => new AAuth($user, $role->id));
+    $this->app->singleton('aauth', fn () => new AAuth($user, $role->id));
 
     try {
         app('aauth')->passOrAbort('non_existent_permission', 'Custom error message');
@@ -192,7 +192,7 @@ test('passOrAbort throws HttpException with default message', function () {
     $user = User::find(1);
     $role = Role::whereName('Root Role 1')->first();
 
-    $this->app->singleton('aauth', fn() => new AAuth($user, $role->id));
+    $this->app->singleton('aauth', fn () => new AAuth($user, $role->id));
 
     try {
         app('aauth')->passOrAbort('non_existent_permission');

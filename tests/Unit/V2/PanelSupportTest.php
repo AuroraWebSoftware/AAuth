@@ -13,7 +13,7 @@ beforeEach(function () {
     $seeder->run();
 
     // Add panel_id column to roles if not exists
-    if (!Schema::hasColumn('roles', 'panel_id')) {
+    if (! Schema::hasColumn('roles', 'panel_id')) {
         Schema::table('roles', function ($table) {
             $table->string('panel_id')->nullable()->after('status');
         });
@@ -171,7 +171,7 @@ test('aauth_panel_can condition works in panel context', function () {
     $user = User::find(1);
     $role = Role::whereName('Root Role 1')->first();
 
-    $this->app->singleton('aauth', fn() => new AAuth($user, $role->id, 'admin'));
+    $this->app->singleton('aauth', fn () => new AAuth($user, $role->id, 'admin'));
 
     // When in correct panel, permission check should work
     $result = app('aauth')->can('create_something_for_organization');

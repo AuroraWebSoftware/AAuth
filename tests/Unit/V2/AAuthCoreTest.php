@@ -3,7 +3,6 @@
 use AuroraWebSoftware\AAuth\AAuth;
 use AuroraWebSoftware\AAuth\Database\Seeders\SampleDataSeeder;
 use AuroraWebSoftware\AAuth\Models\Role;
-use AuroraWebSoftware\AAuth\Models\RolePermission;
 use AuroraWebSoftware\AAuth\Models\User;
 use Illuminate\Support\Facades\Artisan;
 
@@ -208,7 +207,7 @@ test('organizationNode returns single node by ID', function () {
     $aauth = new AAuth($user, $role->id);
     $nodeIds = $aauth->organizationNodeIds();
 
-    if (!empty($nodeIds)) {
+    if (! empty($nodeIds)) {
         $node = $aauth->organizationNode($nodeIds[0]);
 
         expect($node)->toBeInstanceOf(\AuroraWebSoftware\AAuth\Models\OrganizationNode::class)
@@ -237,7 +236,7 @@ test('passOrAbort passes when user has permission', function () {
     $user = User::find(1);
     $role = Role::whereName('Root Role 1')->first();
 
-    $this->app->singleton('aauth', fn() => new AAuth($user, $role->id));
+    $this->app->singleton('aauth', fn () => new AAuth($user, $role->id));
 
     // Should not throw exception
     app('aauth')->passOrAbort('create_something_for_organization');
@@ -249,7 +248,7 @@ test('passOrAbort aborts with 403 when user lacks permission', function () {
     $user = User::find(1);
     $role = Role::whereName('Root Role 1')->first();
 
-    $this->app->singleton('aauth', fn() => new AAuth($user, $role->id));
+    $this->app->singleton('aauth', fn () => new AAuth($user, $role->id));
 
     // Should throw 403
     app('aauth')->passOrAbort('non_existent_permission');
