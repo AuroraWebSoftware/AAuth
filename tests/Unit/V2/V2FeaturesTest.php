@@ -181,7 +181,7 @@ test('isSuperAdmin returns false when disabled in config', function () {
 
 test('isSuperAdmin returns true for super admin user when enabled', function () {
     // Add is_super_admin column if not exists
-    if (!Schema::hasColumn('users', 'is_super_admin')) {
+    if (! Schema::hasColumn('users', 'is_super_admin')) {
         Schema::table('users', function ($table) {
             $table->boolean('is_super_admin')->default(false);
         });
@@ -202,7 +202,7 @@ test('isSuperAdmin returns true for super admin user when enabled', function () 
 });
 
 test('super admin bypasses permission checks', function () {
-    if (!Schema::hasColumn('users', 'is_super_admin')) {
+    if (! Schema::hasColumn('users', 'is_super_admin')) {
         Schema::table('users', function ($table) {
             $table->boolean('is_super_admin')->default(false);
         });
@@ -428,7 +428,7 @@ test('observer clears context when permission is added', function () {
     $role = Role::whereName('Root Role 1')->first();
 
     // Create AAuth instance
-    $this->app->singleton('aauth', fn() => new AAuth($user, $role->id));
+    $this->app->singleton('aauth', fn () => new AAuth($user, $role->id));
 
     // Verify initial state
     expect(app('aauth')->can('new_dynamic_permission'))->toBeFalse();
@@ -454,7 +454,7 @@ test('observer clears context when permission is removed', function () {
     ]);
 
     // Create AAuth instance
-    $this->app->singleton('aauth', fn() => new AAuth($user, $role->id));
+    $this->app->singleton('aauth', fn () => new AAuth($user, $role->id));
 
     // Verify permission exists
     expect(app('aauth')->can('removable_permission'))->toBeTrue();

@@ -26,7 +26,7 @@ test('AAuthPermission middleware passes when user has permission', function () {
     $user = User::find(1);
     $role = Role::whereName('Root Role 1')->first();
 
-    $this->app->singleton('aauth', fn() => new AAuth($user, $role->id));
+    $this->app->singleton('aauth', fn () => new AAuth($user, $role->id));
 
     $middleware = new AAuthPermission();
     $request = Request::create('/test', 'GET');
@@ -43,7 +43,7 @@ test('AAuthPermission middleware aborts 403 when user lacks permission', functio
     $user = User::find(1);
     $role = Role::whereName('Root Role 1')->first();
 
-    $this->app->singleton('aauth', fn() => new AAuth($user, $role->id));
+    $this->app->singleton('aauth', fn () => new AAuth($user, $role->id));
 
     $middleware = new AAuthPermission();
     $request = Request::create('/test', 'GET');
@@ -69,7 +69,7 @@ test('AAuthPermission middleware passes parameters to can() method', function ()
 
     // Mock AAuth to verify parameters are passed
     $aauth = new AAuth($user, $role->id);
-    $this->app->singleton('aauth', fn() => $aauth);
+    $this->app->singleton('aauth', fn () => $aauth);
 
     $middleware = new AAuthPermission();
     $request = Request::create('/test', 'GET');
@@ -92,7 +92,7 @@ test('AAuthRole middleware passes when user has correct role', function () {
     $user = User::find(1);
     $role = Role::whereName('Root Role 1')->first();
 
-    $this->app->singleton('aauth', fn() => new AAuth($user, $role->id));
+    $this->app->singleton('aauth', fn () => new AAuth($user, $role->id));
 
     $middleware = new AAuthRole();
     $request = Request::create('/test', 'GET');
@@ -109,7 +109,7 @@ test('AAuthRole middleware aborts 403 when user has wrong role', function () {
     $user = User::find(1);
     $role = Role::whereName('Root Role 1')->first();
 
-    $this->app->singleton('aauth', fn() => new AAuth($user, $role->id));
+    $this->app->singleton('aauth', fn () => new AAuth($user, $role->id));
 
     $middleware = new AAuthRole();
     $request = Request::create('/test', 'GET');
@@ -139,7 +139,7 @@ test('multiple middleware can be chained', function () {
     $user = User::find(1);
     $role = Role::whereName('Root Role 1')->first();
 
-    $this->app->singleton('aauth', fn() => new AAuth($user, $role->id));
+    $this->app->singleton('aauth', fn () => new AAuth($user, $role->id));
 
     $permissionMiddleware = new AAuthPermission();
     $roleMiddleware = new AAuthRole();
@@ -160,7 +160,7 @@ test('middleware chain fails on first check failure', function () {
     $user = User::find(1);
     $role = Role::whereName('Root Role 1')->first();
 
-    $this->app->singleton('aauth', fn() => new AAuth($user, $role->id));
+    $this->app->singleton('aauth', fn () => new AAuth($user, $role->id));
 
     $permissionMiddleware = new AAuthPermission();
     $roleMiddleware = new AAuthRole();
