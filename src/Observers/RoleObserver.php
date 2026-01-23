@@ -7,6 +7,7 @@ use AuroraWebSoftware\AAuth\Events\RoleDeletedEvent;
 use AuroraWebSoftware\AAuth\Events\RoleUpdatedEvent;
 use AuroraWebSoftware\AAuth\Models\Role;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class RoleObserver
 {
@@ -44,12 +45,14 @@ class RoleObserver
         Cache::forget("{$prefix}:role:{$role->id}:permissions");
         Cache::forget("{$prefix}:role:{$role->id}:abac_rules");
 
-        $role->load('organization_nodes');
-        foreach ($role->organization_nodes as $node) {
-            $pivotUserId = $node->pivot->user_id ?? null;
-            if ($pivotUserId) {
-                Cache::forget("{$prefix}:user:{$pivotUserId}:switchable_roles");
-            }
+        // Clear switchable roles cache for all users with this role
+        $userIds = DB::table('user_role_organization_node')
+            ->where('role_id', $role->id)
+            ->distinct()
+            ->pluck('user_id');
+
+        foreach ($userIds as $userId) {
+            Cache::forget("{$prefix}:user:{$userId}:switchable_roles");
         }
     }
 }

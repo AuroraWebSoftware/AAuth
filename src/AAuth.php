@@ -497,6 +497,8 @@ class AAuth
         $context = Context::getHidden(self::CONTEXT_KEY);
 
         if ($context === null) {
+            // Refresh role to get latest data in case of mid-request updates
+            $this->role->refresh();
             $this->loadAndCacheContext();
             $context = Context::getHidden(self::CONTEXT_KEY);
         }
@@ -512,7 +514,7 @@ class AAuth
 
     protected function getPermissionCacheKey(string $permission, array $arguments): string
     {
-        return $permission . ':' . md5(json_encode($arguments));
+        return $permission . ':' . md5(json_encode($arguments) ?: '');
     }
 
     protected function validateParameters(array $roleParameters, array $arguments): bool
