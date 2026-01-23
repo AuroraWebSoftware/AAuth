@@ -14,7 +14,9 @@ return new class extends Migration
             $table->dropIndex(['type', 'name', 'status']);
         });
 
-        DB::statement("ALTER TABLE roles MODIFY COLUMN type ENUM('system', 'organization') NULL");
+        Schema::table('roles', function (Blueprint $table) {
+            $table->string('type', 50)->nullable()->change();
+        });
 
         Schema::table('roles', function (Blueprint $table) {
             $table->unique(['name', 'organization_scope_id'], 'roles_name_scope_unique');
@@ -32,7 +34,9 @@ return new class extends Migration
             $table->dropIndex(['organization_scope_id', 'name', 'status']);
         });
 
-        DB::statement("ALTER TABLE roles MODIFY COLUMN type ENUM('system', 'organization') NOT NULL");
+        Schema::table('roles', function (Blueprint $table) {
+            $table->string('type', 50)->nullable(false)->change();
+        });
 
         Schema::table('roles', function (Blueprint $table) {
             $table->unique(['name', 'type']);

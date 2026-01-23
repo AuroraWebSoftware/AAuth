@@ -512,7 +512,7 @@ class AAuth
 
     protected function getPermissionCacheKey(string $permission, array $arguments): string
     {
-        return $permission . ':' . md5(serialize($arguments));
+        return $permission . ':' . md5(json_encode($arguments));
     }
 
     protected function validateParameters(array $roleParameters, array $arguments): bool
