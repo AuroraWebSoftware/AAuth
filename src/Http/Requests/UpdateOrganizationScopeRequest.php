@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\FormRequest;
 class UpdateOrganizationScopeRequest extends FormRequest
 {
     public static array $rules = [
-        'name' => ['required', 'min:5'],
+        'name' => ['required', 'min:3'],
         'level' => [],
     ];
 
@@ -18,7 +18,7 @@ class UpdateOrganizationScopeRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**

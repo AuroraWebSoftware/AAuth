@@ -9,8 +9,7 @@ class UpdateRoleRequest extends FormRequest
     public static array $rules = [
         'name' => [
             'required',
-            'min:5',
-            'unique:permissions',
+            'min:3',
         ],
     ];
 
@@ -21,7 +20,7 @@ class UpdateRoleRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
@@ -31,6 +30,9 @@ class UpdateRoleRequest extends FormRequest
      */
     public function rules(): array
     {
-        return self::$rules;
+        $rules = self::$rules;
+        $rules['name'][] = 'unique:roles,name,' . $this->route('role');
+
+        return $rules;
     }
 }

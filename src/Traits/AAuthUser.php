@@ -7,6 +7,7 @@ use AuroraWebSoftware\AAuth\Models\Role;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 trait AAuthUser
 {
@@ -37,21 +38,55 @@ trait AAuthUser
     }
 
     /**
+     * Get system roles (global roles not tied to organization)
+     * Defensive: supports both old 'type' column and new organization_scope_id approach
+     *
      * @return BelongsToMany
      */
     public function system_roles(): BelongsToMany
     {
-        return $this->belongsToMany(Role::class, 'user_role_organization_node')
-            ->where('type', 'system');
+        $query = $this->belongsToMany(Role::class, 'user_role_organization_node');
+
+        // Defensive: check if old 'type' column exists
+        if ($this->hasRolesTypeColumn()) {
+            return $query->where('type', 'system');
+        }
+
+        return $query->whereNull('roles.organization_scope_id');
     }
 
     /**
+     * Get organization roles (roles tied to an organization scope)
+     * Defensive: supports both old 'type' column and new organization_scope_id approach
+     *
      * @return BelongsToMany
      */
     public function organization_roles(): BelongsToMany
     {
-        return $this->belongsToMany(Role::class, 'user_role_organization_node')
-            ->where('type', 'organization');
+        $query = $this->belongsToMany(Role::class, 'user_role_organization_node');
+
+        // Defensive: check if old 'type' column exists
+        if ($this->hasRolesTypeColumn()) {
+            return $query->where('type', 'organization');
+        }
+
+        return $query->whereNotNull('roles.organization_scope_id');
+    }
+
+    /**
+     * Check if type column exists in roles table (for backward compatibility)
+     *
+     * @return bool
+     */
+    protected function hasRolesTypeColumn(): bool
+    {
+        static $hasType = null;
+
+        if ($hasType === null) {
+            $hasType = Schema::hasColumn('roles', 'type');
+        }
+
+        return $hasType;
     }
 
     /**
@@ -72,15 +107,15 @@ trait AAuthUser
         return $this->getAssignedUserCountAttribute() == 0;
     }
 
-    public function can($abilities, $arguments = []): bool
+    public function can($abilities, ...$arguments): bool
     {
         if (is_string($abilities)) {
-            return app('aauth')->can($abilities);
+            return app('aauth')->can($abilities, ...$arguments);
         }
 
         if (is_array($abilities)) {
             foreach ($abilities as $ability) {
-                if (! app('aauth')->can($ability)) {
+                if (! app('aauth')->can($ability, ...$arguments)) {
                     return false;
                 }
             }
@@ -88,6 +123,6 @@ trait AAuthUser
             return true;
         }
 
-        return parent::can($abilities, $arguments);
+        return parent::can($abilities, ...$arguments);
     }
 }

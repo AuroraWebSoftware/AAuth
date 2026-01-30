@@ -40,7 +40,10 @@
             "AuroraWebSoftware\\AAuth\\": "src",
             "AuroraWebSoftware\\AAuth\\Database\\Factories\\": "database/factories",
             "AuroraWebSoftware\\AAuth\\Database\\Seeders\\": "database/seeders"
-        }
+        },
+        "files": [
+            "src/helpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

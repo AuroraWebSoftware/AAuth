@@ -8,7 +8,7 @@ class StoreOrganizationNodeRequest extends FormRequest
 {
     // todo
     public static array $rules = [
-        'name' => ['required', 'min:5'],
+        'name' => ['required', 'min:3'],
         'parent_id' => ['required', 'int'],
     ];
 
@@ -19,7 +19,7 @@ class StoreOrganizationNodeRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**

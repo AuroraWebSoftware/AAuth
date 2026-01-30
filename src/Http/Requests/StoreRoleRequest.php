@@ -8,7 +8,7 @@ class StoreRoleRequest extends FormRequest
 {
     // todo
     public static array $rules = [
-        'name' => ['required', 'min:5'],
+        'name' => ['required', 'min:3'],
     ];
 
     /**
@@ -18,7 +18,7 @@ class StoreRoleRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**

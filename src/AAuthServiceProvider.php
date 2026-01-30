@@ -2,7 +2,14 @@
 
 namespace AuroraWebSoftware\AAuth;
 
-use AuroraWebSoftware\AAuth\Commands\AAuthCommand;
+use AuroraWebSoftware\AAuth\Http\Middleware\AAuthOrganizationScope;
+use AuroraWebSoftware\AAuth\Http\Middleware\AAuthPermission;
+use AuroraWebSoftware\AAuth\Http\Middleware\AAuthRole;
+use AuroraWebSoftware\AAuth\Models\Role;
+use AuroraWebSoftware\AAuth\Models\RolePermission;
+use AuroraWebSoftware\AAuth\Observers\RoleObserver;
+use AuroraWebSoftware\AAuth\Observers\RolePermissionObserver;
+use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Gate;
@@ -20,10 +27,7 @@ class AAuthServiceProvider extends PackageServiceProvider
     {
         $package
             ->name('aauth')
-            ->hasConfigFile()
-            // ->hasViews()
-            // ->hasMigration()
-            // ->hasCommand(AAuthCommand::class)
+            ->hasConfigFile(['aauth', 'aauth-advanced'])
         ;
     }
 
@@ -34,7 +38,6 @@ class AAuthServiceProvider extends PackageServiceProvider
     {
         parent::boot();
 
-        // load packages migrations
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
         $this->publishes([
@@ -42,10 +45,21 @@ class AAuthServiceProvider extends PackageServiceProvider
         ], 'aauth-seeders');
 
         $this->publishes([
-            __DIR__.'/../config' => config_path(),
+            __DIR__.'/../config/aauth.php' => config_path('aauth.php'),
+            __DIR__.'/../config/aauth-permissions.php' => config_path('aauth-permissions.php'),
+            __DIR__.'/../config/aauth-advanced.php' => config_path('aauth-advanced.php'),
         ], 'aauth-config');
 
-        // todo singleton bind ??
+        // Language files
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'aauth');
+
+        $this->publishes([
+            __DIR__.'/../resources/lang' => resource_path('lang/vendor/aauth'),
+        ], 'aauth-lang');
+
+        $this->registerObservers();
+        $this->registerMiddleware();
+
         $this->app->singleton('aauth', function ($app) {
             return new AAuth(
                 Auth::user(), // @phpstan-ignore-line
@@ -54,14 +68,57 @@ class AAuthServiceProvider extends PackageServiceProvider
         });
 
         Gate::before(function ($user, $ability, $arguments = []) {
-            return app('aauth')->can($ability) ?: null;
+            try {
+                /** @var AAuth $aauth */
+                $aauth = app('aauth');
+
+                if ($aauth->isSuperAdmin()) {
+                    return true;
+                }
+
+                return $aauth->can($ability, ...$arguments) ?: null;
+            } catch (\Throwable $e) {
+                return null;
+            }
         });
 
+        $this->registerBladeDirectives();
+    }
+
+    protected function registerObservers(): void
+    {
+        Role::observe(RoleObserver::class);
+        RolePermission::observe(RolePermissionObserver::class);
+    }
+
+    protected function registerMiddleware(): void
+    {
+        $router = $this->app->make(Router::class);
+
+        $router->aliasMiddleware('aauth.permission', AAuthPermission::class);
+        $router->aliasMiddleware('aauth.role', AAuthRole::class);
+        $router->aliasMiddleware('aauth.organization', AAuthOrganizationScope::class);
+    }
+
+    protected function registerBladeDirectives(): void
+    {
         Blade::directive('aauth', function ($permission) {
             return "<?php if(\AuroraWebSoftware\AAuth\Facades\AAuth::can($permission)){ ?>";
         });
         Blade::directive('endaauth', function () {
             return '<?php } ?>';
+        });
+
+        Blade::if('aauth_can', function ($permission, ...$arguments) {
+            return app('aauth')->can($permission, ...$arguments);
+        });
+
+        Blade::if('aauth_role', function ($roleName) {
+            return app('aauth')->currentRole()?->name === $roleName;
+        });
+
+        Blade::if('aauth_super_admin', function () {
+            return app('aauth')->isSuperAdmin();
         });
     }
 }
