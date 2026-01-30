@@ -18,7 +18,6 @@ Organization Based (OrBAC) , Attibute Based (ABAC) , Rol-Permission (RBAC)  Base
 - DB Row Level Filtering for the Role with ABAC
 - Built-in Blade Directives for permission control inside **Blade** files
 - Mysql, MariaDB, Postgres Support
-- Filament Panel Support (v2+)
 - Built-in Caching Layer with Configurable TTL
 - Community Driven and Open Source Forever
 
@@ -1004,81 +1003,6 @@ that's all.
 
 For upgrade instructions, see [UPGRADE.md](UPGRADE.md). For complete API documentation, see [API.md](API.md).
 
-## Filament Panel Support
-
-AAuth v2 introduces native Filament panel support, allowing you to manage roles and permissions per panel.
-
-### Static Factory Methods
-
-```php
-use AuroraWebSoftware\AAuth\AAuth;
-
-// Create AAuth instance for specific panel
-$aauth = AAuth::forPanel($user, $roleId, 'admin');
-
-// Auto-detect current Filament panel
-$aauth = AAuth::forCurrentPanel($user, $roleId);
-```
-
-### Panel-Aware Methods
-
-```php
-// Get switchable roles for specific panel
-$roles = $aauth->switchableRolesForPanel('admin');
-
-// Get switchable roles for current panel
-$roles = $aauth->switchableRolesForCurrentPanel();
-
-// Check if in specific panel
-if ($aauth->isInPanel('admin')) {
-    // ...
-}
-
-// Get current panel context
-$panelId = $aauth->getCurrentPanel();
-```
-
-### Static Helpers
-
-```php
-// Get switchable roles for panel (static)
-$roles = AAuth::switchableRolesForPanelStatic($userId, 'admin');
-
-// Detect current Filament panel ID
-$panelId = AAuth::detectCurrentPanelId();
-```
-
-### Helper Functions
-
-```php
-// Create panel-aware AAuth instance (uses Auth::user() and Session::get('roleId'))
-$aauth = aauth_for_panel('admin');
-
-// Get panel roles for current user
-$roles = aauth_panel_roles('admin');
-
-// Check if in panel
-if (aauth_in_panel('admin')) {
-    // ...
-}
-```
-
-### Blade Directives
-
-```blade
-{{-- Check panel context --}}
-@panel('admin')
-    <p>You are in admin panel</p>
-@endpanel
-
-{{-- Check permission in panel context --}}
-@aauth_panel_can('edit.users', 'admin')
-    <button>Edit User</button>
-@endaauth_panel_can
-```
-
----
-
 ## Performance Optimization
 
 AAuth v2 includes built-in caching and database optimization features.
@@ -1114,7 +1038,6 @@ AAuth v2 includes optimized database indexes for better query performance:
 
 ```php
 // Included in migration: 2024_01_01_000004_add_performance_indexes.php
-- idx_roles_panel_id              // Panel filtering
 - idx_role_permission_composite   // Permission checks (role_id, permission)
 - idx_uron_composite              // User-role joins (user_id, role_id)
 - idx_organization_nodes_path     // Organization hierarchy queries

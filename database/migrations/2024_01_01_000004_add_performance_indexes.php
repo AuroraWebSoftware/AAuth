@@ -8,12 +8,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (Schema::hasTable('roles') && ! $this->hasIndex('roles', 'idx_roles_panel_id')) {
-            Schema::table('roles', function (Blueprint $table) {
-                $table->index('panel_id', 'idx_roles_panel_id');
-            });
-        }
-
         if (Schema::hasTable('role_permission') && ! $this->hasIndex('role_permission', 'idx_role_permission_composite')) {
             Schema::table('role_permission', function (Blueprint $table) {
                 $table->index(['role_id', 'permission'], 'idx_role_permission_composite');
@@ -35,12 +29,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        if (Schema::hasTable('roles') && $this->hasIndex('roles', 'idx_roles_panel_id')) {
-            Schema::table('roles', function (Blueprint $table) {
-                $table->dropIndex('idx_roles_panel_id');
-            });
-        }
-
         if (Schema::hasTable('role_permission') && $this->hasIndex('role_permission', 'idx_role_permission_composite')) {
             Schema::table('role_permission', function (Blueprint $table) {
                 $table->dropIndex('idx_role_permission_composite');

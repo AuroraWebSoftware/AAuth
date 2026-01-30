@@ -60,12 +60,6 @@ class RolePermissionObserver
         $prefix = config('aauth-advanced.cache.prefix', 'aauth');
 
         Cache::forget("{$prefix}:role:{$permission->role_id}");
-
-        $role = $permission->role;
-        if ($role && isset($role->panel_id)) {
-            Cache::forget("{$prefix}:role:{$permission->role_id}:panel:{$role->panel_id}");
-        }
-
         Cache::forget("{$prefix}:role:{$permission->role_id}:permissions");
     }
 }

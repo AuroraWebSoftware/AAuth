@@ -150,14 +150,3 @@ parameters:
 			count: 1
 			path: src/helpers.php
 
-		-
-			message: '#^Function aauth_panel_roles\(\) return type with generic class Illuminate\\Database\\Eloquent\\Collection does not specify its types\: TKey, TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: src/helpers.php
-
-		-
-			message: '#^Parameter \#1 \$user of class AuroraWebSoftware\\AAuth\\AAuth constructor expects AuroraWebSoftware\\AAuth\\Contracts\\AAuthUserContract\|null, Illuminate\\Foundation\\Auth\\User\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: src/helpers.php

@@ -407,16 +407,6 @@ test('role syncPermissions with parametric permissions', function () {
     expect($paramPerm->parameters)->toBe(['limit' => 10]);
 });
 
-test('role isGlobal and isOrganizational methods', function () {
-    $systemRole = Role::whereName('System Role 1')->first();
-    $orgRole = Role::whereName('Root Role 1')->first();
-
-    expect($systemRole->isGlobal())->toBeTrue()
-        ->and($systemRole->isOrganizational())->toBeFalse()
-        ->and($orgRole->isGlobal())->toBeFalse()
-        ->and($orgRole->isOrganizational())->toBeTrue();
-});
-
 /*
 |--------------------------------------------------------------------------
 | Observer Cache Clearing Tests

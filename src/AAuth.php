@@ -32,12 +32,10 @@ class AAuth
 
     protected array $requestCache = [];
 
-    protected ?string $panelId = null;
-
     /**
      * @throws Throwable
      */
-    public function __construct(?AAuthUserContract $user, ?int $roleId, ?string $panelId = null)
+    public function __construct(?AAuthUserContract $user, ?int $roleId)
     {
         throw_unless($user, new AuthenticationException());
         throw_unless($roleId, new MissingRoleException());
@@ -48,7 +46,6 @@ class AAuth
         );
 
         $this->user = $user;
-        $this->panelId = $panelId;
 
         $this->role = config('aauth-advanced.cache.enabled', false)
             ? $this->getCachedRole($roleId)
@@ -62,53 +59,6 @@ class AAuth
             ->pluck('organization_node_id')->toArray();
 
         $this->loadAndCacheContext();
-    }
-
-    /**
-     * Create AAuth instance for specific Filament panel
-     *
-     * @param AAuthUserContract $user
-     * @param int $roleId
-     * @param string $panelId
-     * @return self
-     * @throws Throwable
-     */
-    public static function forPanel(AAuthUserContract $user, int $roleId, string $panelId): self
-    {
-        return new self($user, $roleId, $panelId);
-    }
-
-    /**
-     * Create AAuth instance for current Filament panel (auto-detect)
-     *
-     * @param AAuthUserContract $user
-     * @param int $roleId
-     * @return self
-     * @throws Throwable
-     */
-    public static function forCurrentPanel(AAuthUserContract $user, int $roleId): self
-    {
-        $panelId = self::detectCurrentPanelId();
-
-        return new self($user, $roleId, $panelId);
-    }
-
-    /**
-     * Detect current Filament panel ID
-     *
-     * @return string|null
-     */
-    public static function detectCurrentPanelId(): ?string
-    {
-        if (! class_exists(\Filament\Facades\Filament::class)) {
-            return null;
-        }
-
-        try {
-            return \Filament\Facades\Filament::getCurrentPanel()?->getId();
-        } catch (\Throwable $e) {
-            return null;
-        }
     }
 
     /**
@@ -133,79 +83,6 @@ class AAuth
     }
 
     /**
-     * Get switchable roles for specific Filament panel
-     *
-     * @param string $panelId
-     * @return Collection<int, Role>
-     */
-    public function switchableRolesForPanel(string $panelId): Collection
-    {
-        $query = Role::where('uro.user_id', '=', $this->user->id)
-            ->leftJoin('user_role_organization_node as uro', 'uro.role_id', '=', 'roles.id')
-            ->distinct();
-
-        if ($this->hasRolesPanelIdColumn()) {
-            $query->where(function ($q) use ($panelId) {
-                $q->where('panel_id', $panelId)->orWhereNull('panel_id');
-            });
-        }
-
-        // @phpstan-ignore-next-line
-        return $query->select('roles.id', 'name')->get();
-    }
-
-    /**
-     * Get switchable roles for current Filament panel
-     *
-     * @return Collection<int, Role>
-     */
-    public function switchableRolesForCurrentPanel(): Collection
-    {
-        $panelId = $this->panelId ?? self::detectCurrentPanelId();
-
-        if (! $panelId) {
-            return $this->switchableRoles();
-        }
-
-        return $this->switchableRolesForPanel($panelId);
-    }
-
-    /**
-     * Get role's panel ID from database
-     *
-     * @return string|null
-     */
-    public function getPanelId(): ?string
-    {
-        if (! $this->hasRolesPanelIdColumn()) {
-            return null;
-        }
-
-        return $this->role->panel_id;
-    }
-
-    /**
-     * Get current Filament panel context
-     *
-     * @return string|null
-     */
-    public function getCurrentPanel(): ?string
-    {
-        return $this->panelId;
-    }
-
-    /**
-     * Check if in specific Filament panel
-     *
-     * @param string $panelId
-     * @return bool
-     */
-    public function isInPanel(string $panelId): bool
-    {
-        return $this->panelId === $panelId;
-    }
-
-    /**
      * @param int $userId
      * @return array|Collection<int, Role>|\Illuminate\Support\Collection<int, Role>
      */
@@ -216,29 +93,6 @@ class AAuth
             ->leftJoin('user_role_organization_node as uro', 'uro.role_id', '=', 'roles.id')
             ->distinct()
             ->select('roles.id', 'name')->get();
-    }
-
-    /**
-     * Get switchable roles for specific Filament panel (static)
-     *
-     * @param int $userId
-     * @param string $panelId
-     * @return Collection<int, Role>
-     */
-    public static function switchableRolesForPanelStatic(int $userId, string $panelId): Collection
-    {
-        $query = Role::where('uro.user_id', '=', $userId)
-            ->leftJoin('user_role_organization_node as uro', 'uro.role_id', '=', 'roles.id')
-            ->distinct();
-
-        if (Schema::hasColumn('roles', 'panel_id')) {
-            $query->where(function ($q) use ($panelId) {
-                $q->where('panel_id', $panelId)->orWhereNull('panel_id');
-            });
-        }
-
-        // @phpstan-ignore-next-line
-        return $query->select('roles.id', 'name')->get();
     }
 
     /**
@@ -314,22 +168,6 @@ class AAuth
     }
 
     /**
-     * Check if panel_id column exists in roles table (for Filament support)
-     *
-     * @return bool
-     */
-    protected function hasRolesPanelIdColumn(): bool
-    {
-        static $hasPanelId = null;
-
-        if ($hasPanelId === null) {
-            $hasPanelId = Schema::hasColumn('roles', 'panel_id');
-        }
-
-        return $hasPanelId;
-    }
-
-    /**
      * Get cached role with permissions and ABAC rules
      *
      * @param int $roleId
@@ -342,10 +180,6 @@ class AAuth
         $store = config('aauth-advanced.cache.store');
 
         $cacheKey = "{$prefix}:role:{$roleId}";
-
-        if ($this->panelId) {
-            $cacheKey .= ":panel:{$this->panelId}";
-        }
 
         $cache = $store ? Cache::store($store) : Cache::store();
 
@@ -362,15 +196,7 @@ class AAuth
      */
     protected function loadRole(int $roleId): ?Role
     {
-        $query = Role::with(['rolePermissions', 'abacRules']);
-
-        if ($this->panelId && $this->hasRolesPanelIdColumn()) {
-            $query->where(function ($q) {
-                $q->where('panel_id', $this->panelId)->orWhereNull('panel_id');
-            });
-        }
-
-        return $query->find($roleId);
+        return Role::with(['rolePermissions', 'abacRules'])->find($roleId);
     }
 
     /**

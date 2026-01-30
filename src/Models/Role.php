@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 
 /**
  * AuroraWebSoftware\AAuth\Models\Role
@@ -18,7 +17,6 @@ use Illuminate\Support\Facades\Schema;
  * @property string|null $type
  * @property string $name
  * @property string $status
- * @property string|null $panel_id
  * @property OrganizationNode $organizationNode
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -32,7 +30,7 @@ class Role extends Model
     /** @use \Illuminate\Database\Eloquent\Factories\HasFactory<\Illuminate\Database\Eloquent\Factories\Factory<\AuroraWebSoftware\AAuth\Models\Role>> */
     use HasFactory;
 
-    protected $fillable = ['organization_scope_id', 'type', 'name', 'status', 'panel_id'];
+    protected $fillable = ['organization_scope_id', 'type', 'name', 'status'];
 
     /**
      * Get permissions as array (legacy method - backward compatible)
@@ -78,54 +76,6 @@ class Role extends Model
     public function organization_nodes(): BelongsToMany
     {
         return $this->belongsToMany(OrganizationNode::class, 'user_role_organization_node');
-    }
-
-    /**
-     * Check if this is a global role (not organization-scoped)
-     * Defensive: supports both old 'type' column and new organization_scope_id approach
-     *
-     * @return bool
-     */
-    public function isGlobal(): bool
-    {
-        // Defensive: check if old 'type' column exists
-        if ($this->hasColumnType()) {
-            return $this->type === 'system';
-        }
-
-        return $this->organization_scope_id === null;
-    }
-
-    /**
-     * Check if this is an organizational role
-     * Defensive: supports both old 'type' column and new organization_scope_id approach
-     *
-     * @return bool
-     */
-    public function isOrganizational(): bool
-    {
-        // Defensive: check if old 'type' column exists
-        if ($this->hasColumnType()) {
-            return $this->type === 'organization';
-        }
-
-        return $this->organization_scope_id !== null;
-    }
-
-    /**
-     * Check if type column exists (for backward compatibility)
-     *
-     * @return bool
-     */
-    protected function hasColumnType(): bool
-    {
-        static $hasType = null;
-
-        if ($hasType === null) {
-            $hasType = Schema::hasColumn('roles', 'type');
-        }
-
-        return $hasType;
     }
 
     /**

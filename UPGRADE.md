@@ -22,7 +22,6 @@ php artisan migrate
 
 This will apply the following changes:
 
-- Add `panel_id` column to `roles` table (nullable)
 - Add `parameters` JSON column to `role_permission` table
 - Make `type` column nullable in `roles` table
 - Add performance indexes
@@ -89,22 +88,6 @@ Minimum name length changed from 5 to 3 characters:
 ```
 
 ## New Features in v2
-
-### Filament Panel Support
-
-```php
-// New static factory methods
-$aauth = AAuth::forPanel($user, $roleId, 'admin');
-$aauth = AAuth::forCurrentPanel($user, $roleId);
-
-// New instance methods
-$roles = $aauth->switchableRolesForPanel('admin');
-$panelId = $aauth->getCurrentPanel();
-
-// New helper functions (uses Auth::user() and Session internally)
-$aauth = aauth_for_panel('admin');
-$roles = aauth_panel_roles('admin');
-```
 
 ### Caching
 
@@ -189,19 +172,6 @@ If migration fails due to existing indexes:
 # Check existing indexes
 SHOW INDEX FROM roles;
 SHOW INDEX FROM role_permission;
-
-# Drop duplicate indexes manually if needed
-DROP INDEX idx_roles_panel_id ON roles;
-```
-
-### Filament Panel Not Detected
-
-Ensure Filament is properly installed:
-
-```php
-// Check if panel is detected
-$panelId = AAuth::detectCurrentPanelId();
-dd($panelId); // Should show current panel ID or null
 ```
 
 ## Getting Help
