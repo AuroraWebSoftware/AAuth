@@ -60,12 +60,12 @@ class CreateRolesAndPermissionsTables extends Migration
             $table->foreign('user_id')
                 ->references('id')
                 ->on('users')
-                ->onUpdate('cascade');
+                ->cascadeOnUpdate();
 
             $table->foreign('role_id')
                 ->references('id')
                 ->on('roles')
-                ->onUpdate('cascade');
+                ->cascadeOnUpdate();
 
             // organization node id is below
         });
@@ -74,7 +74,7 @@ class CreateRolesAndPermissionsTables extends Migration
             $table->foreign('role_id')
                 ->references('id')
                 ->on('roles')
-                ->onUpdate('cascade');
+                ->cascadeOnUpdate();
         });
     }
 

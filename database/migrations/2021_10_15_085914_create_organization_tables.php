@@ -53,26 +53,26 @@ class CreateOrganizationTables extends Migration
             $table->foreign('organization_node_id')
                 ->references('id')
                 ->on('organization_nodes')
-                ->onUpdate('cascade');
+                ->cascadeOnUpdate();
         });
 
         Schema::table('organization_nodes', function (Blueprint $table) {
             $table->foreign('organization_scope_id')
                 ->references('id')
                 ->on('organization_scopes')
-                ->onUpdate('cascade');
+                ->cascadeOnUpdate();
 
             $table->foreign('parent_id')
                 ->references('id')
                 ->on('organization_nodes')
-                ->onUpdate('cascade');
+                ->cascadeOnUpdate();
         });
 
         Schema::table('roles', function (Blueprint $table) {
             $table->foreign('organization_scope_id')
                 ->references('id')
                 ->on('organization_scopes')
-                ->onUpdate('cascade');
+                ->cascadeOnUpdate();
         });
     }
 
