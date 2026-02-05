@@ -1138,35 +1138,30 @@ aauth_is_super_admin(); // bool
 
 ---
 
-## Policies
+## Laravel Gate Integration
 
-AAuth registers Laravel Gate policies for `OrganizationNode` and `Role` models.
+AAuth integrates with Laravel's built-in authorization via a `Gate::before` callback registered in `AAuthServiceProvider`:
 
-### OrganizationNodePolicy
+```php
+// Super admin bypasses all permission checks
+// All other Gate checks are delegated to AAuth::can()
+Gate::before(function ($user, $ability, $arguments = []) {
+    $aauth = app('aauth');
 
-| Method | Permission | Additional Check |
-|--------|-----------|-----------------|
-| viewAny | `view_organization_nodes` | - |
-| view | `view_organization_nodes` | Node accessibility check |
-| create | `create_organization_nodes` | - |
-| update | `update_organization_nodes` | Node accessibility check |
-| delete | `delete_organization_nodes` | Node accessibility check |
+    if ($aauth->isSuperAdmin()) {
+        return true;
+    }
 
-### RolePolicy
+    return $aauth->can($ability, ...$arguments) ?: null;
+});
+```
 
-| Method | Permission | Additional Check |
-|--------|-----------|-----------------|
-| viewAny | `view_roles` | - |
-| view | `view_roles` | Scope access check for org roles |
-| create | `create_roles` | - |
-| update | `update_roles` | Scope access check for org roles |
-| delete | `delete_roles` | Deletable + scope access check |
-
-### Gate::before Integration
-
-AAuth registers a `Gate::before` callback that:
-1. Checks if user is super admin (bypasses all checks)
-2. Delegates to `AAuth::can()` for all Gate checks
+This means standard Laravel authorization works with AAuth:
+```php
+Gate::allows('edit_something');
+$user->can('edit_something');
+@can('edit_something') ... @endcan
+```
 
 ---
 
@@ -1223,7 +1218,7 @@ use AuroraWebSoftware\AAuth\Events\RoleUpdatedEvent;    // Properties: Role $rol
 use AuroraWebSoftware\AAuth\Events\RoleDeletedEvent;    // Properties: Role $role
 use AuroraWebSoftware\AAuth\Events\RoleAssignedEvent;   // Properties: int $userId, Role $role, ?OrganizationNode
 use AuroraWebSoftware\AAuth\Events\RoleRemovedEvent;    // Properties: int $userId, Role $role, ?OrganizationNode
-use AuroraWebSoftware\AAuth\Events\RoleSwitchedEvent;   // Properties: int $userId, Role $newRole, ?Role $oldRole
+use AuroraWebSoftware\AAuth\Events\RoleSwitchedEvent;   // Properties: int $userId, Role $newRole, ?Role $oldRole, ?OrganizationNode $organizationNode
 use AuroraWebSoftware\AAuth\Events\PermissionAddedEvent;   // Properties: Role $role, string $permission, ?array $parameters
 use AuroraWebSoftware\AAuth\Events\PermissionUpdatedEvent; // Properties: Role $role, string $permission, ?array $parameters, ?array $oldParameters
 use AuroraWebSoftware\AAuth\Events\PermissionRemovedEvent; // Properties: Role $role, string $permission

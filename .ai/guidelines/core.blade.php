@@ -9,7 +9,7 @@ AAuth is a Laravel package that combines **Organization-Based Access Control (Or
 - **ABAC**: Model-level attribute filtering with JSON rules applied via global scopes
 - **Automatic Data Filtering**: Global scopes filter data based on user's authorized organization nodes
 - **Middleware**: Route-level permission, role, and organization scope protection
-- **Policies**: Laravel Gate integration with OrganizationNode and Role policies
+- **Gate Integration**: `Gate::before` callback for Laravel authorization integration
 - **Cache**: Configurable caching with automatic invalidation via observers
 - **Super Admin**: Bypass all permission checks with configurable column
 - **Events**: Lifecycle events for roles and permissions
@@ -512,8 +512,8 @@ School::deleteWithAAuthOrganizationNode($modelId);
 // Access the related organization node
 $orgNode = $school->relatedAAuthOrganizationNode();
 
-// Get all records without organization scope filtering
-$all = School::allWithoutAAuthOrganizationNodeScope();
+// Get all records without organization scope filtering (instance method)
+$all = (new School)->allWithoutAAuthOrganizationNodeScope();
 </code-snippet>
 @endverbatim
 
@@ -567,48 +567,31 @@ Route::get('/department', [DeptController::class, 'index'])
 </code-snippet>
 @endverbatim
 
-### Policies
+### Laravel Gate Integration
 
-AAuth registers Laravel Gate policies for `OrganizationNode` and `Role` models via `Gate::policy()` in the service provider. A `Gate::before` callback also integrates AAuth with Laravel's built-in authorization and checks super admin status.
-
-**OrganizationNodePolicy** (`src/Policies/OrganizationNodePolicy.php`):
+AAuth integrates with Laravel's built-in authorization via a `Gate::before` callback registered in the service provider:
 
 @verbatim
-<code-snippet name="OrganizationNodePolicy" lang="php">
-// viewAny: requires 'view_organization_nodes' permission
-// view:    requires 'view_organization_nodes' + verifies node is accessible via AAuth::organizationNode($id)
-// create:  requires 'create_organization_nodes' permission
-// update:  requires 'update_organization_nodes' + verifies node accessibility
-// delete:  requires 'delete_organization_nodes' + verifies node accessibility
+<code-snippet name="Gate::before Integration" lang="php">
+// Registered in AAuthServiceProvider::boot()
+Gate::before(function ($user, $ability, $arguments = []) {
+    $aauth = app('aauth');
 
-// Usage with Laravel Gate:
-Gate::allows('viewAny', OrganizationNode::class);
-Gate::allows('view', $organizationNode);
-Gate::allows('update', $organizationNode);
+    // Super admin bypasses all permission checks
+    if ($aauth->isSuperAdmin()) {
+        return true;
+    }
+
+    // Delegate to AAuth::can() for all Gate checks
+    return $aauth->can($ability, ...$arguments) ?: null;
+});
+
+// This means standard Laravel Gate/Policy checks work with AAuth:
+Gate::allows('edit_something');
+$user->can('edit_something');
+@can('edit_something') ... @endcan
 </code-snippet>
 @endverbatim
-
-**RolePolicy** (`src/Policies/RolePolicy.php`):
-
-@verbatim
-<code-snippet name="RolePolicy" lang="php">
-// viewAny: requires 'view_roles' permission
-// view:    requires 'view_roles' + for organization roles, checks scope access
-// create:  requires 'create_roles' permission
-// update:  requires 'update_roles' + for organization roles, checks scope access
-// delete:  requires 'delete_roles' + checks $role->deletable + for org roles, checks scope access
-
-// Organization role scope check: iterates user's organization nodes
-// and verifies at least one node matches the role's organization_scope_id.
-// System roles always pass the scope check.
-
-// Usage with Laravel Gate:
-Gate::allows('update', $role);
-Gate::allows('delete', $role); // also checks deletable attribute
-</code-snippet>
-@endverbatim
-
-**Gate::before callback**: The service provider registers a `Gate::before` that checks `isSuperAdmin()` (bypasses all checks if true) and then delegates to `AAuth::can()` for all Gate checks.
 
 ### Events
 
@@ -616,15 +599,15 @@ AAuth dispatches events for role and permission lifecycle:
 
 @verbatim
 <code-snippet name="Available Events" lang="php">
-use AuroraWebSoftware\AAuth\Events\RoleCreatedEvent;
-use AuroraWebSoftware\AAuth\Events\RoleUpdatedEvent;
-use AuroraWebSoftware\AAuth\Events\RoleDeletedEvent;
-use AuroraWebSoftware\AAuth\Events\RoleAssignedEvent;
-use AuroraWebSoftware\AAuth\Events\RoleRemovedEvent;
-use AuroraWebSoftware\AAuth\Events\RoleSwitchedEvent;
-use AuroraWebSoftware\AAuth\Events\PermissionAddedEvent;
-use AuroraWebSoftware\AAuth\Events\PermissionUpdatedEvent;
-use AuroraWebSoftware\AAuth\Events\PermissionRemovedEvent;
+use AuroraWebSoftware\AAuth\Events\RoleCreatedEvent;       // Role $role
+use AuroraWebSoftware\AAuth\Events\RoleUpdatedEvent;       // Role $role
+use AuroraWebSoftware\AAuth\Events\RoleDeletedEvent;       // Role $role
+use AuroraWebSoftware\AAuth\Events\RoleAssignedEvent;      // int $userId, Role $role, ?OrganizationNode $organizationNode
+use AuroraWebSoftware\AAuth\Events\RoleRemovedEvent;       // int $userId, Role $role, ?OrganizationNode $organizationNode
+use AuroraWebSoftware\AAuth\Events\RoleSwitchedEvent;      // int $userId, Role $newRole, ?Role $oldRole, ?OrganizationNode $organizationNode
+use AuroraWebSoftware\AAuth\Events\PermissionAddedEvent;   // Role $role, string $permission, ?array $parameters
+use AuroraWebSoftware\AAuth\Events\PermissionUpdatedEvent; // Role $role, string $permission, ?array $parameters, ?array $oldParameters
+use AuroraWebSoftware\AAuth\Events\PermissionRemovedEvent; // Role $role, string $permission
 
 // Listen to events in your EventServiceProvider or listener classes
 </code-snippet>
