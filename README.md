@@ -542,10 +542,18 @@ $organizationService->createOrganizationScope($data);
 ```
 
 ### Updating an Organization Scope
-// todo help wanted
+```php
+$organizationService->updateOrganizationScope([
+    'name' => 'Updated Scope Name',
+    'level' => 10,
+    'status' => 'active',
+], $scopeId);
+```
 
 ### Deleting an Organization Scope
-// todo help wanted
+```php
+$organizationService->deleteOrganizationScope($scopeId);
+```
 
 
 ### Creating an Organization Node without Model Relationship
@@ -563,10 +571,14 @@ $organizationService->createOrganizationNode($data);
 ```
 
 ### Updating an Organization Node
-// todo help wanted
+```php
+$organizationService->updateNodePathsRecursively($organizationNode);
+```
 
 ### Deleting an Organization Node
-// todo help wanted
+```php
+$organizationService->deleteOrganizationNodesRecursively($organizationNode);
+```
 
 ##  Role Permission Service
 
@@ -600,10 +612,23 @@ $createdRole = $rolePermissionService->createRole($data);
 ```
 
 ### Updating a Role
-// todo help wanted
+```php
+$rolePermissionService->updateRole([
+    'name' => 'Updated Role Name',
+    'status' => 'active',
+], $roleId);
+```
 
 ### Deleting a Role
-// todo help wanted
+```php
+$rolePermissionService->deleteRole($roleId);
+```
+
+### Activating / Deactivating a Role
+```php
+$rolePermissionService->activateRole($roleId);
+$rolePermissionService->deactivateRole($roleId);
+```
 
 ### Attaching a Role to a User
 ```php
@@ -648,7 +673,28 @@ $rolePermissionService->attachOrganizationRoleToUser($organizationNode->id, $cre
 ```
 
 ### Creating a System Role and Attaching to a User
-// todo help wanted
+```php
+$organizationScope = OrganizationScope::whereName('Root Scope')->first();
+
+$data = [
+    'organization_scope_id' => $organizationScope->id,
+    'type' => 'system',
+    'name' => 'Created System Role 1',
+    'status' => 'active',
+];
+
+$createdRole = $rolePermissionService->createRole($data);
+$rolePermissionService->attachSystemRoleToUser($createdRole->id, $user->id);
+
+// Attach multiple system roles at once
+$rolePermissionService->attachSystemRoleToUser([$role1->id, $role2->id], $user->id);
+
+// Sync system roles (replaces all existing)
+$rolePermissionService->syncUserSystemRoles($user->id, [$role1->id, $role2->id]);
+
+// Detach system role
+$rolePermissionService->detachSystemRoleFromUser($createdRole->id, $user->id);
+```
 
 
 ## Using AAuth Interface and Trait with Eloquent Models
@@ -735,7 +781,6 @@ class Order extends Model implements AAuthABACModelInterface
 This setup prepares your model to have ABAC rules applied to it. The `getModelType()` method provides a string identifier for your model type, which can be used in rule definitions. The `getABACRules()` method is where you can define default or fallback attribute conditions for accessing instances of this model. While the primary mechanism for applying role-specific rules is via the `RoleModelAbacRule` model (see "Managing ABAC Rules and Associations"), these model-defined rules can act as a base or default. The detailed format for the rule syntax is covered in the "Defining ABAC Rules" section.
 
 ## AAuth Service and Facade Methods
-// todo
 
 ### Current Roles All Permissions
 current user's selected roles permissions with **AAuth Facade**
@@ -768,7 +813,11 @@ $organizationNodes = AAuth::organizationNodes();
 ```
 
 ### Get one specified organization node
-// todo help wanted
+Returns the organization node if the user has access, throws `InvalidOrganizationNodeException` otherwise.
+```php
+$node = AAuth::organizationNode(nodeId: 5);
+$node = AAuth::organizationNode(nodeId: 5, modelType: School::class);
+```
 
 ### Descendant nodes can be checked
 with this method you can check is a organization node is descendant of another organization node.
@@ -999,9 +1048,190 @@ that's all.
 
 ---
 
-## What's New in v2
+## Middleware
 
-For upgrade instructions, see [UPGRADE.md](UPGRADE.md). For complete API documentation, see [API.md](API.md).
+AAuth provides three middleware for route-level protection. They are automatically registered as aliases:
+
+### Permission Middleware
+```php
+// Check if user has the given permission
+Route::get('/students', [StudentController::class, 'index'])
+    ->middleware('aauth.permission:view_students');
+
+// With parametric arguments
+Route::put('/posts/{post}', [PostController::class, 'update'])
+    ->middleware('aauth.permission:posts.edit,5,draft');
+```
+
+### Role Middleware
+```php
+// Check if current active role name matches
+Route::get('/admin', [AdminController::class, 'index'])
+    ->middleware('aauth.role:System Administrator');
+```
+
+### Organization Scope Middleware
+```php
+// Check if user's role belongs to the given organization scope
+Route::get('/department', [DeptController::class, 'index'])
+    ->middleware('aauth.organization:2'); // organization_scope_id = 2
+```
+
+---
+
+## Role Model Methods
+
+The Role model provides direct methods for permission management:
+
+```php
+// Give a permission (with optional parametric arguments)
+$role->givePermission('edit_posts');
+$role->givePermission('edit_posts', ['max_edits_per_day' => 10]);
+
+// Remove a permission
+$role->removePermission('edit_posts');
+
+// Sync permissions (replaces all existing)
+$role->syncPermissions(['view_posts', 'edit_posts']);
+
+// Sync with parameters
+$role->syncPermissions([
+    'view_posts' => null,
+    'edit_posts' => ['max_edits_per_day' => 5],
+]);
+
+// Check if role has a permission
+$role->hasPermission('edit_posts'); // bool
+
+// Relationships
+$role->rolePermissions;     // HasMany -> RolePermission (with parameters)
+$role->abacRules;           // HasMany -> RoleModelAbacRule
+$role->organization_scope;  // BelongsTo -> OrganizationScope
+$role->organization_nodes;  // BelongsToMany -> OrganizationNode
+```
+
+---
+
+## Helper Functions
+
+AAuth provides global helper functions (autoloaded via `src/helpers.php`):
+
+```php
+// Get AAuth service instance
+$aauth = aauth();
+
+// Check permission
+aauth_can('edit_something'); // bool
+
+// Check current role name
+aauth_has_role('System Administrator'); // bool
+
+// Get current active role
+$role = aauth_active_role(); // ?Role
+
+// Get first active organization node
+$node = aauth_active_organization(); // ?OrganizationNode
+
+// Check super admin status
+aauth_is_super_admin(); // bool
+```
+
+---
+
+## Policies
+
+AAuth registers Laravel Gate policies for `OrganizationNode` and `Role` models.
+
+### OrganizationNodePolicy
+
+| Method | Permission | Additional Check |
+|--------|-----------|-----------------|
+| viewAny | `view_organization_nodes` | - |
+| view | `view_organization_nodes` | Node accessibility check |
+| create | `create_organization_nodes` | - |
+| update | `update_organization_nodes` | Node accessibility check |
+| delete | `delete_organization_nodes` | Node accessibility check |
+
+### RolePolicy
+
+| Method | Permission | Additional Check |
+|--------|-----------|-----------------|
+| viewAny | `view_roles` | - |
+| view | `view_roles` | Scope access check for org roles |
+| create | `create_roles` | - |
+| update | `update_roles` | Scope access check for org roles |
+| delete | `delete_roles` | Deletable + scope access check |
+
+### Gate::before Integration
+
+AAuth registers a `Gate::before` callback that:
+1. Checks if user is super admin (bypasses all checks)
+2. Delegates to `AAuth::can()` for all Gate checks
+
+---
+
+## Super Admin
+
+When enabled, users with the configured column set to `true` bypass all permission checks.
+
+```php
+// config/aauth-advanced.php
+'super_admin' => [
+    'enabled' => true,
+    'column' => 'is_super_admin', // column on users table
+],
+```
+
+```php
+// Check super admin status
+AAuth::isSuperAdmin(); // bool
+aauth_is_super_admin(); // helper function
+```
+
+---
+
+## Parametric Permissions
+
+Permissions can have parameters that control fine-grained access:
+
+```php
+// Give permission with parameters
+$role->givePermission('posts.edit', [
+    'max_edits_per_day' => 10,
+    'allowed_statuses' => ['draft', 'published'],
+    'can_force_delete' => false,
+]);
+
+// Check with runtime arguments (validated against stored parameters)
+AAuth::can('posts.edit', 5, 'draft'); // true if 5 <= max and 'draft' in allowed_statuses
+```
+
+Parameter validation rules:
+- **Integer**: Runtime value must be <= stored value
+- **Array**: Runtime value must be in the stored array
+- **Boolean**: Runtime value must exactly match stored value
+
+---
+
+## Events
+
+AAuth dispatches events for role and permission lifecycle:
+
+```php
+use AuroraWebSoftware\AAuth\Events\RoleCreatedEvent;    // Properties: Role $role
+use AuroraWebSoftware\AAuth\Events\RoleUpdatedEvent;    // Properties: Role $role
+use AuroraWebSoftware\AAuth\Events\RoleDeletedEvent;    // Properties: Role $role
+use AuroraWebSoftware\AAuth\Events\RoleAssignedEvent;   // Properties: int $userId, Role $role, ?OrganizationNode
+use AuroraWebSoftware\AAuth\Events\RoleRemovedEvent;    // Properties: int $userId, Role $role, ?OrganizationNode
+use AuroraWebSoftware\AAuth\Events\RoleSwitchedEvent;   // Properties: int $userId, Role $newRole, ?Role $oldRole
+use AuroraWebSoftware\AAuth\Events\PermissionAddedEvent;   // Properties: Role $role, string $permission, ?array $parameters
+use AuroraWebSoftware\AAuth\Events\PermissionUpdatedEvent; // Properties: Role $role, string $permission, ?array $parameters, ?array $oldParameters
+use AuroraWebSoftware\AAuth\Events\PermissionRemovedEvent; // Properties: Role $role, string $permission
+```
+
+---
+
+## What's New in v2
 
 ## Performance Optimization
 
@@ -1130,7 +1360,6 @@ Please see [CONTRIBUTING](README-contr.md) for details.
 
 ## Security Vulnerabilities
 
-// todo ?
 Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
 
 
