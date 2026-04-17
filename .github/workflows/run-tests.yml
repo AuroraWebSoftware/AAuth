@@ -4,7 +4,7 @@ on:
   push:
     branches: ['*']
   pull_request:
-    branches: [main]
+    branches: [main, main-v13]
 
 jobs:
   test:
@@ -13,22 +13,13 @@ jobs:
       fail-fast: true
       matrix:
         os: [ubuntu-latest]
-        php: [8.2,8.3,8.4]
-        laravel: [11.*, 12.*, 13.*]
-        stability: [prefer-lowest, prefer-stable]
+        php: [8.3, 8.4]
+        laravel: [13.*]
+        stability: [prefer-stable]
         include:
-          - laravel: 11.*
-            testbench: 9.*
-            carbon: ^2
-          - laravel: 12.*
-            testbench: 10.*
-            carbon: ^3
           - laravel: 13.*
             testbench: 11.*
             carbon: ^3
-        exclude:
-          - laravel: 13.*
-            php: 8.2
 
     name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
 
