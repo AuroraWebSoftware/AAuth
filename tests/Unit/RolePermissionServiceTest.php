@@ -49,23 +49,224 @@ test('can create a role', function () {
 });
 
 test('can update a role', function () {
-    // todo
-    expect(true)->toBeTrue();
+    $organizationScope = OrganizationScope::whereName('Root Scope')->first();
+
+    $created = $this->service->createRole([
+        'organization_scope_id' => $organizationScope->id,
+        'type' => 'organization',
+        'name' => 'Role For Update',
+        'status' => 'active',
+    ]);
+
+    $updated = $this->service->updateRole(['name' => 'Role Renamed'], $created->id);
+
+    expect($updated)->not->toBeNull()
+        ->and($updated->name)->toBe('Role Renamed')
+        ->and(Role::find($created->id)->name)->toBe('Role Renamed');
 });
 
 test('can delete a role', function () {
-    // todo
-    expect(true)->toBeTrue();
+    $created = $this->service->createRole([
+        'type' => 'system',
+        'name' => 'Role For Delete',
+        'status' => 'active',
+    ]);
+
+    $result = $this->service->deleteRole($created->id);
+
+    expect($result)->toBeTrue()
+        ->and(Role::find($created->id))->toBeNull();
 });
 
 test('can activate role', function () {
-    // todo
-    expect(true)->toBeTrue();
+    $created = $this->service->createRole([
+        'type' => 'system',
+        'name' => 'Role For Activate',
+        'status' => 'passive',
+    ]);
+
+    $result = $this->service->activateRole($created->id);
+
+    expect($result)->toBeTrue()
+        ->and(Role::find($created->id)->status)->toBe('active');
 });
 
 test('can deactivate role', function () {
-    // todo
-    expect(true)->toBeTrue();
+    $created = $this->service->createRole([
+        'type' => 'system',
+        'name' => 'Role For Deactivate',
+        'status' => 'active',
+    ]);
+
+    $result = $this->service->deactivateRole($created->id);
+
+    expect($result)->toBeTrue()
+        ->and(Role::find($created->id)->status)->toBe('passive');
+});
+
+test('detachOrganizationRoleFromUserBy removes correct row with aligned-order args', function () {
+    $organizationScope = OrganizationScope::whereName('Root Scope')->first();
+    $organizationNode = OrganizationNode::whereName('Root Node')->first();
+
+    $role = $this->service->createRole([
+        'organization_scope_id' => $organizationScope->id,
+        'type' => 'organization',
+        'name' => 'Detach By Test Role',
+        'status' => 'active',
+    ]);
+
+    $this->service->attachOrganizationRoleToUser($organizationNode->id, $role->id, 1);
+
+    $pivotBefore = \Illuminate\Support\Facades\DB::table('user_role_organization_node')
+        ->where(['user_id' => 1, 'role_id' => $role->id, 'organization_node_id' => $organizationNode->id])
+        ->count();
+    expect($pivotBefore)->toBe(1);
+
+    $deleted = $this->service->detachOrganizationRoleFromUserBy($organizationNode->id, $role->id, 1);
+
+    expect($deleted)->toBe(1);
+
+    $pivotAfter = \Illuminate\Support\Facades\DB::table('user_role_organization_node')
+        ->where(['user_id' => 1, 'role_id' => $role->id, 'organization_node_id' => $organizationNode->id])
+        ->count();
+    expect($pivotAfter)->toBe(0);
+});
+
+test('legacy detachOrganizationRoleFromUser still works with historic param order', function () {
+    $organizationScope = OrganizationScope::whereName('Root Scope')->first();
+    $organizationNode = OrganizationNode::whereName('Root Node')->first();
+
+    $role = $this->service->createRole([
+        'organization_scope_id' => $organizationScope->id,
+        'type' => 'organization',
+        'name' => 'Detach Legacy Test Role',
+        'status' => 'active',
+    ]);
+
+    $this->service->attachOrganizationRoleToUser($organizationNode->id, $role->id, 1);
+
+    // Historic signature: ($userId, $roleId, $organizationNodeId)
+    $deleted = $this->service->detachOrganizationRoleFromUser(1, $role->id, $organizationNode->id);
+
+    expect($deleted)->toBe(1);
+
+    $pivotAfter = \Illuminate\Support\Facades\DB::table('user_role_organization_node')
+        ->where(['user_id' => 1, 'role_id' => $role->id, 'organization_node_id' => $organizationNode->id])
+        ->count();
+    expect($pivotAfter)->toBe(0);
+});
+
+test('legacy detachOrganizationRoleFromUser does not emit a runtime deprecation notice', function () {
+    $organizationScope = OrganizationScope::whereName('Root Scope')->first();
+    $organizationNode = OrganizationNode::whereName('Root Node')->first();
+
+    $role = $this->service->createRole([
+        'organization_scope_id' => $organizationScope->id,
+        'type' => 'organization',
+        'name' => 'Detach Quiet Test Role',
+        'status' => 'active',
+    ]);
+
+    $this->service->attachOrganizationRoleToUser($organizationNode->id, $role->id, 1);
+
+    $notices = [];
+    $prev = set_error_handler(function ($severity, $message) use (&$notices) {
+        if ($severity === E_USER_DEPRECATED || $severity === E_DEPRECATED) {
+            $notices[] = $message;
+        }
+
+        return false; // let default handler also run for non-deprecated
+    });
+
+    try {
+        $this->service->detachOrganizationRoleFromUser(1, $role->id, $organizationNode->id);
+    } finally {
+        set_error_handler($prev);
+    }
+
+    expect($notices)->toBeEmpty();
+});
+
+test('detachOrganizationRoleFromUserBy throws InvalidUserException for unknown user', function () {
+    $organizationScope = OrganizationScope::whereName('Root Scope')->first();
+    $organizationNode = OrganizationNode::whereName('Root Node')->first();
+
+    $role = $this->service->createRole([
+        'organization_scope_id' => $organizationScope->id,
+        'type' => 'organization',
+        'name' => 'Validation Test Role',
+        'status' => 'active',
+    ]);
+
+    $this->service->detachOrganizationRoleFromUserBy($organizationNode->id, $role->id, 99999);
+})->throws(\AuroraWebSoftware\AAuth\Exceptions\InvalidUserException::class);
+
+test('detachOrganizationRoleFromUserBy throws InvalidRoleException for unknown organization role', function () {
+    $organizationNode = OrganizationNode::whereName('Root Node')->first();
+
+    $this->service->detachOrganizationRoleFromUserBy($organizationNode->id, 99999, 1);
+})->throws(\AuroraWebSoftware\AAuth\Exceptions\InvalidRoleException::class);
+
+test('detachOrganizationRoleFromUserBy throws InvalidOrganizationNodeException for unknown node', function () {
+    $organizationScope = OrganizationScope::whereName('Root Scope')->first();
+
+    $role = $this->service->createRole([
+        'organization_scope_id' => $organizationScope->id,
+        'type' => 'organization',
+        'name' => 'Validation Node Test Role',
+        'status' => 'active',
+    ]);
+
+    $this->service->detachOrganizationRoleFromUserBy(99999, $role->id, 1);
+})->throws(\AuroraWebSoftware\AAuth\Exceptions\InvalidOrganizationNodeException::class);
+
+test('detachOrganizationRoleFromUserBy clears user role cache when enabled', function () {
+    config(['aauth-advanced.cache.enabled' => true]);
+    config(['aauth-advanced.cache.prefix' => 'aauth']);
+
+    $organizationScope = OrganizationScope::whereName('Root Scope')->first();
+    $organizationNode = OrganizationNode::whereName('Root Node')->first();
+
+    $role = $this->service->createRole([
+        'organization_scope_id' => $organizationScope->id,
+        'type' => 'organization',
+        'name' => 'Cache Test Detach Role',
+        'status' => 'active',
+    ]);
+
+    $this->service->attachOrganizationRoleToUser($organizationNode->id, $role->id, 1);
+
+    // Prime the cache
+    \Illuminate\Support\Facades\Cache::put('aauth:user:1:switchable_roles', ['sentinel'], 60);
+    expect(\Illuminate\Support\Facades\Cache::get('aauth:user:1:switchable_roles'))->toBe(['sentinel']);
+
+    $this->service->detachOrganizationRoleFromUserBy($organizationNode->id, $role->id, 1);
+
+    // The detach must have invalidated the cache key
+    expect(\Illuminate\Support\Facades\Cache::get('aauth:user:1:switchable_roles'))->toBeNull();
+});
+
+test('both detach methods coexist on the service class', function () {
+    $reflection = new \ReflectionClass(RolePermissionService::class);
+
+    expect($reflection->hasMethod('detachOrganizationRoleFromUser'))->toBeTrue();
+    expect($reflection->hasMethod('detachOrganizationRoleFromUserBy'))->toBeTrue();
+
+    $legacy = $reflection->getMethod('detachOrganizationRoleFromUser');
+    $canonical = $reflection->getMethod('detachOrganizationRoleFromUserBy');
+
+    expect($legacy->getNumberOfParameters())->toBe(3);
+    expect($canonical->getNumberOfParameters())->toBe(3);
+
+    // Verify legacy has @deprecated in its docblock
+    expect($legacy->getDocComment())->toContain('@deprecated');
+    expect($canonical->getDocComment())->not->toContain('@deprecated');
+
+    // Verify aligned-order parameter names on the canonical method
+    $params = $canonical->getParameters();
+    expect($params[0]->getName())->toBe('organizationNodeId');
+    expect($params[1]->getName())->toBe('roleId');
+    expect($params[2]->getName())->toBe('userId');
 });
 
 test('can attach to role and detach a permission from role', function () {

@@ -60,7 +60,15 @@ class AAuthServiceProvider extends PackageServiceProvider
         $this->registerObservers();
         $this->registerMiddleware();
 
-        $this->app->singleton('aauth', function ($app) {
+        // Request-scoped binding (not singleton): under Laravel Octane / Vapor the
+        // resolved AAuth instance carries per-user state (role, organization node IDs,
+        // permissions, ABAC rules, super-admin flag). A singleton binding survives the
+        // request boundary in long-lived workers and leaks one user's authorization
+        // context into the next user's request. `scoped()` is flushed automatically by
+        // Octane's FlushTemporaryContainerInstances listener on RequestTerminated. Under
+        // classic PHP-FPM each request is a fresh process, so scoped() and singleton()
+        // are observationally equivalent (no behaviour change for PHP-FPM consumers).
+        $this->app->scoped('aauth', function ($app) {
             return new AAuth(
                 Auth::user(), // @phpstan-ignore-line
                 Session::get('roleId')
