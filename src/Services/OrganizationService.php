@@ -81,8 +81,8 @@ class OrganizationService
     /**
      * Creates an org. node with given array
      *
-     * @param array $organizationNode
-     * @param bool $withValidation
+     * @param  array<string, mixed>  $organizationNode
+     * @param  bool  $withValidation
      * @return OrganizationNode
      *
      * @throws ValidationException
@@ -101,15 +101,24 @@ class OrganizationService
 
         $parentPath = $this->getPath($organizationNode['parent_id'] ?? null);
 
-        // add temp path before determine actual path
-        $organizationNode['path'] = $parentPath . '/?';
-        $organizationNode = OrganizationNode::create($organizationNode);
+        // Build attributes with literal fillable keys so Larastan can verify
+        // the shape against OrganizationNode's fillable columns.
+        $attributes = [
+            'organization_scope_id' => $organizationNode['organization_scope_id'] ?? null,
+            'name' => $organizationNode['name'] ?? null,
+            'model_type' => $organizationNode['model_type'] ?? null,
+            'model_id' => $organizationNode['model_id'] ?? null,
+            'path' => $parentPath . '/?',
+            'parent_id' => $organizationNode['parent_id'] ?? null,
+        ];
+
+        $created = OrganizationNode::create($attributes);
 
         // todo , can be add inside model's created event
-        $organizationNode->path = $parentPath . $organizationNode->id;
-        $organizationNode->save();
+        $created->path = $parentPath . $created->id;
+        $created->save();
 
-        return $organizationNode;
+        return $created;
     }
 
     /**
