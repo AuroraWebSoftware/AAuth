@@ -111,6 +111,7 @@ test('mid-recursion failure rolls back the entire subtree delete', function () {
     });
 
     $thrown = null;
+
     try {
         $this->service->deleteOrganizationNodesRecursively($tree['root']);
     } catch (\Throwable $e) {
@@ -154,6 +155,7 @@ test('mid-recursion failure rolls back path updates', function () {
         ->update(['path' => $originalRootPath . '-stale']);
 
     $thrown = null;
+
     try {
         $freshRoot = OrganizationNode::find($tree['root']->id);
         $this->service->updateNodePathsRecursively($freshRoot);
@@ -226,6 +228,7 @@ test('deep recursion (3+ levels) is atomic on failure', function () {
     });
 
     $thrown = null;
+
     try {
         $this->service->deleteOrganizationNodesRecursively($root);
     } catch (\Throwable $e) {
