@@ -26,13 +26,19 @@ class TestCase extends Orchestra
 
     public function getEnvironmentSetUp($app)
     {
-        // for GitHub tests wirh mysql
-        // config()->set('database.default', 'mysql');
+        // Respect the DB_CONNECTION env var from phpunit.xml.dist (and from the
+        // GitHub Actions matrix). The historic three-line override forced 'mysql'
+        // regardless, which prevented local developers without Docker from running
+        // the suite. Now:
+        //   - phpunit.xml.dist sets DB_CONNECTION=mysql by default → MySQL/MariaDB.
+        //   - Local devs without Docker can override via env or a custom phpunit.xml
+        //     (e.g. AAUTH_TEST_DB=sqlite vendor/bin/pest).
+        $connection = env('DB_CONNECTION', 'testing');
 
-        // for local tests with sqlite
-        config()->set('database.default', 'testing');
+        if (env('AAUTH_TEST_DB') === 'sqlite') {
+            $connection = 'testing';
+        }
 
-        // for local tests with mysql
-        config()->set('database.default', 'mysql');
+        config()->set('database.default', $connection);
     }
 }

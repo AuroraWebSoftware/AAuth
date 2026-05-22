@@ -19,6 +19,7 @@ Organization Based (OrBAC) , Attibute Based (ABAC) , Rol-Permission (RBAC)  Base
 - Built-in Blade Directives for permission control inside **Blade** files
 - Mysql, MariaDB, Postgres Support
 - Built-in Caching Layer with Configurable TTL
+- **Laravel Octane / Vapor safe** — `aauth` is a request-scoped binding; no cross-request state leak
 - Community Driven and Open Source Forever
 
 ---
@@ -64,6 +65,12 @@ Optionally, You can seed the sample data with:
 ```bash
 php artisan db:seed --class=SampleDataSeeder
 ```
+
+## Laravel Octane / Vapor
+
+AAuth resolves the `aauth` service as a **request-scoped** binding (`$app->scoped()`). Under Octane and Vapor the resolved instance is flushed at every `RequestTerminated` event, so the active user, role, organization node IDs, permissions and ABAC rules cannot leak across requests sharing the same long-lived worker. No `config/octane.php` flush entry is needed.
+
+Under classic PHP-FPM behaviour is unchanged.
 
 You can publish the config file with:
 

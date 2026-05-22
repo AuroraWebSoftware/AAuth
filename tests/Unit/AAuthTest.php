@@ -57,9 +57,29 @@ test('role can check allowed permission with can() method', function () {
         ->and(AAuth::can('create_something_for_organization_k'))->toBeFalse();
 });
 
-test('passOrAbort', function () {
-    // todo
-    expect(1)->toBeTruthy();
+test('passOrAbort passes silently when permission is granted', function () {
+    AAuth::passOrAbort('create_something_for_organization');
+    expect(true)->toBeTrue();
+});
+
+test('passOrAbort aborts with 401 and custom message when permission is missing', function () {
+    try {
+        AAuth::passOrAbort('non_existent_perm', 'Specific denial');
+        $this->fail('passOrAbort should have aborted');
+    } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+        expect($e->getStatusCode())->toBe(401)
+            ->and($e->getMessage())->toBe('Specific denial');
+    }
+});
+
+test('passOrAbort aborts with 401 and default message when permission is missing', function () {
+    try {
+        AAuth::passOrAbort('non_existent_perm');
+        $this->fail('passOrAbort should have aborted');
+    } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+        expect($e->getStatusCode())->toBe(401)
+            ->and($e->getMessage())->toBe('No Permission');
+    }
 });
 
 test('can get all permitted organization nodes', function () {
@@ -75,9 +95,28 @@ test('can get all permitted organization nodes', function () {
 });
 
 test('can get one specified organization node', function () {
-    //AAuth::organizationNodes();
-    // todo
-    expect(1)->toBeTruthy();
+    // The seeded AAuth in beforeEach binds user1/role3 which has access to
+    // organization nodes 1..N via the role3 -> node1 pivot. Sub-tree
+    // organizationNodes() returns nodes whose path is under node 1.
+    $accessible = AAuth::organizationNodes(true);
+    expect($accessible)->not->toBeEmpty();
+
+    $someNode = $accessible->first();
+    $resolved = AAuth::organizationNode($someNode->id);
+
+    expect($resolved)->toBeInstanceOf(OrganizationNode::class)
+        ->and($resolved->id)->toBe($someNode->id);
+});
+
+test('organizationNode throws when accessing a node outside the role scope', function () {
+    AAuth::organizationNode(99999);
+})->throws(\AuroraWebSoftware\AAuth\Exceptions\InvalidOrganizationNodeException::class);
+
+test('switchableRolesStatic returns the same roles as the instance method', function () {
+    $static = \AuroraWebSoftware\AAuth\AAuth::switchableRolesStatic(1);
+    $instance = AAuth::switchableRoles();
+
+    expect(count($static))->toBe(count($instance));
 });
 
 test('descendant nodes can be checked', function () {

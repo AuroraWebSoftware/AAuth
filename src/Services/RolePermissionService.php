@@ -316,6 +316,15 @@ class RolePermissionService
     }
 
     /**
+     * Detach an organization role from a user.
+     *
+     * @deprecated since 21.1.0 Parameter order is inconsistent with
+     *             {@see self::attachOrganizationRoleToUser()}. Use
+     *             {@see self::detachOrganizationRoleFromUserBy()} which takes
+     *             arguments in the aligned order ($organizationNodeId, $roleId, $userId).
+     *             This historic-order method continues to work and emits no
+     *             runtime notice; it will be removed in the next major release.
+     *
      * @param  int  $userId
      * @param  int  $roleId
      * @param  int  $organizationNodeId
@@ -351,6 +360,51 @@ class RolePermissionService
 
         return $result;
         // todo attach ve sync ile olmayacak gibi direk db query yazmank lazım
+    }
+
+    /**
+     * Detach an organization role from a user using the canonical parameter
+     * order that matches {@see self::attachOrganizationRoleToUser()}.
+     *
+     * Prefer this method over the legacy {@see self::detachOrganizationRoleFromUser()}
+     * which keeps the historic, inconsistent parameter order for backward
+     * compatibility and will be removed in the next major release.
+     *
+     * @param  int  $organizationNodeId
+     * @param  int  $roleId
+     * @param  int  $userId
+     * @return int
+     *
+     * @throws Throwable
+     */
+    public function detachOrganizationRoleFromUserBy(int $organizationNodeId, int $roleId, int $userId): int
+    {
+        throw_unless(User::whereId($userId)->exists(), new InvalidUserException());
+
+        $roleQuery = Role::whereId($roleId);
+        if ($this->hasRolesTypeColumn()) {
+            $roleQuery->where('type', '=', 'organization');
+        } else {
+            $roleQuery->whereNotNull('organization_scope_id');
+        }
+        throw_unless($roleQuery->exists(), new InvalidRoleException());
+
+        throw_unless(
+            OrganizationNode::whereId($organizationNodeId)->exists(),
+            new InvalidOrganizationNodeException()
+        );
+
+        $result = DB::table('user_role_organization_node')
+            ->where([
+                'user_id' => $userId,
+                'role_id' => $roleId,
+                'organization_node_id' => $organizationNodeId,
+            ])
+            ->delete();
+
+        $this->clearUserRoleCache($userId);
+
+        return $result;
     }
 
     /**

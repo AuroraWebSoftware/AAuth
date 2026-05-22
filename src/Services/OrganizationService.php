@@ -145,65 +145,88 @@ class OrganizationService
     }
 
     /**
-     * Updates organization node recursively using breadth first method
-     * @param OrganizationNode $node
-     * @param bool|null $withDBTransaction
+     * Updates organization node paths recursively (breadth-first).
+     *
+     * Atomicity guarantee: the entire subtree update is wrapped in a single
+     * database transaction (savepoints under nested calls). If any descendant
+     * save fails, every prior change in the subtree is rolled back and the
+     * original exception is re-thrown to the caller. Previous versions silently
+     * swallowed exceptions and left the subtree in an inconsistent state.
+     *
+     * The `$withDBTransaction` parameter is preserved for backward compatibility:
+     *  - true  (default): open a top-level transaction here.
+     *  - false           : the caller is already managing a transaction; participate in it.
+     *
+     * @param  OrganizationNode  $node
+     * @param  bool|null  $withDBTransaction
      * @return void
+     *
+     * @throws \Throwable
      */
     public function updateNodePathsRecursively(OrganizationNode $node, ?bool $withDBTransaction = true): void
     {
         if ($withDBTransaction) {
-            DB::beginTransaction();
+            DB::transaction(fn () => $this->updateSubtreePaths($node));
+
+            return;
         }
 
-        try {
-            $node->path = $this->getPath($node->parent_id) . $node->id;
-            $node->save();
+        $this->updateSubtreePaths($node);
+    }
 
-            $subNodes = OrganizationNode::whereParentId($node->id)->get();
+    /**
+     * Inner recursion for path updates. Does not manage transactions.
+     *
+     * @param  OrganizationNode  $node
+     * @return void
+     */
+    protected function updateSubtreePaths(OrganizationNode $node): void
+    {
+        $node->path = $this->getPath($node->parent_id) . $node->id;
+        $node->save();
 
-            foreach ($subNodes as $subNode) {
-                $this->updateNodePathsRecursively($subNode, false);
-            }
-
-        } catch (\Exception $exception) {
-            DB::rollback();
-        }
-
-        if ($withDBTransaction) {
-            DB::commit();
+        foreach (OrganizationNode::whereParentId($node->id)->get() as $subNode) {
+            $this->updateSubtreePaths($subNode);
         }
     }
 
     /**
-     * deletes organization nodes using depth first search
-     * @param OrganizationNode $node
-     * @param bool|null $withDBTransaction
+     * Deletes organization nodes recursively (depth-first).
+     *
+     * Atomicity guarantee: identical to updateNodePathsRecursively(). The whole
+     * subtree deletion is atomic; partial failures roll back the entire subtree
+     * and re-throw the original exception. Previous versions silently swallowed
+     * exceptions.
+     *
+     * @param  OrganizationNode  $node
+     * @param  bool|null  $withDBTransaction
      * @return void
+     *
+     * @throws \Throwable
      */
     public function deleteOrganizationNodesRecursively(OrganizationNode $node, ?bool $withDBTransaction = true): void
     {
         if ($withDBTransaction) {
-            DB::beginTransaction();
+            DB::transaction(fn () => $this->deleteSubtree($node));
+
+            return;
         }
 
-        try {
-            //
-            $subNodes = OrganizationNode::whereParentId($node->id)->get();
+        $this->deleteSubtree($node);
+    }
 
-            foreach ($subNodes as $subNode) {
-                $this->deleteOrganizationNodesRecursively($subNode, false);
-            }
-
-            $node->delete();
-
-        } catch (\Exception $exception) {
-            DB::rollback();
+    /**
+     * Inner recursion for deletes. Does not manage transactions.
+     *
+     * @param  OrganizationNode  $node
+     * @return void
+     */
+    protected function deleteSubtree(OrganizationNode $node): void
+    {
+        foreach (OrganizationNode::whereParentId($node->id)->get() as $subNode) {
+            $this->deleteSubtree($subNode);
         }
 
-        if ($withDBTransaction) {
-            DB::commit();
-        }
-
+        $node->delete();
     }
 }
