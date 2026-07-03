@@ -180,7 +180,32 @@ never union the dimensions.**
 | P2 | SQLite hard-errors at 1000 OR terms | Deduplicate ancestor-covered nodes in PHP; collapse root-equality terms into `IN (ids)`. MySQL/PostgreSQL handle hundreds of terms fine (the pgsql `varchar_pattern_ops` index already ships) |
 | P3 | The ABAC scope re-queries the rule per scope application | Serve rules from the per-request context — profile mode then becomes *cheaper* than today per query |
 
-## 6. Open decisions (for the product owner)
+## 6. Worked example: the school
+
+> Tree: `School → 9-A, 10-B, 11-C`
+> Teacher Ayşe holds: **Math Teacher** @ 9-A, 10-B · **PE Teacher** @ 9-A, 10-B, 11-C
+> A "Teacher profile" (same-scope strategy) is the textbook use case for this feature.
+
+Three shapes, three risk levels:
+
+| Case | Shape | Naive merge | Recommended design |
+|---|---|---|---|
+| 1 | Both roles at the **same nodes**, no/identical ABAC | **Safe** — the union creates no new (permission, row) pair. (If the permission sets are identical too, they should be *one role at many nodes* — no profile needed.) | Safe |
+| 2 | **Different node sets** | **Leak 1 materializes:** `can('math_grade:enter')` passes (from the Math role) and the org union includes 11-C → Ayşe can enter *math grades* in a class where she only teaches PE. No single role grants that. In a school this is a grade-integrity violation. | **Blocked:** the coupled write check requires a *single* role to grant both the permission and the node — the Math role has no 11-C. |
+| 3 | **Different ABAC rules** (e.g. Exam model: Math role `subject='math'`, PE role `subject='pe'`) | **Leak 3 materializes:** `(9A∨10B∨11C) ∧ (math∨pe)` shows Ayşe the *math exams of 11-C*, where she is not the math teacher. | **Correct:** per-role branches `(mathClasses ∧ math) ∨ (peClasses ∧ pe)` — math exams only from 9-A/10-B, PE records from all three. |
+
+**Residual read gap in this scenario:** if the PE role has *no* ABAC rule for the Exam
+model, its branch is `peClasses ∧ TRUE`, so a `math_exam:view` permission (granted by
+the Math role) applies to 11-C's exam rows in listings — the documented read-side gap.
+The practical fix here is clean: give every subject role a `subject='X'` ABAC rule on
+Exam, which closes the gap entirely without the Phase 2 coupled-query API.
+
+**SoD note:** math × PE is not a toxic combination, so SoD risk is low here. But the
+same mechanism applied to e.g. *teacher + vice-principal* would merge grade-*entry*
+with grade-*approval* — exactly the maker/checker separation profiles can silently
+erase. Curate strategies with that in mind.
+
+## 7. Open decisions (for the product owner)
 
 1. **Row-visibility semantics** — recommended: per-role-coupled branches
    (`(subtree_r ∧ abac_r)` OR'ed). The cheaper "plain unions + documented
@@ -190,7 +215,7 @@ never union the dimensions.**
    mutually-exclusive-role constraints, per-role `mergeable` flag, admin-curated
    persistent profiles (Keycloak-style).
 
-## 7. Naming, effort, test gate
+## 8. Naming, effort, test gate
 
 - **Name:** "Profile", documented as *multi-role activation (NIST RBAC session
   semantics)*. "Session" (Laravel collision) and "composite role" (implies
