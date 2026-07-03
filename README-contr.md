@@ -57,7 +57,7 @@ Rules:
 
 - **GitHub Actions** — `.github/workflows/run-tests.yml`: PHP 8.2–8.4 × Laravel
   11–13 × stability, each cell run against **MariaDB and PostgreSQL**.
-- **GitLab CI** — `.gitlab-ci.yml`: `quality` (phpstan + pint) plus
+- **GitLab CI** — `.gitlab-ci.yml`: `quality` (phpstan + php-cs-fixer) plus
   `test:mariadb` and `test:postgres` stages.
 
 ## 6. Pre-PR review agents (Claude Code)
