@@ -7,6 +7,8 @@
 
 Organization Based (OrBAC) , Attibute Based (ABAC) , Rol-Permission (RBAC)  Based Authentication Methods Combined **Laravel Auth Package** with Limitless Hierarchical Level of Organizations and Limitless Attribute Conditions
 
+> **Contributing / running the tests?** See [README-contr.md](README-contr.md) for local setup, the multi-database (SQLite / MariaDB / PostgreSQL) test matrix, the quality gates, and the pre-PR review agents.
+
 # Features
 
 - Organization Based Access Controllable (OrBAC) Eloquent Models

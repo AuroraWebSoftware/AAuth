@@ -1,15 +1,38 @@
 services:
   mariadb:
-    image: mariadb:10.8
+    image: mariadb:11
     ports:
+      # host 33062 matches phpunit.xml.dist DB_PORT (default local MariaDB run)
       - "33062:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: aauth
+      MYSQL_PASSWORD: aauth
+      MYSQL_USER: aauth
+      MYSQL_DATABASE: aauth
     volumes:
       - aurora_aauth_root_mariadb_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  postgres:
+    image: postgres:16
+    ports:
+      - "54322:5432"
     environment:
-      - MYSQL_ROOT_PASSWORD=aauth
-      - MYSQL_PASSWORD=aauth
-      - MYSQL_USER=aauth
-      - MYSQL_DATABASE=aauth
+      POSTGRES_PASSWORD: aauth
+      POSTGRES_USER: aauth
+      POSTGRES_DB: aauth
+    volumes:
+      - aurora_aauth_root_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aauth -d aauth"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
 networks:
   default:
     driver: bridge
@@ -19,3 +42,4 @@ networks:
 
 volumes:
   aurora_aauth_root_mariadb_data:
+  aurora_aauth_root_postgres_data:

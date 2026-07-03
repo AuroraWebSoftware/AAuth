@@ -1,0 +1,67 @@
+# GitLab CI — runs the AAuth test suite against BOTH MariaDB and PostgreSQL.
+# Mirrors .github/workflows/run-tests.yml so local, GitHub and GitLab agree.
+stages:
+  - quality
+  - test
+
+default:
+  image: php:8.3-cli
+  before_script:
+    - apt-get update -yqq && apt-get install -yqq git unzip libzip-dev libpq-dev
+    - docker-php-ext-install pdo pdo_mysql pdo_pgsql zip > /dev/null
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    - composer install --no-interaction --prefer-dist --no-progress
+
+variables:
+  DB_DATABASE: aauth
+  DB_USERNAME: aauth
+  DB_PASSWORD: aauth
+  MYSQL_DATABASE: aauth
+  MYSQL_USER: aauth
+  MYSQL_PASSWORD: aauth
+  MYSQL_ROOT_PASSWORD: aauth
+  POSTGRES_DB: aauth
+  POSTGRES_USER: aauth
+  POSTGRES_PASSWORD: aauth
+
+phpstan:
+  stage: quality
+  script:
+    - vendor/bin/phpstan analyse --memory-limit=1G
+  before_script:
+    - apt-get update -yqq && apt-get install -yqq git unzip
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    - composer install --no-interaction --prefer-dist --no-progress
+
+pint:
+  stage: quality
+  script:
+    - vendor/bin/pint --test
+  before_script:
+    - apt-get update -yqq && apt-get install -yqq git unzip
+    - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+    - composer install --no-interaction --prefer-dist --no-progress
+
+test:mariadb:
+  stage: test
+  services:
+    - name: mariadb:11
+      alias: mariadb
+  variables:
+    DB_CONNECTION: mysql
+    DB_HOST: mariadb
+    DB_PORT: "3306"
+  script:
+    - vendor/bin/pest --no-coverage
+
+test:postgres:
+  stage: test
+  services:
+    - name: postgres:16
+      alias: postgres
+  variables:
+    DB_CONNECTION: pgsql
+    DB_HOST: postgres
+    DB_PORT: "5432"
+  script:
+    - vendor/bin/pest --no-coverage
