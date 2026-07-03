@@ -27,25 +27,4 @@ return [
         'enabled' => false,
         'column' => 'is_super_admin',
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Cache Configuration
-    |--------------------------------------------------------------------------
-    |
-    | Cache settings for role and permission data. When enabled, role data
-    | and switchable roles are cached for better performance.
-    |
-    | Cache is automatically invalidated when:
-    | - Role is updated/deleted (RoleObserver)
-    | - Permission is added/updated/removed (RolePermissionObserver)
-    | - User role assignment changes (RolePermissionService)
-    |
-    */
-    'cache' => [
-        'enabled' => true,
-        'ttl' => 3600, // 1 hour
-        'prefix' => 'aauth',
-        'store' => null, // null = default cache driver
-    ],
 ];

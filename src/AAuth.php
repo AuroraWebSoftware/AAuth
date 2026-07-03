@@ -13,8 +13,6 @@ use AuroraWebSoftware\AAuth\Models\User;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
@@ -22,8 +20,6 @@ use Throwable;
 
 class AAuth
 {
-    private const CONTEXT_KEY = 'aauth_context';
-
     public AAuthUserContract $user;
 
     public Role $role;
@@ -37,6 +33,15 @@ class AAuth
      * @var array<string, bool>
      */
     protected array $requestCache = [];
+
+    /**
+     * Per-request authorization context (role, permissions, ABAC, org nodes, super-admin),
+     * held on THIS request-scoped instance — never in shared/global storage — so two AAuth
+     * instances (e.g. two users in one request) can never read each other's permissions.
+     *
+     * @var array<string, mixed>|null
+     */
+    protected ?array $context = null;
 
     /**
      * @throws Throwable
@@ -55,9 +60,7 @@ class AAuth
 
         $this->user = $user;
 
-        $this->role = config('aauth-advanced.cache.enabled', false)
-            ? $this->getCachedRole($roleId)
-            : $this->loadRole($roleId);
+        $this->role = $this->loadRole($roleId);
 
         throw_unless($this->role, new MissingRoleException());
 
@@ -80,10 +83,6 @@ class AAuth
      */
     public function switchableRoles(): array|Collection|\Illuminate\Support\Collection
     {
-        if (config('aauth-advanced.cache.enabled', false)) {
-            return $this->getCachedSwitchableRoles();
-        }
-
         return $this->loadSwitchableRoles();
     }
 
@@ -171,49 +170,11 @@ class AAuth
     }
 
     /**
-     * Get cached role with permissions and ABAC rules
-     */
-    protected function getCachedRole(int $roleId): ?Role
-    {
-        $prefix = config('aauth-advanced.cache.prefix', 'aauth');
-        $ttl = config('aauth-advanced.cache.ttl', 3600);
-        $store = config('aauth-advanced.cache.store');
-
-        $cacheKey = "{$prefix}:role:{$roleId}";
-
-        $cache = $store ? Cache::store($store) : Cache::store();
-
-        return $cache->remember($cacheKey, $ttl, function () use ($roleId) {
-            return $this->loadRole($roleId);
-        });
-    }
-
-    /**
      * Load role from database with permissions and ABAC rules
      */
     protected function loadRole(int $roleId): ?Role
     {
         return Role::with(['rolePermissions', 'abacRules'])->find($roleId);
-    }
-
-    /**
-     * Get cached switchable roles for current user
-     *
-     * @return Collection<int, Role>
-     */
-    protected function getCachedSwitchableRoles(): Collection
-    {
-        $prefix = config('aauth-advanced.cache.prefix', 'aauth');
-        $ttl = config('aauth-advanced.cache.ttl', 3600);
-        $store = config('aauth-advanced.cache.store');
-
-        $cacheKey = "{$prefix}:user:{$this->user->id}:switchable_roles";
-
-        $cache = $store ? Cache::store($store) : Cache::store();
-
-        return $cache->remember($cacheKey, $ttl, function () {
-            return $this->loadSwitchableRoles();
-        });
     }
 
     /**
@@ -278,8 +239,10 @@ class AAuth
 
     protected function loadAndCacheContext(): void
     {
-        // Refresh relationships from database to get latest data
-        $this->role->load(['rolePermissions', 'abacRules']);
+        // Reuse the relations eager-loaded in loadRole() — loadMissing() avoids a
+        // redundant re-query on the constructor path; the mid-request refresh() in
+        // getAuthContext() reloads them first when data may have changed.
+        $this->role->loadMissing(['rolePermissions', 'abacRules']);
 
         $permissions = [];
         foreach ($this->role->rolePermissions as $rp) {
@@ -307,7 +270,7 @@ class AAuth
             'is_super_admin' => $isSuperAdmin,
         ];
 
-        Context::addHidden(self::CONTEXT_KEY, $context);
+        $this->context = $context;
     }
 
     /**
@@ -315,22 +278,20 @@ class AAuth
      */
     protected function getAuthContext(): array
     {
-        $context = Context::getHidden(self::CONTEXT_KEY);
-
-        if ($context === null) {
-            // Refresh role to get latest data in case of mid-request updates
+        if ($this->context === null) {
+            // Rebuild after a mid-request invalidation (clearContext): refresh the role so
+            // a permission/ABAC change made during this request is reflected.
             $this->role->refresh();
             $this->loadAndCacheContext();
-            $context = Context::getHidden(self::CONTEXT_KEY);
         }
 
-        return $context;
+        return $this->context;
     }
 
     public function clearContext(): void
     {
         $this->requestCache = [];
-        Context::forgetHidden(self::CONTEXT_KEY);
+        $this->context = null;
     }
 
     /**

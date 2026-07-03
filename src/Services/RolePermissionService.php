@@ -11,7 +11,6 @@ use AuroraWebSoftware\AAuth\Models\OrganizationNode;
 use AuroraWebSoftware\AAuth\Models\Role;
 use AuroraWebSoftware\AAuth\Models\RolePermission;
 use AuroraWebSoftware\AAuth\Models\User;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
@@ -204,9 +203,6 @@ class RolePermissionService
 
         $result = User::find($userId)->system_roles()->sync($roleIdOrIds, false);
 
-        // Clear user's switchable_roles cache
-        $this->clearUserRoleCache($userId);
-
         return $result;
     }
 
@@ -236,8 +232,6 @@ class RolePermissionService
 
         $result = User::find($userId)->system_roles()->detach($roleIdOrIds);
 
-        $this->clearUserRoleCache($userId);
-
         return $result;
     }
 
@@ -250,8 +244,6 @@ class RolePermissionService
         // todo
         // to be unit tested
         $result = User::find($userId)->system_roles()->sync($roleIds);
-
-        $this->clearUserRoleCache($userId);
 
         return $result;
     }
@@ -289,8 +281,6 @@ class RolePermissionService
                 'role_id' => $roleId,
                 'organization_node_id' => $organizationNodeId,
             ]);
-
-        $this->clearUserRoleCache($userId);
 
         return $result;
     }
@@ -330,8 +320,6 @@ class RolePermissionService
                 'role_id' => $roleId,
                 'organization_node_id' => $organizationNodeId, ])
             ->delete();
-
-        $this->clearUserRoleCache($userId);
 
         return $result;
         // todo attach ve sync ile olmayacak gibi direk db query yazmank lazım
@@ -373,8 +361,6 @@ class RolePermissionService
             ])
             ->delete();
 
-        $this->clearUserRoleCache($userId);
-
         return $result;
     }
 
@@ -392,9 +378,6 @@ class RolePermissionService
         return $hasType;
     }
 
-    /**
-     * Clear user's role-related cache
-     */
     /**
      * Enforce the active role's org-subtree boundary on role assignment, but only when
      * an AAuth context is resolvable (seeders/console/queue run without one and skip).
@@ -416,18 +399,5 @@ class RolePermissionService
         }
 
         $aauth->organizationNode($nodeId);
-    }
-
-    protected function clearUserRoleCache(int $userId): void
-    {
-        if (! config('aauth-advanced.cache.enabled', false)) {
-            return;
-        }
-
-        $prefix = config('aauth-advanced.cache.prefix', 'aauth');
-        $store = config('aauth-advanced.cache.store');
-        $cache = $store ? Cache::store($store) : Cache::store();
-
-        $cache->forget("{$prefix}:user:{$userId}:switchable_roles");
     }
 }

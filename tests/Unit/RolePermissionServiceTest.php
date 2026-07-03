@@ -220,31 +220,6 @@ test('detachOrganizationRoleFromUserBy throws InvalidOrganizationNodeException f
     $this->service->detachOrganizationRoleFromUserBy(99999, $role->id, 1);
 })->throws(\AuroraWebSoftware\AAuth\Exceptions\InvalidOrganizationNodeException::class);
 
-test('detachOrganizationRoleFromUserBy clears user role cache when enabled', function () {
-    config(['aauth-advanced.cache.enabled' => true]);
-    config(['aauth-advanced.cache.prefix' => 'aauth']);
-
-    $organizationScope = OrganizationScope::whereName('Root Scope')->first();
-    $organizationNode = OrganizationNode::whereName('Root Node')->first();
-
-    $role = $this->service->createRole([
-        'organization_scope_id' => $organizationScope->id,
-        'type' => 'organization',
-        'name' => 'Cache Test Detach Role',
-        'status' => 'active',
-    ]);
-
-    $this->service->attachOrganizationRoleToUser($organizationNode->id, $role->id, 1);
-
-    // Prime the cache
-    \Illuminate\Support\Facades\Cache::put('aauth:user:1:switchable_roles', ['sentinel'], 60);
-    expect(\Illuminate\Support\Facades\Cache::get('aauth:user:1:switchable_roles'))->toBe(['sentinel']);
-
-    $this->service->detachOrganizationRoleFromUserBy($organizationNode->id, $role->id, 1);
-
-    // The detach must have invalidated the cache key
-    expect(\Illuminate\Support\Facades\Cache::get('aauth:user:1:switchable_roles'))->toBeNull();
-});
 
 test('both detach methods coexist on the service class', function () {
     $reflection = new \ReflectionClass(RolePermissionService::class);

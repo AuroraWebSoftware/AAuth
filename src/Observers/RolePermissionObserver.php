@@ -6,14 +6,12 @@ use AuroraWebSoftware\AAuth\Events\PermissionAddedEvent;
 use AuroraWebSoftware\AAuth\Events\PermissionRemovedEvent;
 use AuroraWebSoftware\AAuth\Events\PermissionUpdatedEvent;
 use AuroraWebSoftware\AAuth\Models\RolePermission;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Context;
 
 class RolePermissionObserver
 {
     public function created(RolePermission $permission): void
     {
-        $this->clearPermissionCache($permission);
+        $this->clearAAuthContext();
         event(new PermissionAddedEvent(
             $permission->role,
             $permission->permission,
@@ -23,7 +21,7 @@ class RolePermissionObserver
 
     public function updated(RolePermission $permission): void
     {
-        $this->clearPermissionCache($permission);
+        $this->clearAAuthContext();
         event(new PermissionUpdatedEvent(
             $permission->role,
             $permission->permission,
@@ -34,34 +32,25 @@ class RolePermissionObserver
 
     public function deleted(RolePermission $permission): void
     {
-        $this->clearPermissionCache($permission);
+        $this->clearAAuthContext();
         event(new PermissionRemovedEvent(
             $permission->role,
             $permission->permission
         ));
     }
 
-    protected function clearPermissionCache(RolePermission $permission): void
+    /**
+     * Refresh the live AAuth request context so a permission change is
+     * reflected within the same request.
+     */
+    protected function clearAAuthContext(): void
     {
-        // Clear AAuth instance's request cache and context
         try {
             if (app()->bound('aauth')) {
                 app('aauth')->clearContext();
             }
         } catch (\Throwable $e) {
-            // AAuth not initialized yet, just clear context directly
-            Context::forgetHidden('aauth_context');
+            // No resolvable AAuth instance (seeder/console/queue) — nothing to clear.
         }
-
-        if (! config('aauth-advanced.cache.enabled', false)) {
-            return;
-        }
-
-        $prefix = config('aauth-advanced.cache.prefix', 'aauth');
-        $store = config('aauth-advanced.cache.store');
-        $cache = $store ? Cache::store($store) : Cache::store();
-
-        $cache->forget("{$prefix}:role:{$permission->role_id}");
-        $cache->forget("{$prefix}:role:{$permission->role_id}:permissions");
     }
 }
