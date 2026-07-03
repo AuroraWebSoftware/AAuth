@@ -18,6 +18,25 @@ less (speed + UX). Requirements from the product owner:
 4. Permissions must merge accordingly; data-level access (ABAC rules and
    organization-node query scopes) must merge accordingly.
 
+## What already works today: one role at many nodes
+
+**A single role assigned at multiple organization nodes already merges those nodes —
+no profile needed.** The constructor collects *all* pivot rows for the (user, role)
+pair (`src/AAuth.php:67-70`), and `organizationNodesQuery()` ORs every node's subtree
+into one union (`src/AAuth.php:402-408`), which the query scopes apply to model
+queries. A "Branch Manager" role attached at 12 branches sees the union of all 12
+subtrees today, with zero switching.
+
+This is safe because one role is one consistent triple: a single permission set +
+a single ABAC rule + the node union — none of the cross-product leaks below can occur.
+
+**Consequence for this feature:** the real need for profiles is merging *different*
+roles (different permission sets) — which is exactly where all the risk lives. Before
+reaching for profiles, deployments suffering from frequent role switching should first
+check whether their "many roles" are really per-node copies of the same role; if so,
+consolidating them into one role attached at many nodes solves the UX problem with the
+existing mechanism.
+
 ## Verdict
 
 **Feasible ✅ · Reasonable ✅ · BUT a naive merge is a guaranteed data leak ❌**
