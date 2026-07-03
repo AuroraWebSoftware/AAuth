@@ -10,6 +10,7 @@ use AuroraWebSoftware\AAuth\Scopes\AAuthOrganizationNodeScope;
 use AuroraWebSoftware\AAuth\Services\OrganizationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /**
@@ -17,9 +18,6 @@ use Throwable;
  */
 trait AAuthOrganizationNode
 {
-    /**
-     * @return void
-     */
     public static function bootAAuthOrganizationNode(): void
     {
         static::addGlobalScope(new AAuthOrganizationNodeScope());
@@ -30,22 +28,41 @@ trait AAuthOrganizationNode
          */
     }
 
-    /**
-     * @return mixed
-     */
     public function allWithoutAAuthOrganizationNodeScope(): mixed
     {
         return self::withoutGlobalScopes()->all();
     }
 
-    /**
-     * @return OrganizationNode|Builder|Model|null
-     */
     public function relatedAAuthOrganizationNode(): Model|OrganizationNode|Builder|null
     {
         return OrganizationNode::whereModelId($this->getModelId())
             ->whereModelType(self::getModelType())
             ->first();
+    }
+
+    /**
+     * Enforce the active role's org-subtree boundary on writes — but only when an AAuth
+     * context is resolvable. Seeders, console commands and queue jobs run without an
+     * authenticated role and are intentionally skipped (no context = no enforcement).
+     *
+     * @throws Throwable
+     */
+    protected static function assertOrganizationNodeAuthorized(int $nodeId): void
+    {
+        try {
+            $aauth = app('aauth');
+        } catch (Throwable $e) {
+            // No resolvable AAuth context: legitimate for console/seeders/queue (skip),
+            // but an unauthenticated / invalid-role HTTP request must be DENIED.
+            if (app()->runningInConsole()) {
+                return;
+            }
+
+            throw $e;
+        }
+
+        // Throws InvalidOrganizationNodeException when the node is outside the subtree.
+        $aauth->organizationNode($nodeId);
     }
 
     /**
@@ -56,9 +73,6 @@ trait AAuthOrganizationNode
         // todo di
         $organizationService = new OrganizationService();
 
-        // todo yetki kontrolü ? serviste mi olmalı?
-        // gerekli validationlar, organization scope validationları vs.
-        // commit rollback
         $parentOrganizationNode = OrganizationNode::find($parentOrganizationNodeId);
 
         throw_if($parentOrganizationNode == null, new InvalidOrganizationNodeException());
@@ -66,6 +80,9 @@ trait AAuthOrganizationNode
         $organizationScope = OrganizationScope::find($organizationScopeId);
 
         throw_if($organizationScope == null, new InvalidOrganizationScopeException());
+
+        // Reject grafting under a parent outside the active role's accessible subtree.
+        self::assertOrganizationNodeAuthorized($parentOrganizationNodeId);
 
         $createdModel = self::create($modelCreateData);
 
@@ -97,28 +114,40 @@ trait AAuthOrganizationNode
 
         throw_if($organizationScope == null, new InvalidOrganizationScopeException());
 
+        // Authorize BOTH the node being moved AND the destination parent, so a role
+        // cannot re-parent a node from outside its subtree into its own (which would
+        // escalate read+write access over that node's whole subtree).
+        self::assertOrganizationNodeAuthorized($nodeId);
+        self::assertOrganizationNodeAuthorized($parentOrganizationNodeId);
 
-        $modelInfo = self::find($modelId);
+        return DB::transaction(function () use ($modelId, $nodeId, $modelUpdateData, $parentOrganizationNode, $organizationScope, $organizationService) {
+            $modelInfo = self::findOrFail($modelId);
+            $updatedModel = $modelInfo->update($modelUpdateData);
 
-        $updatedModel = $modelInfo->update($modelUpdateData);
+            // Persist the node's new parent/scope/name, THEN recompute the whole
+            // subtree path (updateNodePathsRecursively only recomputes; it does not
+            // persist field changes on its own).
+            $node = OrganizationNode::findOrFail($nodeId);
+            // Defence in depth: the node must actually belong to this model.
+            throw_if(
+                $node->model_id !== $modelId || $node->model_type !== self::getModelType(),
+                new InvalidOrganizationNodeException()
+            );
+            $node->update([
+                'name' => $modelInfo->getModelName(),
+                'organization_scope_id' => $organizationScope->id,
+                'parent_id' => $parentOrganizationNode->id,
+            ]);
 
+            $organizationService->updateNodePathsRecursively($node, false);
 
-
-        $OrgNodeUpdateData = [
-            'name' => $modelInfo->getModelName(),
-            'organization_scope_id' => $organizationScope->id,
-            'parent_id' => $parentOrganizationNode->id,
-            'model_type' => self::getModelType(),
-            'model_id' => $modelId,
-        ];
-        $updateON = $organizationService->updateOrganizationNodesRecursively($OrgNodeUpdateData, $nodeId);
-
-        return $updatedModel;
+            return $updatedModel;
+        });
     }
 
     /**
-     * @param int $modelId
      * @return bool
+     *
      * @throws Throwable
      */
     public static function deleteWithAAuthOrganizationNode(int $modelId)
@@ -126,19 +155,23 @@ trait AAuthOrganizationNode
 
         $organizationService = new OrganizationService();
 
-        $organizationNode = OrganizationNode::where('model_id', $modelId)->first();
+        return DB::transaction(function () use ($modelId, $organizationService) {
+            $organizationNode = OrganizationNode::where('model_id', $modelId)
+                ->where('model_type', self::getModelType())
+                ->first();
 
+            throw_if($organizationNode == null, new InvalidOrganizationNodeException());
 
-        throw_if($organizationNode == null, new InvalidOrganizationNodeException());
+            self::assertOrganizationNodeAuthorized($organizationNode->id);
 
+            $modelInfo = self::findOrFail($modelId);
+            $modelInfo->delete();
 
-        $modelInfo = self::findOrFail($modelId);
+            // Pass the model (not its id) — deleteOrganizationNodesRecursively expects
+            // an OrganizationNode; participate in the outer transaction.
+            $organizationService->deleteOrganizationNodesRecursively($organizationNode, false);
 
-        $deleteModel = $modelInfo->delete($modelInfo);
-
-
-        $deleteON = $organizationService->deleteOrganizationNodesRecursively($organizationNode->id);
-
-        return true;
+            return true;
+        });
     }
 }

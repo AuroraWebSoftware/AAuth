@@ -35,12 +35,12 @@ if (! function_exists('aauth_active_role')) {
 if (! function_exists('aauth_active_organization')) {
     function aauth_active_organization(): ?OrganizationNode
     {
-        $nodeIds = app('aauth')->organizationNodeIds();
+        $nodeIds = aauth()->organizationNodeIds();
         if (empty($nodeIds)) {
             return null;
         }
 
-        return OrganizationNode::find($nodeIds[0]);
+        return OrganizationNode::find((int) $nodeIds[0]);
     }
 }
 

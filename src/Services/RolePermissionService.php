@@ -11,7 +11,6 @@ use AuroraWebSoftware\AAuth\Models\OrganizationNode;
 use AuroraWebSoftware\AAuth\Models\Role;
 use AuroraWebSoftware\AAuth\Models\RolePermission;
 use AuroraWebSoftware\AAuth\Models\User;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Validator;
@@ -27,9 +26,7 @@ class RolePermissionService
     /**
      * Creates a Perm. with given array
      *
-     * @param  array  $role
-     * @param  bool  $withValidation
-     * @return Role
+     * @param  array<string, mixed>  $role
      *
      * @throws ValidationException
      */
@@ -45,16 +42,20 @@ class RolePermissionService
             }
         }
 
-        return Role::create($role);
+        $model = new Role();
+        $model->fill(['name' => $role['name'] ?? null, 'status' => $role['status'] ?? 'active']);
+        // type / organization_scope_id are set explicitly here (not mass-assignable).
+        $model->type = $role['type'] ?? null;
+        $model->organization_scope_id = $role['organization_scope_id'] ?? null;
+        $model->save();
+
+        return $model;
     }
 
     /**
      * Updates a Perm.
      *
-     * @param  array  $role
-     * @param  int  $id
-     * @param  bool  $withValidation
-     * @return Role|null
+     * @param  array<string, mixed>  $role
      */
     public function updateRole(array $role, int $id, bool $withValidation = true): ?Role
     {
@@ -74,9 +75,6 @@ class RolePermissionService
 
     /**
      * deletes the role.
-     *
-     * @param  int  $id
-     * @return bool|null
      */
     public function deleteRole(int $id): ?bool
     {
@@ -85,9 +83,6 @@ class RolePermissionService
 
     /**
      * activates the roles
-     *
-     * @param  int  $roleId
-     * @return bool
      */
     public function activateRole(int $roleId): bool
     {
@@ -99,9 +94,6 @@ class RolePermissionService
 
     /**
      * deactivates the roles
-     *
-     * @param  int  $roleId
-     * @return bool
      */
     public function deactivateRole(int $roleId): bool
     {
@@ -112,9 +104,7 @@ class RolePermissionService
     }
 
     /**
-     * @param  string|array  $permissionOrPermissions
-     * @param  int  $roleId
-     * @return bool
+     * @param  string|array<int, string>  $permissionOrPermissions
      */
     public function attachPermissionToRole(string|array $permissionOrPermissions, int $roleId): bool
     {
@@ -136,9 +126,7 @@ class RolePermissionService
     }
 
     /**
-     * @param  string|array  $permissions
-     * @param  int  $roleId
-     * @return bool
+     * @param  string|array<int, string>  $permissions
      */
     public function detachPermissionFromRole(string|array $permissions, int $roleId): bool
     {
@@ -159,10 +147,6 @@ class RolePermissionService
         return true;
     }
 
-    /**
-     * @param  int  $roleId
-     * @return bool
-     */
     public function detachAllPermissionsFromRole(int $roleId): bool
     {
         $roleId = Role::find($roleId)->id;
@@ -174,28 +158,26 @@ class RolePermissionService
     }
 
     /**
-     * @param  array  $permissions
-     * @param  int  $roleId
-     * @return bool
+     * @param  array<int, string>  $permissions
      *
      * @throws Throwable
      */
     public function syncPermissionsOfRole(array $permissions, int $roleId): bool
     {
-        // todo need refactor
         $role = Role::find($roleId);
         throw_if($role == null, new InvalidRoleException());
 
-        $detached = $this->detachAllPermissionsFromRole($roleId);
-        $attached = $this->attachPermissionToRole($permissions, $roleId);
+        return DB::transaction(function () use ($permissions, $roleId) {
+            $detached = $this->detachAllPermissionsFromRole($roleId);
+            $attached = $this->attachPermissionToRole($permissions, $roleId);
 
-        return $attached && $detached;
+            return $attached && $detached;
+        });
     }
 
     /**
-     * @param  int  $userId
-     * @param  array  $roleIdOrIds
-     * @return array
+     * @param  array<int, int>|int  $roleIdOrIds
+     * @return array<string, mixed>
      *
      * @throws Throwable
      */
@@ -221,16 +203,11 @@ class RolePermissionService
 
         $result = User::find($userId)->system_roles()->sync($roleIdOrIds, false);
 
-        // Clear user's switchable_roles cache
-        $this->clearUserRoleCache($userId);
-
         return $result;
     }
 
     /**
-     * @param  int  $userId
-     * @param  int  $roleIdOrIds
-     * @return int
+     * @param  array<int, int>|int  $roleIdOrIds
      *
      * @throws Throwable
      */
@@ -255,15 +232,12 @@ class RolePermissionService
 
         $result = User::find($userId)->system_roles()->detach($roleIdOrIds);
 
-        $this->clearUserRoleCache($userId);
-
         return $result;
     }
 
     /**
-     * @param  int  $userId
-     * @param  array  $roleIds
-     * @return array
+     * @param  array<int, int>  $roleIds
+     * @return array<string, mixed>
      */
     public function syncUserSystemRoles(int $userId, array $roleIds): array
     {
@@ -271,18 +245,12 @@ class RolePermissionService
         // to be unit tested
         $result = User::find($userId)->system_roles()->sync($roleIds);
 
-        $this->clearUserRoleCache($userId);
-
         return $result;
     }
 
     /**
      * it makes organization insert and return the pivot table id's
      *
-     * @param  int  $userId
-     * @param  int  $roleId
-     * @param  int  $organizationNodeId
-     * @return bool
      *
      * @throws Throwable
      */
@@ -303,14 +271,16 @@ class RolePermissionService
         throw_unless(OrganizationNode::whereId($organizationNodeId)
             ->exists(), new InvalidOrganizationNodeException());
 
+        // A caller may only assign a role at a node within their own accessible subtree
+        // (skipped when there is no active AAuth context — seeders/console/queue).
+        $this->assertOrganizationNodeAuthorized($organizationNodeId);
+
         $result = DB::table('user_role_organization_node')
             ->updateOrInsert([
                 'user_id' => $userId,
                 'role_id' => $roleId,
                 'organization_node_id' => $organizationNodeId,
             ]);
-
-        $this->clearUserRoleCache($userId);
 
         return $result;
     }
@@ -324,11 +294,6 @@ class RolePermissionService
      *             arguments in the aligned order ($organizationNodeId, $roleId, $userId).
      *             This historic-order method continues to work and emits no
      *             runtime notice; it will be removed in the next major release.
-     *
-     * @param  int  $userId
-     * @param  int  $roleId
-     * @param  int  $organizationNodeId
-     * @return int
      *
      * @throws Throwable
      */
@@ -356,8 +321,6 @@ class RolePermissionService
                 'organization_node_id' => $organizationNodeId, ])
             ->delete();
 
-        $this->clearUserRoleCache($userId);
-
         return $result;
         // todo attach ve sync ile olmayacak gibi direk db query yazmank lazım
     }
@@ -370,10 +333,6 @@ class RolePermissionService
      * which keeps the historic, inconsistent parameter order for backward
      * compatibility and will be removed in the next major release.
      *
-     * @param  int  $organizationNodeId
-     * @param  int  $roleId
-     * @param  int  $userId
-     * @return int
      *
      * @throws Throwable
      */
@@ -402,15 +361,11 @@ class RolePermissionService
             ])
             ->delete();
 
-        $this->clearUserRoleCache($userId);
-
         return $result;
     }
 
     /**
      * Check if type column exists in roles table (for backward compatibility)
-     *
-     * @return bool
      */
     protected function hasRolesTypeColumn(): bool
     {
@@ -424,19 +379,25 @@ class RolePermissionService
     }
 
     /**
-     * Clear user's role-related cache
+     * Enforce the active role's org-subtree boundary on role assignment, but only when
+     * an AAuth context is resolvable (seeders/console/queue run without one and skip).
      *
-     * @param int $userId
-     * @return void
+     * @throws Throwable
      */
-    protected function clearUserRoleCache(int $userId): void
+    protected function assertOrganizationNodeAuthorized(int $nodeId): void
     {
-        if (! config('aauth-advanced.cache.enabled', false)) {
-            return;
+        try {
+            $aauth = app('aauth');
+        } catch (Throwable $e) {
+            // No resolvable AAuth context: legitimate for console/seeders/queue (skip),
+            // but an unauthenticated / invalid-role HTTP request must be DENIED.
+            if (app()->runningInConsole()) {
+                return;
+            }
+
+            throw $e;
         }
 
-        $prefix = config('aauth-advanced.cache.prefix', 'aauth');
-
-        Cache::forget("{$prefix}:user:{$userId}:switchable_roles");
+        $aauth->organizationNode($nodeId);
     }
 }

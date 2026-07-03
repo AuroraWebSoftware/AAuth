@@ -11,9 +11,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read int $id
  * @property int $role_id
  * @property string $permission
- * @property array|null $parameters
+ * @property array<string, mixed>|null $parameters
  *
- * @method static RolePermission create(array $attributes)
+ * @method static RolePermission create(array<string, mixed> $attributes)
  */
 class RolePermission extends Model
 {
@@ -34,7 +34,7 @@ class RolePermission extends Model
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var list<string>
      */
     protected $fillable = ['role_id', 'permission', 'parameters'];
 
@@ -50,7 +50,7 @@ class RolePermission extends Model
     /**
      * Get the role that owns this permission.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\AuroraWebSoftware\AAuth\Models\Role, \AuroraWebSoftware\AAuth\Models\RolePermission>
+     * @return BelongsTo<Role, $this>
      */
     public function role(): BelongsTo
     {

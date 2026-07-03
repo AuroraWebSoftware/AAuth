@@ -6,8 +6,7 @@ use AuroraWebSoftware\AAuth\Models\Role;
 use AuroraWebSoftware\AAuth\Models\RolePermission;
 use AuroraWebSoftware\AAuth\Models\User;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Context;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 beforeEach(function () {
@@ -22,54 +21,69 @@ beforeEach(function () {
 |--------------------------------------------------------------------------
 */
 
-test('context is loaded and cached on AAuth instantiation', function () {
+test('permissions are loaded once on instantiation and served from the instance', function () {
     $user = User::find(1);
     $role = Role::whereName('Root Role 1')->first();
 
     $aauth = new AAuth($user, $role->id);
 
-    // Context should be stored
-    $context = Context::getHidden('aauth_context');
-
-    expect($context)->not->toBeNull()
-        ->and($context['user_id'])->toBe($user->id)
-        ->and($context['role_id'])->toBe($role->id)
-        ->and($context['permissions'])->toBeArray();
+    // Context (role + permissions) is held on THIS instance; checks resolve from it
+    // without re-querying per call.
+    expect($aauth->currentRole()->id)->toBe($role->id);
+    expect($aauth->can('create_something_for_organization'))->toBeTrue();
+    // A second identical check is served from the in-request memo, still correct.
+    expect($aauth->can('create_something_for_organization'))->toBeTrue();
 });
 
-test('clearContext clears both request cache and context', function () {
+test('clearContext resets the instance context and a check still resolves', function () {
     $user = User::find(1);
     $role = Role::whereName('Root Role 1')->first();
 
     $aauth = new AAuth($user, $role->id);
-
-    // Call can() to populate request cache
     $aauth->can('create_something_for_organization');
 
-    // Clear context
     $aauth->clearContext();
 
-    // Context should be null
-    $context = Context::getHidden('aauth_context');
-    expect($context)->toBeNull();
+    // The context is rebuilt on demand — the check still returns the correct result.
+    expect($aauth->can('create_something_for_organization'))->toBeTrue();
 });
 
-test('context is reloaded after clearContext when can() is called', function () {
+test('a permission granted mid-request is reflected after clearContext', function () {
     $user = User::find(1);
     $role = Role::whereName('Root Role 1')->first();
 
     $aauth = new AAuth($user, $role->id);
+    expect($aauth->can('brand_new_perm'))->toBeFalse();
 
-    // Clear context
+    RolePermission::create(['role_id' => $role->id, 'permission' => 'brand_new_perm']);
     $aauth->clearContext();
 
-    // Call can() - should reload context
-    $result = $aauth->can('create_something_for_organization');
+    expect($aauth->can('brand_new_perm'))->toBeTrue();
+});
 
-    // Context should be restored
-    $context = Context::getHidden('aauth_context');
-    expect($context)->not->toBeNull()
-        ->and($result)->toBeTrue();
+test('two AAuth instances in one request never read each other\'s permissions (no leak)', function () {
+    // A fresh role WITH a unique permission, assigned to user 1.
+    $roleWith = Role::create(['name' => 'HasIsolatedPerm', 'status' => 'active']);
+    RolePermission::create(['role_id' => $roleWith->id, 'permission' => 'perm.isolated']);
+    DB::table('user_role_organization_node')->insert([
+        'user_id' => 1, 'role_id' => $roleWith->id, 'organization_node_id' => 1,
+    ]);
+
+    // A fresh role WITHOUT that permission, assigned to user 2.
+    $roleWithout = Role::create(['name' => 'NoIsolatedPerm', 'status' => 'active']);
+    DB::table('user_role_organization_node')->insert([
+        'user_id' => 2, 'role_id' => $roleWithout->id, 'organization_node_id' => 1,
+    ]);
+
+    $aauthUser1 = new AAuth(User::find(1), $roleWith->id);
+    // Constructed AFTER user 1 — with a shared Context store this overwrote user 1's
+    // context and leaked; with per-instance context each sees only its own.
+    $aauthUser2 = new AAuth(User::find(2), $roleWithout->id);
+
+    expect($aauthUser1->can('perm.isolated'))->toBeTrue();   // user 1 has it
+    expect($aauthUser2->can('perm.isolated'))->toBeFalse();  // user 2 must NOT see it
+    // Re-checking user 1 after user 2 was built still returns user 1's own result.
+    expect($aauthUser1->can('perm.isolated'))->toBeTrue();
 });
 
 /*
@@ -229,44 +243,6 @@ test('super admin bypasses permission checks', function () {
 | Cache Layer Tests
 |--------------------------------------------------------------------------
 */
-
-test('role is cached when cache is enabled', function () {
-    config(['aauth-advanced.cache.enabled' => true]);
-    config(['aauth-advanced.cache.ttl' => 3600]);
-    config(['aauth-advanced.cache.prefix' => 'aauth_test']);
-
-    $user = User::find(1);
-    $role = Role::whereName('Root Role 1')->first();
-
-    // Clear any existing cache
-    Cache::forget("aauth_test:role:{$role->id}");
-
-    $aauth = new AAuth($user, $role->id);
-
-    // Role should be cached
-    $cachedRole = Cache::get("aauth_test:role:{$role->id}");
-    expect($cachedRole)->not->toBeNull()
-        ->and($cachedRole->id)->toBe($role->id);
-});
-
-test('switchable roles are cached when cache is enabled', function () {
-    config(['aauth-advanced.cache.enabled' => true]);
-    config(['aauth-advanced.cache.ttl' => 3600]);
-    config(['aauth-advanced.cache.prefix' => 'aauth_test']);
-
-    $user = User::find(1);
-    $role = Role::whereName('Root Role 1')->first();
-
-    // Clear any existing cache
-    Cache::forget("aauth_test:user:{$user->id}:switchable_roles");
-
-    $aauth = new AAuth($user, $role->id);
-    $aauth->switchableRoles();
-
-    // Switchable roles should be cached
-    $cachedRoles = Cache::get("aauth_test:user:{$user->id}:switchable_roles");
-    expect($cachedRoles)->not->toBeNull();
-});
 
 /*
 |--------------------------------------------------------------------------

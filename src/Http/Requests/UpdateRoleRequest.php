@@ -6,6 +6,9 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateRoleRequest extends FormRequest
 {
+    /**
+     * @var array<string, mixed>
+     */
     public static array $rules = [
         'name' => [
             'required',
@@ -15,8 +18,6 @@ class UpdateRoleRequest extends FormRequest
 
     /**
      * Determine if the user is authorized to make this request.
-     *
-     * @return bool
      */
     public function authorize(): bool
     {
@@ -26,12 +27,12 @@ class UpdateRoleRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array
+     * @return array<string, mixed>
      */
     public function rules(): array
     {
         $rules = self::$rules;
-        $rules['name'][] = 'unique:roles,name,' . $this->route('role');
+        $rules['name'][] = 'unique:roles,name,'.$this->route('role');
 
         return $rules;
     }

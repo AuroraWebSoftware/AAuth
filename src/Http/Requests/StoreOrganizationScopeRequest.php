@@ -6,13 +6,16 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreOrganizationScopeRequest extends FormRequest
 {
+    /**
+     * @var array<string, mixed>
+     */
     public static array $rules = [
         'name' => ['required', 'min:3'],
         'level' => [],
     ];
 
     /**
-     * @return array
+     * @return array<string, mixed>
      */
     public static function getRules(): array
     {
@@ -24,6 +27,9 @@ class StoreOrganizationScopeRequest extends FormRequest
         return true;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     public function rules(): array
     {
         return self::$rules;

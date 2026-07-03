@@ -2,6 +2,27 @@
 
 All notable changes to `AAuth` will be documented in this file.
 
+## Unreleased — Security hardening
+
+Secure-by-default fixes for confirmed authorization defects (no config flags). See
+[UPGRADE.md](UPGRADE.md) for the observable behaviour changes.
+
+- **Security:** parametric permissions fail closed; deactivated roles are rejected;
+  `Gate::before` defers to a host Policy (no IDOR by name-collision); org-write helpers
+  (`createWith`/`updateWith`/`deleteWithAAuthOrganizationNode`) and `attachOrganizationRoleToUser`
+  authorize the target node against the active role's subtree; `updateWith` also authorizes
+  the node being moved; `Role` privilege columns are no longer mass-assignable;
+  `descendant()` is `/`-separator-anchored; ABAC rule attributes are allowlisted; an empty
+  accessible-node set returns zero rows (fail closed).
+- **Fixes:** `Role::permissions()` (returned every role's permissions), assigned-user count,
+  non-atomic permission sync and organization-node create, the pgsql seed sequence, and the
+  runtime-fatal org-node update/delete trait helpers.
+- **Removed:** the opt-in role/permission cache (`aauth-advanced.cache`). Authorization data
+  is now loaded once per request into the request-scoped instance — no persistent cache, no
+  invalidation apparatus, tenant-safe; a published `cache` config key is simply ignored.
+- **CI:** the suite runs on SQLite, MariaDB and PostgreSQL (GitHub Actions + GitLab CI); a
+  `/pre-pr-review` agent suite lives in `.claude/`.
+
 ## 1.1.0 - 2022-10-24
 
 Abac Features

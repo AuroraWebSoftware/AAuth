@@ -13,8 +13,6 @@ use AuroraWebSoftware\AAuth\Models\User;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Symfony\Component\HttpFoundation\Response as ResponseAlias;
@@ -22,15 +20,28 @@ use Throwable;
 
 class AAuth
 {
-    private const CONTEXT_KEY = 'aauth_context';
-
     public AAuthUserContract $user;
 
     public Role $role;
 
+    /**
+     * @var array<int, mixed>|null
+     */
     public ?array $organizationNodeIds;
 
+    /**
+     * @var array<string, bool>
+     */
     protected array $requestCache = [];
+
+    /**
+     * Per-request authorization context (role, permissions, ABAC, org nodes, super-admin),
+     * held on THIS request-scoped instance — never in shared/global storage — so two AAuth
+     * instances (e.g. two users in one request) can never read each other's permissions.
+     *
+     * @var array<string, mixed>|null
+     */
+    protected ?array $context = null;
 
     /**
      * @throws Throwable
@@ -40,16 +51,16 @@ class AAuth
         throw_unless($user, new AuthenticationException());
         throw_unless($roleId, new MissingRoleException());
 
+        // Only an ACTIVE assigned role may be selected — deactivateRole() is an
+        // effective kill switch on the very next request.
         throw_if(
-            $user->roles()->where('roles.id', '=', $roleId)->count() < 1,
+            $user->roles()->where('roles.id', '=', $roleId)->where('status', '=', 'active')->count() < 1,
             new UserHasNoAssignedRoleException()
         );
 
         $this->user = $user;
 
-        $this->role = config('aauth-advanced.cache.enabled', false)
-            ? $this->getCachedRole($roleId)
-            : $this->loadRole($roleId);
+        $this->role = $this->loadRole($roleId);
 
         throw_unless($this->role, new MissingRoleException());
 
@@ -61,9 +72,6 @@ class AAuth
         $this->loadAndCacheContext();
     }
 
-    /**
-     * @return Role|null
-     */
     public function currentRole(): ?Role
     {
         // todo unit test
@@ -71,25 +79,21 @@ class AAuth
     }
 
     /**
-     * @return array|Collection<int, Role>|\Illuminate\Support\Collection<int, Role>
+     * @return array<int, Role>|Collection<int, Role>|\Illuminate\Support\Collection<int, Role>
      */
     public function switchableRoles(): array|Collection|\Illuminate\Support\Collection
     {
-        if (config('aauth-advanced.cache.enabled', false)) {
-            return $this->getCachedSwitchableRoles();
-        }
-
         return $this->loadSwitchableRoles();
     }
 
     /**
-     * @param int $userId
-     * @return array|Collection<int, Role>|\Illuminate\Support\Collection<int, Role>
+     * @return array<int, Role>|Collection<int, Role>|\Illuminate\Support\Collection<int, Role>
      */
     public static function switchableRolesStatic(int $userId): array|Collection|\Illuminate\Support\Collection
     {
         // todo test'i yazılacak
         return Role::where('uro.user_id', '=', $userId)
+            ->where('status', '=', 'active')
             ->leftJoin('user_role_organization_node as uro', 'uro.role_id', '=', 'roles.id')
             ->distinct()
             ->select('roles.id', 'name')->get();
@@ -98,7 +102,7 @@ class AAuth
     /**
      * Role's all permissions
      *
-     * @return array
+     * @return array<int, mixed>
      */
     public function permissions(): array
     {
@@ -111,7 +115,7 @@ class AAuth
      * Get organization permissions for current role
      * Defensive: supports both old 'type' column and new organization_scope_id approach
      *
-     * @return array
+     * @return array<int, mixed>
      */
     public function organizationPermissions(): array
     {
@@ -133,7 +137,7 @@ class AAuth
      * Get system permissions for current role
      * Defensive: supports both old 'type' column and new organization_scope_id approach
      *
-     * @return array
+     * @return array<int, mixed>
      */
     public function systemPermissions(): array
     {
@@ -153,8 +157,6 @@ class AAuth
 
     /**
      * Check if type column exists in roles table (for backward compatibility)
-     *
-     * @return bool
      */
     protected function hasRolesTypeColumn(): bool
     {
@@ -168,55 +170,11 @@ class AAuth
     }
 
     /**
-     * Get cached role with permissions and ABAC rules
-     *
-     * @param int $roleId
-     * @return Role|null
-     */
-    protected function getCachedRole(int $roleId): ?Role
-    {
-        $prefix = config('aauth-advanced.cache.prefix', 'aauth');
-        $ttl = config('aauth-advanced.cache.ttl', 3600);
-        $store = config('aauth-advanced.cache.store');
-
-        $cacheKey = "{$prefix}:role:{$roleId}";
-
-        $cache = $store ? Cache::store($store) : Cache::store();
-
-        return $cache->remember($cacheKey, $ttl, function () use ($roleId) {
-            return $this->loadRole($roleId);
-        });
-    }
-
-    /**
      * Load role from database with permissions and ABAC rules
-     *
-     * @param int $roleId
-     * @return Role|null
      */
     protected function loadRole(int $roleId): ?Role
     {
         return Role::with(['rolePermissions', 'abacRules'])->find($roleId);
-    }
-
-    /**
-     * Get cached switchable roles for current user
-     *
-     * @return Collection<int, Role>
-     */
-    protected function getCachedSwitchableRoles(): Collection
-    {
-        $prefix = config('aauth-advanced.cache.prefix', 'aauth');
-        $ttl = config('aauth-advanced.cache.ttl', 3600);
-        $store = config('aauth-advanced.cache.store');
-
-        $cacheKey = "{$prefix}:user:{$this->user->id}:switchable_roles";
-
-        $cache = $store ? Cache::store($store) : Cache::store();
-
-        return $cache->remember($cacheKey, $ttl, function () {
-            return $this->loadSwitchableRoles();
-        });
     }
 
     /**
@@ -226,18 +184,13 @@ class AAuth
      */
     protected function loadSwitchableRoles(): Collection
     {
-        // @phpstan-ignore-next-line
         return Role::where('uro.user_id', '=', $this->user->id)
+            ->where('status', '=', 'active')
             ->leftJoin('user_role_organization_node as uro', 'uro.role_id', '=', 'roles.id')
             ->distinct()
             ->select('roles.id', 'name')->get();
     }
 
-    /**
-     * @param string $permission
-     * @param mixed ...$arguments
-     * @return bool
-     */
     public function can(string $permission, mixed ...$arguments): bool
     {
         $cacheKey = $this->getPermissionCacheKey($permission, $arguments);
@@ -261,9 +214,12 @@ class AAuth
         }
 
         if (empty($arguments)) {
-            $this->requestCache[$cacheKey] = true;
+            // Fail closed: a permission that declares parameter constraints cannot be
+            // granted without the runtime value(s) needed to check them.
+            $result = empty($context['permissions'][$permission]);
+            $this->requestCache[$cacheKey] = $result;
 
-            return true;
+            return $result;
         }
 
         $roleParameters = $context['permissions'][$permission];
@@ -274,9 +230,6 @@ class AAuth
         return $result;
     }
 
-    /**
-     * @return bool
-     */
     public function isSuperAdmin(): bool
     {
         $context = $this->getAuthContext();
@@ -286,8 +239,10 @@ class AAuth
 
     protected function loadAndCacheContext(): void
     {
-        // Refresh relationships from database to get latest data
-        $this->role->load(['rolePermissions', 'abacRules']);
+        // Reuse the relations eager-loaded in loadRole() — loadMissing() avoids a
+        // redundant re-query on the constructor path; the mid-request refresh() in
+        // getAuthContext() reloads them first when data may have changed.
+        $this->role->loadMissing(['rolePermissions', 'abacRules']);
 
         $permissions = [];
         foreach ($this->role->rolePermissions as $rp) {
@@ -315,47 +270,58 @@ class AAuth
             'is_super_admin' => $isSuperAdmin,
         ];
 
-        Context::addHidden(self::CONTEXT_KEY, $context);
+        $this->context = $context;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function getAuthContext(): array
     {
-        $context = Context::getHidden(self::CONTEXT_KEY);
-
-        if ($context === null) {
-            // Refresh role to get latest data in case of mid-request updates
+        if ($this->context === null) {
+            // Rebuild after a mid-request invalidation (clearContext): refresh the role so
+            // a permission/ABAC change made during this request is reflected.
             $this->role->refresh();
             $this->loadAndCacheContext();
-            $context = Context::getHidden(self::CONTEXT_KEY);
         }
 
-        return $context;
+        return $this->context;
     }
 
     public function clearContext(): void
     {
         $this->requestCache = [];
-        Context::forgetHidden(self::CONTEXT_KEY);
+        $this->context = null;
     }
 
+    /**
+     * @param  array<int|string, mixed>  $arguments
+     */
     protected function getPermissionCacheKey(string $permission, array $arguments): string
     {
-        return $permission . ':' . md5(json_encode($arguments) ?: '');
+        return $permission.':'.md5(json_encode($arguments) ?: '');
     }
 
+    /**
+     * @param  array<int|string, mixed>  $roleParameters
+     * @param  array<int|string, mixed>  $arguments
+     */
     protected function validateParameters(array $roleParameters, array $arguments): bool
     {
-        foreach ($roleParameters as $paramName => $roleValue) {
-            $argIndex = array_search($paramName, array_keys($roleParameters));
-
-            if (! isset($arguments[$argIndex])) {
-                continue;
+        // Positional matching: the Nth declared parameter is checked against the Nth
+        // runtime argument. Fail closed on any missing/mismatched/unknown constraint.
+        $argIndex = 0;
+        foreach ($roleParameters as $roleValue) {
+            if (! array_key_exists($argIndex, $arguments)) {
+                return false;
             }
 
             $runtimeValue = $arguments[$argIndex];
+            $argIndex++;
 
-            if (is_int($roleValue) && is_numeric($runtimeValue)) {
-                if ($runtimeValue > $roleValue) {
+            if (is_int($roleValue)) {
+                // Numeric upper bound; a non-numeric runtime value cannot satisfy it.
+                if (! is_numeric($runtimeValue) || $runtimeValue > $roleValue) {
                     return false;
                 }
             } elseif (is_array($roleValue)) {
@@ -366,6 +332,12 @@ class AAuth
                 if ((bool) $runtimeValue !== $roleValue) {
                     return false;
                 }
+            } elseif (is_string($roleValue)) {
+                if ((string) $runtimeValue !== $roleValue) {
+                    return false;
+                }
+            } else {
+                return false;
             }
         }
 
@@ -374,7 +346,8 @@ class AAuth
 
     /**
      * @deprecated Use getAuthContext() instead
-     * @return array<string, array|null>
+     *
+     * @return array<string, array<int|string, mixed>|null>
      */
     protected function getPermissionsWithParameters(): array
     {
@@ -384,14 +357,11 @@ class AAuth
     }
 
     /**
-     * @param string $permission
-     * @param string $message
-     * @return void
+     * @param  array<int, mixed>  $arguments  parametric permission values, forwarded to can()
      */
-    public function passOrAbort(string $permission, string $message = 'No Permission'): void
+    public function passOrAbort(string $permission, string $message = 'No Permission', array $arguments = []): void
     {
-        // todo mesaj dil dosyasından gelecek.
-        if (! $this->can($permission)) {
+        if (! $this->can($permission, ...$arguments)) {
             abort(ResponseAlias::HTTP_UNAUTHORIZED, $message);
         }
     }
@@ -400,55 +370,37 @@ class AAuth
      * Returns user's current role's authorized organization nodes
      * if model type is given, returns only this model typed nodes.
      *
-     * @param bool $includeRootNode
-     * @param string|null $modelType
      * @return \Illuminate\Support\Collection<int, OrganizationNode>
      *
      * @throws Throwable
      */
     public function organizationNodes(bool $includeRootNode = false, ?string $modelType = null): \Illuminate\Support\Collection
     {
-        // todo scope eklenecek. $scopeLevel $scopeName
-        // todo depth ler eklenecek $maxDepthFromRoot $minDepthFromRoot
-
-        return OrganizationNode::where(function ($query) use ($includeRootNode) {
-            foreach ($this->organizationNodeIds as $organizationNodeId) {
-                $rootNode = OrganizationNode::find($organizationNodeId);
-                throw_unless($rootNode, new InvalidOrganizationNodeException());
-
-                /**
-                 * @phpstan-ignore-next-line
-                 */
-                $query->orWhere('path', 'like', $rootNode->path . '/%');
-
-                if ($includeRootNode) {
-                    /**
-                     * @phpstan-ignore-next-line
-                     */
-                    $query->orWhere('path', $rootNode->path);
-                }
-
-            }
-        })
-            ->when($modelType !== null, function ($query) use ($modelType) {
-                return $query->where('model_type', '=', $modelType);
-            })->get();
+        // Delegate to the single empty-guarded builder: fixes the N+1 (per-id find())
+        // and the empty-scope over-exposure (a role with no nodes must return ZERO rows).
+        return $this->organizationNodesQuery($includeRootNode, $modelType)->get();
     }
 
     /**
-     * @param bool $includeRootNode
-     * @param string|null $modelType
-     * @return OrganizationNode|Builder
+     * @return Builder<OrganizationNode>|OrganizationNode
+     *
      * @throws Throwable
      */
     public function organizationNodesQuery(bool $includeRootNode = false, ?string $modelType = null): OrganizationNode|Builder
     {
         $rootNodes = OrganizationNode::whereIn('id', $this->organizationNodeIds)->get();
-        throw_unless($rootNodes->isNotEmpty(), new InvalidOrganizationNodeException());
 
         return OrganizationNode::where(function ($query) use ($rootNodes, $includeRootNode) {
+            // Fail closed: a role with no accessible nodes matches ZERO rows,
+            // never falling through to an unconstrained (whole-table) result.
+            if ($rootNodes->isEmpty()) {
+                $query->whereRaw('1 = 0');
+
+                return;
+            }
+
             foreach ($rootNodes as $rootNode) {
-                $query->orWhere('path', 'like', $rootNode->path . '/%');
+                $query->orWhere('path', 'like', $rootNode->path.'/%');
 
                 if ($includeRootNode) {
                     $query->orWhere('path', '=', $rootNode->path);
@@ -462,9 +414,6 @@ class AAuth
     /**
      * checks if current role authorized to access given node id
      *
-     * @param int $nodeId
-     * @param string|null $modelType
-     * @return OrganizationNode
      *
      * @throws InvalidOrganizationNodeException|Throwable
      */
@@ -487,7 +436,7 @@ class AAuth
     }
 
     /**
-     * @return array|null
+     * @return array<int, mixed>|null
      */
     public function organizationNodeIds(): ?array
     {
@@ -497,13 +446,14 @@ class AAuth
     /**
      * Get accessible organization nodes with depth and scope filtering
      *
-     * @param int|null $minDepthFromRoot Minimum depth from root (inclusive, 0-based)
-     * @param int|null $maxDepthFromRoot Maximum depth from root (inclusive, 0-based)
-     * @param string|null $scopeName Organization scope name filter
-     * @param int|null $scopeLevel Organization scope level filter
-     * @param bool $includeRootNode Include root nodes in results
-     * @param string|null $modelType Filter by model type
-     * @return \Illuminate\Support\Collection
+     * @param  int|null  $minDepthFromRoot  Minimum depth from root (inclusive, 0-based)
+     * @param  int|null  $maxDepthFromRoot  Maximum depth from root (inclusive, 0-based)
+     * @param  string|null  $scopeName  Organization scope name filter
+     * @param  int|null  $scopeLevel  Organization scope level filter
+     * @param  bool  $includeRootNode  Include root nodes in results
+     * @param  string|null  $modelType  Filter by model type
+     * @return \Illuminate\Support\Collection<int, OrganizationNode>
+     *
      * @throws Throwable
      */
     public function getAccessibleOrganizationNodes(
@@ -514,30 +464,12 @@ class AAuth
         bool $includeRootNode = false,
         ?string $modelType = null
     ): \Illuminate\Support\Collection {
-        return OrganizationNode::where(function ($query) use ($includeRootNode) {
-            foreach ($this->organizationNodeIds as $organizationNodeId) {
-                $rootNode = OrganizationNode::find($organizationNodeId);
-                throw_unless($rootNode, new InvalidOrganizationNodeException());
-
-                /**
-                 * @phpstan-ignore-next-line
-                 */
-                $query->orWhere('path', 'like', $rootNode->path . '/%');
-
-                if ($includeRootNode) {
-                    /**
-                     * @phpstan-ignore-next-line
-                     */
-                    $query->orWhere('path', $rootNode->path);
-                }
-            }
-        })
-            // Depth filtering using path length calculation
-            // Depth = (number of slashes in path) - 1
-            // Examples: "/" = depth 0, "/1/" = depth 1, "/1/3/" = depth 2
+        // Reuse the single empty-guarded subtree builder (it already fails closed on an
+        // empty node set and applies the model-type filter), then layer depth/scope on top.
+        return $this->organizationNodesQuery($includeRootNode, $modelType)
+            // Depth = (number of '/' in path) - 1.
             ->when($minDepthFromRoot !== null || $maxDepthFromRoot !== null, function ($query) use ($minDepthFromRoot, $maxDepthFromRoot) {
                 if ($minDepthFromRoot !== null) {
-                    // MySQL and PostgreSQL compatible
                     $query->whereRaw('(LENGTH(path) - LENGTH(REPLACE(path, ?, ?))) - 1 >= ?', ['/', '', $minDepthFromRoot]);
                 }
 
@@ -545,21 +477,17 @@ class AAuth
                     $query->whereRaw('(LENGTH(path) - LENGTH(REPLACE(path, ?, ?))) - 1 <= ?', ['/', '', $maxDepthFromRoot]);
                 }
             })
-            // Scope name filtering
             ->when($scopeName !== null, function ($query) use ($scopeName) {
-                $query->whereHas('organization_scope', function ($q) use ($scopeName) {
+                $query->whereHas('organization_scope', function (Builder $q) use ($scopeName) {
+                    /** @var Builder<\AuroraWebSoftware\AAuth\Models\OrganizationScope> $q */
                     $q->where('name', $scopeName);
                 });
             })
-            // Scope level filtering
             ->when($scopeLevel !== null, function ($query) use ($scopeLevel) {
-                $query->whereHas('organization_scope', function ($q) use ($scopeLevel) {
+                $query->whereHas('organization_scope', function (Builder $q) use ($scopeLevel) {
+                    /** @var Builder<\AuroraWebSoftware\AAuth\Models\OrganizationScope> $q */
                     $q->where('level', $scopeLevel);
                 });
-            })
-            // Model type filtering
-            ->when($modelType !== null, function ($query) use ($modelType) {
-                $query->where('model_type', '=', $modelType);
             })
             ->get();
     }
@@ -568,9 +496,6 @@ class AAuth
      * Checks if tree has given child
      * No permission check.
      *
-     * @param int $rootNodeId
-     * @param int $childNodeId
-     * @return bool
      *
      * @throws Throwable
      */
@@ -579,13 +504,16 @@ class AAuth
         $subTreeRootNode = OrganizationNode::find($rootNodeId);
         throw_unless($subTreeRootNode, new InvalidOrganizationNodeException());
 
-        return OrganizationNode::where('path', 'like', $subTreeRootNode->path . '%')
-            ->where('id', '=', $childNodeId)->exists();
+        // Anchored to the '/' separator so root '1' does not match sibling '10'/'1/3'→'1/30'.
+        return OrganizationNode::where('id', '=', $childNodeId)
+            ->where(function ($query) use ($subTreeRootNode) {
+                $query->where('path', '=', $subTreeRootNode->path)
+                    ->orWhere('path', 'like', $subTreeRootNode->path.'/%');
+            })->exists();
     }
 
     /**
-     * @param string $modelType
-     * @return array|null
+     * @return array<string, mixed>|null
      */
     public function ABACRules(string $modelType): ?array
     {

@@ -8,12 +8,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AAuthOrganizationScope
 {
-    /**
-     * @param Request $request
-     * @param Closure $next
-     * @param int|null $organizationScopeId
-     * @return Response
-     */
     public function handle(Request $request, Closure $next, ?int $organizationScopeId = null): Response
     {
         try {

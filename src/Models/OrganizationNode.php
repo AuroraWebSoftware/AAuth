@@ -4,6 +4,7 @@ namespace AuroraWebSoftware\AAuth\Models;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -41,17 +42,18 @@ use Illuminate\Support\Facades\DB;
  * @method static Builder|OrganizationNode wherePath($value)
  * @method static Builder|OrganizationNode whereUpdatedAt($value)
  * @method static OrganizationNode find($value)
+ *
  * @mixin OrganizationNode
  */
 class OrganizationNode extends Model
 {
-    /** @use \Illuminate\Database\Eloquent\Factories\HasFactory<\Illuminate\Database\Eloquent\Factories\Factory<\AuroraWebSoftware\AAuth\Models\OrganizationNode>> */
+    /** @use HasFactory<Factory<OrganizationNode>> */
     use HasFactory;
 
     protected $fillable = ['organization_scope_id', 'name', 'model_type', 'model_id', 'path', 'parent_id'];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\AuroraWebSoftware\AAuth\Models\OrganizationScope, static>
+     * @return BelongsTo<OrganizationScope, $this>
      */
     public function organization_scope(): BelongsTo
     {
@@ -61,17 +63,14 @@ class OrganizationNode extends Model
 
     public function getAssignedNodeCountAttribute(): int
     {
-        //todo new attribute syntax
+        // todo new attribute syntax
         return DB::table('user_role_organization_node')
             ->where('organization_node_id', $this->id)->count();
     }
 
-    /**
-     * @return bool
-     */
     public function getDeletableAttribute(): bool
     {
-        //todo new attrbiute syntax
+        // todo new attrbiute syntax
         if (OrganizationNode::whereParentId($this->id)->exists()) {
             return false;
         }
@@ -81,7 +80,7 @@ class OrganizationNode extends Model
 
     /**
      * @return Collection<int, OrganizationScope>
-     * todo daha güzel fonksiyon ismi bulunmalı
+     *                                            todo daha güzel fonksiyon ismi bulunmalı
      */
     public function availableScopes(): Collection
     {
@@ -97,7 +96,6 @@ class OrganizationNode extends Model
     public function breadCrumbs(): \Illuminate\Support\Collection
     {
         $pathNodeIds = explode('/', $this->path);
-        /* @phpstan-ignore-next-line */
         $breadCrumbs = collect();
         foreach ($pathNodeIds as $pathNodeId) {
             $breadCrumbs->push(OrganizationNode::findOrFail($pathNodeId));
@@ -107,7 +105,7 @@ class OrganizationNode extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\MorphTo<\Illuminate\Database\Eloquent\Model, \AuroraWebSoftware\AAuth\Models\OrganizationNode>
+     * @return MorphTo<Model, $this>
      */
     public function relatedModel(): MorphTo
     {

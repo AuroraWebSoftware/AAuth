@@ -14,7 +14,7 @@ class SeedInitialData extends Migration
      */
     public function up()
     {
-        $organizationScope = new OrganizationScope();
+        $organizationScope = new OrganizationScope;
         $organizationScope->id = 1;
         $organizationScope->name = 'Root Scope';
         $organizationScope->level = 1;
@@ -28,7 +28,7 @@ class SeedInitialData extends Migration
                 ");
         }
 
-        $on = new OrganizationNode();
+        $on = new OrganizationNode;
         $on->id = 1;
         $on->organization_scope_id = 1;
         $on->name = 'Root Node';
@@ -37,8 +37,8 @@ class SeedInitialData extends Migration
 
         if (config('database.default') == 'pgsql') {
             DB::select("
-                    SELECT setval(pg_get_serial_sequence('organization_scopes', 'id'), coalesce(max(id)+1, 1), false)
-                    FROM organization_scopes;
+                    SELECT setval(pg_get_serial_sequence('organization_nodes', 'id'), coalesce(max(id)+1, 1), false)
+                    FROM organization_nodes;
                 ");
         }
     }

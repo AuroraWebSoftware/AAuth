@@ -2,11 +2,13 @@
 
 namespace AuroraWebSoftware\AAuth\Models;
 
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -17,7 +19,7 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $type
  * @property string $name
  * @property string $status
- * @property OrganizationNode $organizationNode
+ * @property ?OrganizationNode $organizationNode
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property int|null $organization_scope_id
@@ -27,27 +29,30 @@ use Illuminate\Support\Facades\DB;
  */
 class Role extends Model
 {
-    /** @use \Illuminate\Database\Eloquent\Factories\HasFactory<\Illuminate\Database\Eloquent\Factories\Factory<\AuroraWebSoftware\AAuth\Models\Role>> */
+    /** @use HasFactory<Factory<Role>> */
     use HasFactory;
 
-    protected $fillable = ['organization_scope_id', 'type', 'name', 'status'];
+    // Privilege-defining columns (type, organization_scope_id) are intentionally NOT
+    // mass-assignable — they may only be set explicitly by the authorized service
+    // methods, so forwarding raw request input cannot escalate an org role to a
+    // system role or move it into another scope.
+    protected $fillable = ['name', 'status'];
 
     /**
      * Get permissions as array (legacy method - backward compatible)
      *
-     * @return array
+     * @return array<int, mixed>
      */
     public function permissions(): array
     {
-        return $this
-            ->join('role_permission', 'role_permission.role_id', '=', 'roles.id')
+        return RolePermission::where('role_id', $this->id)
             ->pluck('permission')->toArray();
     }
 
     /**
      * Get role permissions as HasMany relationship (v2)
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\AuroraWebSoftware\AAuth\Models\RolePermission, \AuroraWebSoftware\AAuth\Models\Role>
+     * @return HasMany<RolePermission, $this>
      */
     public function rolePermissions(): HasMany
     {
@@ -55,7 +60,7 @@ class Role extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\AuroraWebSoftware\AAuth\Models\RoleModelAbacRule, \AuroraWebSoftware\AAuth\Models\Role>
+     * @return HasMany<RoleModelAbacRule, $this>
      */
     public function abacRules(): HasMany
     {
@@ -63,7 +68,7 @@ class Role extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\AuroraWebSoftware\AAuth\Models\OrganizationScope, \AuroraWebSoftware\AAuth\Models\Role>
+     * @return BelongsTo<OrganizationScope, $this>
      */
     public function organization_scope(): BelongsTo
     {
@@ -71,7 +76,7 @@ class Role extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\AuroraWebSoftware\AAuth\Models\OrganizationNode, \AuroraWebSoftware\AAuth\Models\Role, \Illuminate\Database\Eloquent\Relations\Pivot>
+     * @return BelongsToMany<OrganizationNode, $this, Pivot>
      */
     public function organization_nodes(): BelongsToMany
     {
@@ -81,9 +86,7 @@ class Role extends Model
     /**
      * Give a permission to this role
      *
-     * @param string $permission
-     * @param array|null $parameters
-     * @return \AuroraWebSoftware\AAuth\Models\RolePermission
+     * @param  array<string, mixed>|null  $parameters
      */
     public function givePermission(string $permission, ?array $parameters = null): RolePermission
     {
@@ -100,9 +103,6 @@ class Role extends Model
 
     /**
      * Remove a permission from this role
-     *
-     * @param string $permission
-     * @return bool
      */
     public function removePermission(string $permission): bool
     {
@@ -114,8 +114,7 @@ class Role extends Model
     /**
      * Sync permissions for this role
      *
-     * @param array $permissions Array of permission strings or ['permission' => 'params'] pairs
-     * @return void
+     * @param  array<int|string, mixed>  $permissions  Array of permission strings or ['permission' => 'params'] pairs
      */
     public function syncPermissions(array $permissions): void
     {
@@ -136,9 +135,6 @@ class Role extends Model
 
     /**
      * Check if role has a specific permission
-     *
-     * @param string $permission
-     * @return bool
      */
     public function hasPermission(string $permission): bool
     {
@@ -147,19 +143,13 @@ class Role extends Model
             ->exists();
     }
 
-    /**
-     * @return int
-     */
     public function getAssignedUserCountAttribute(): int
     {
-        // new attribute syntax
+        // Distinct users assigned this role (a user may hold it at multiple nodes).
         return DB::table('user_role_organization_node')
-            ->where('role_id', $this->id)->groupBy('user_id')->count();
+            ->where('role_id', $this->id)->distinct('user_id')->count('user_id');
     }
 
-    /**
-     * @return bool
-     */
     public function getDeletableAttribute(): bool
     {
         // new attribute syntax

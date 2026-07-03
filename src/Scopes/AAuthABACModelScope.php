@@ -11,43 +11,28 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
 
 /**
- * @template TModelClass of Model
+ * @implements Scope<Model&AAuthABACModelInterface>
  */
 class AAuthABACModelScope implements Scope
 {
     /**
-     * @param Builder<TModelClass> $builder
-     * @param Model $model
-     * @param mixed $rules
-     * @param string $parentOperator
-     * @return void
+     * @param  Builder<covariant Model&AAuthABACModelInterface>  $builder
+     * @param  Model&AAuthABACModelInterface  $model
+     *
      * @throws Exception
      */
     public function apply(Builder $builder, Model $model, mixed $rules = false, string $parentOperator = '&&'): void
     {
         if ($rules === false) {
-            /**
-             * @var AAuthABACModelInterface $model
-             *
-             * PHPStan analysis does not return any errors, but it underlines the ABACRules method because it somehow
-             * does not see it, even though it is defined in the facade.
-             * @phpstan-ignore-next-line
-             */
             $rules = AAuth::ABACRules($model::getModelType()) ?? [];
 
-            /**
-             * @var array $rules
-             */
             ABACUtil::validateAbacRuleArray($rules);
 
             $builder->where(function ($query) use ($rules, $model) {
-                /**
-                 * @var Model $model
-                 */
                 $this->apply($query, $model, $rules);
             });
         } else {
-            $logicalOperators = ["&&","||"];
+            $logicalOperators = ['&&', '||'];
 
             foreach ($rules as $rule) {
                 $firstKey = array_key_first($rule);
@@ -65,13 +50,10 @@ class AAuthABACModelScope implements Scope
     /**
      * Apply logical operator (&& or ||) to the query builder.
      *
-     * @param Builder<TModelClass> $builder
-     * @param array $abacRule
-     * @param Model $model
-     * @param string $logicalOperator
-     * @param string $parentOperator
+     * @param  Builder<covariant Model&AAuthABACModelInterface>  $builder
+     * @param  array<int, mixed>  $abacRule
+     * @param  Model&AAuthABACModelInterface  $model
      *
-     * @return void
      * @throws Exception
      */
     protected function applyLogicalOperator(Builder $builder, array $abacRule, Model $model, string $logicalOperator, string $parentOperator): void
@@ -86,11 +68,8 @@ class AAuthABACModelScope implements Scope
     /**
      * Apply conditional operator to the query builder.
      *
-     * @param Builder<TModelClass> $builder
-     * @param array   $rule
-     * @param string  $parentOperator
-     *
-     * @return void
+     * @param  Builder<covariant Model>  $builder
+     * @param  array<string, mixed>  $rule
      */
     protected function applyConditionalOperator(Builder $builder, array $rule, string $parentOperator): void
     {
@@ -98,12 +77,22 @@ class AAuthABACModelScope implements Scope
 
         $queryMethod = $parentOperator == '||' ? 'orWhere' : 'where';
 
-        $from = sprintf('%s.', is_string($builder->getQuery()->from) ? $builder->getQuery()->from : '');
+        $from = $this->getFromPrefix($builder);
 
         $builder->{$queryMethod}(
             $from.$rule[$operator]['attribute'],
             $operator,
             $rule[$operator]['value']
         );
+    }
+
+    /**
+     * Get the "from" table prefix (e.g. "table_name.") used to qualify rule columns.
+     *
+     * @param  Builder<covariant Model>  $builder
+     */
+    protected function getFromPrefix(Builder $builder): string
+    {
+        return sprintf('%s.', is_string($builder->getQuery()->from) ? $builder->getQuery()->from : '');
     }
 }

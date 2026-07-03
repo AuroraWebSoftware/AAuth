@@ -9,7 +9,7 @@ class AuthorizationException extends Exception
     /**
      * All of the guards that were checked.
      *
-     * @var array
+     * @var list<string>
      */
     protected $guards;
 
@@ -23,8 +23,7 @@ class AuthorizationException extends Exception
     /**
      * Create a new authentication exception.
      *
-     * @param  string  $message
-     * @param  array  $guards
+     * @param  list<string>  $guards
      * @param  string|null  $redirectTo
      * @return void
      */
@@ -39,7 +38,7 @@ class AuthorizationException extends Exception
     /**
      * Get the guards that were checked.
      *
-     * @return array
+     * @return list<string>
      */
     public function guards()
     {

@@ -1,5 +1,66 @@
 # Upgrade Guide
 
+## Upgrading to the next release (security hardening — behaviour changes)
+
+This release fixes several confirmed authorization defects **secure-by-default** (no
+config flags). Each change makes the *correct* behaviour the default; a few are
+observable and are listed here. Review before upgrading.
+
+**1. `Role` privilege columns are no longer mass-assignable (IMPORTANT)**
+
+`Role::$fillable` is narrowed to `['name', 'status']`. `type` and
+`organization_scope_id` can no longer be set through `Role::create($input)` /
+`->update($input)` — this stops a rename/create endpoint fed with raw request input
+from escalating an organization role to a system role. **Set them explicitly** (or use
+`RolePermissionService::createRole()`, which does). If you called
+`Role::create(['type' => ..., 'organization_scope_id' => ...])` directly, those keys are
+now silently ignored — switch to explicit assignment.
+
+**2. Parametric permissions fail closed**
+
+`can('perm')` on a permission that declares parameter constraints now returns `false`
+when called with no/insufficient/type-mismatched arguments (previously it granted). Pass
+the runtime value(s): `can('approve', $amount)`, or `passOrAbort('approve', 'msg', [$amount])`
+(the new optional third argument). Non-parametric `can('perm')` is unaffected.
+
+**3. Deactivated roles are rejected**
+
+A role with `status = 'passive'` can no longer be selected as the current role and no
+longer appears in `switchableRoles()`. `deactivateRole()` is now an effective kill switch.
+
+**4. `Gate::before` defers to host policies**
+
+When your app registers a Policy that handles an ability for a model, AAuth abstains so
+your object-level (ownership) check still runs — a name-only AAuth permission no longer
+shadows a host policy.
+
+**5. Org-write helpers enforce the subtree boundary**
+
+`createWith/updateWith/deleteWithAAuthOrganizationNode` and
+`attachOrganizationRoleToUser` now reject a target node outside the active role's
+accessible subtree — but only when an AAuth context is bound. Seeders, console commands
+and queue jobs run without a context and are skipped (no behaviour change there).
+
+**6. `descendant()` is separator-anchored**
+
+`descendant()` no longer reports a sibling with a shared numeric prefix (e.g. node `1`
+vs `10`, `1/3` vs `1/30`) as a descendant. Results change only for those false-positive cases.
+
+**7. Empty accessible-node set returns zero rows**
+
+`organizationNodes()` / `getAccessibleOrganizationNodes()` and the org global scope now
+return **zero rows** (fail closed) for a role with no accessible nodes, instead of the
+whole table or an exception.
+
+Also fixed (non-behavioural): `Role::permissions()` (was returning every role's
+permissions), the assigned-user count, non-atomic permission sync, and the pgsql seed
+sequence.
+
+**Removed the opt-in role/permission cache** (`aauth-advanced.cache.*`). Authorization
+data is now loaded **once per request** into the request-scoped AAuth instance — no
+persistent cache, no invalidation apparatus, tenant-safe, and no action needed. A
+published `aauth-advanced.php` simply ignores the old `cache` key.
+
 ## Upgrading to 21.1.0 (security + reliability minor)
 
 This release is fully backward compatible — `composer update` from any 21.x will not break a working host application. No migration, no config change, no signature change.
@@ -60,9 +121,9 @@ This guide covers upgrading from AAuth v1 to v2.
 
 ## Requirements
 
-- PHP 8.2 or higher
-- Laravel 11 or 12
-- MySQL 8.0+ or PostgreSQL 13+
+- PHP 8.2, 8.3 or 8.4
+- Laravel 11, 12 or 13
+- SQLite, MySQL 8.0+ / MariaDB, or PostgreSQL 13+
 
 ## Step 1: Update Composer
 
@@ -91,17 +152,11 @@ php artisan vendor:publish --tag="aauth-config" --force
 New config options in v2:
 
 ```php
-// config/aauth.php
+// config/aauth-advanced.php
 return [
     'super_admin' => [
         'enabled' => false,
         'column' => 'is_super_admin',
-    ],
-    'cache' => [
-        'enabled' => true,
-        'ttl' => 3600,
-        'prefix' => 'aauth',
-        'store' => null,
     ],
 ];
 ```
@@ -144,18 +199,6 @@ Minimum name length changed from 5 to 3 characters:
 ```
 
 ## New Features in v2
-
-### Caching
-
-Role and permission data is now cached by default:
-
-```php
-// Disable caching if needed
-// config/aauth.php
-'cache' => [
-    'enabled' => false,
-],
-```
 
 ### Organization Depth Filtering
 
@@ -205,20 +248,6 @@ DB::table('roles')
 ```
 
 ## Troubleshooting
-
-### Cache Issues
-
-If you experience stale data after updates:
-
-```php
-// Clear AAuth cache manually
-$prefix = config('aauth.cache.prefix', 'aauth');
-Cache::forget("{$prefix}:role:{$roleId}");
-Cache::forget("{$prefix}:user:{$userId}:switchable_roles");
-
-// Or disable cache temporarily
-// config/aauth.php: 'cache' => ['enabled' => false]
-```
 
 ### Database Index Errors
 

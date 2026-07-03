@@ -7,6 +7,8 @@
 
 Organization Based (OrBAC) , Attibute Based (ABAC) , Rol-Permission (RBAC)  Based Authentication Methods Combined **Laravel Auth Package** with Limitless Hierarchical Level of Organizations and Limitless Attribute Conditions
 
+> **Contributing / running the tests?** See [README-contr.md](README-contr.md) for local setup, the multi-database (SQLite / MariaDB / PostgreSQL) test matrix, the quality gates, and the pre-PR review agents.
+
 # Features
 
 - Organization Based Access Controllable (OrBAC) Eloquent Models
@@ -18,7 +20,7 @@ Organization Based (OrBAC) , Attibute Based (ABAC) , Rol-Permission (RBAC)  Base
 - DB Row Level Filtering for the Role with ABAC
 - Built-in Blade Directives for permission control inside **Blade** files
 - Mysql, MariaDB, Postgres Support
-- Built-in Caching Layer with Configurable TTL
+- Per-request in-memory authorization loading — no cross-request cache; tenant-safe
 - **Laravel Octane / Vapor safe** — `aauth` is a request-scoped binding; no cross-request state leak
 - Community Driven and Open Source Forever
 
@@ -189,26 +191,38 @@ This model-attribute-focused ABAC complements the Organization-Based Access Cont
 Before using AAuth its worth to understand the main terminology of AAuth.
 AAuth differs from other Auth Packages due to its organizational structure.
 
-## What is Organization?
+## What is Organization? (OrBAC)
 
-Organization is a kind of term
-which refers to hierarchical arrangement of eloquent models in sequential tree.
+**Organization** models your org chart as a **tree** and scopes every authorization
+decision to a user's position in it. A role placed on a node can act on that node **and
+its entire subtree** — nothing above or beside it — and AAuth enforces this automatically
+on every query.
 
-It consists of a central root organization node, and sub organization nodes,
-which are connected via edges.
-We can also say that organization tree has one root node, many sub organization nodes polymorphic-connected with one
-eloquent model.
+```text
+Acme Inc.          Organization Node (root)  · scope "Company"    (level 0) · path "1"
+├── Sales Dept     Organization Node         · scope "Department" (level 1) · path "1/2"
+│   └── EU Team    Organization Node         · scope "Team"       (level 2) · path "1/2/5"
+└── Eng Dept       Organization Node         · scope "Department" (level 1) · path "1/3"
+```
+
+A user with an organization role on **Sales Dept** sees Sales Dept **and** EU Team, but
+not Eng Dept. Each node stores its ancestry as a **materialized path** (`1/2/5`), so an
+entire subtree is fetched in one indexed query — no recursion.
 
 ## Organization Scope
 
-In Organization Tree, each node has an organization scope.
-Organization scope has a level property to determine the level of the organization node in the tree.
+An **Organization Scope** is a *type of level* in the tree — e.g. `Company`, `Department`,
+`Team`. Each scope has a numeric `level` (root type = 0, then 1, 2, …). Every node belongs
+to exactly one scope, letting you reason about "all Departments" or "every node at level 2"
+across branches.
 
 ## Organization Node
 
-Each node in the organization tree means organization node.
-Each Organization Node is an Eloquent Model.
-Organization Node can be polymorphic-related with an Eloquent Model.
+An **Organization Node** is a concrete position in the tree (e.g. "Sales Dept"). It is an
+Eloquent model (`OrganizationNode`) and can be **polymorphically linked to one of your own
+models** — so "Sales Dept" can *be* your `Department` row. Add the `AAuthOrganizationNode`
+trait to a model and its rows live in the tree and become subtree-scoped automatically:
+`Department::all()` then returns only the departments inside the current role's subtree.
 
 ## Permission
 
@@ -226,13 +240,36 @@ file's permission['system'] array.
 an Organization Role.
 Organization Permissions should be added inside `aauth.php` config file's permission['organization'] array.
 
-## ABAC
-Attribute-Based Access Control. AAuth provides comprehensive ABAC features, allowing for fine-grained access control based on model attributes. For a detailed explanation, see the sections:
-- "Main Philosophy of AAuth ABAC"
-- "Using ABAC Interface and Trait with Eloquent Models"
-- "Defining ABAC Rules"
-- "Managing ABAC Rules and Associations"
-- "Automatic Query Filtering (ABAC)"
+## ABAC (row-level filtering)
+
+**Attribute-Based Access Control** adds **row-level** filtering on top of roles: a role
+can carry rules that decide *which rows* of a model it may read, from that model's own
+attribute values — applied automatically as a global query scope, so you never write the
+`where`s by hand.
+
+```php
+// Give the "Regional Manager" role a rule on the Order model:
+//   status == 'approved'  AND  amount >= 100
+RoleModelAbacRule::updateOrCreate(
+    ['role_id' => $role->id, 'model_type' => Order::getModelType()],
+    ['rules_json' => ['&&' => [
+        ['='  => ['attribute' => 'status', 'value' => 'approved']],
+        ['>=' => ['attribute' => 'amount', 'value' => 100]],
+    ]]],
+);
+
+// Now, for any user on that role — filtered automatically, no manual where():
+Order::all();        // → only approved orders with amount >= 100
+Order::find($id);    // → null unless that order matches the rule
+```
+
+**Secure-by-default rule:** ABAC only ever *restricts* a role that **has** a rule for a
+model. **A role with no ABAC rule for a model sees every row of it** — ABAC never
+accidentally hides data a role would otherwise have. Enable it by adding the
+`AAuthABACModel` trait to your model. Operators (`&&`, `||`, `=`, `>=`, `in`, …) and the
+full API are in ["Defining ABAC Rules"](#defining-abac-rules),
+["Managing ABAC Rules"](#managing-abac-rules-and-associations) and
+["Automatic Query Filtering"](#automatic-query-filtering-abac).
 
 ## Role
 
@@ -504,7 +541,7 @@ roleId session must be set before initializing **AAuth** Service.
 `AAuthServiceProvider.php`
 
 ```php
-$this->app->singleton('aauth', function ($app) {
+$this->app->scoped('aauth', function ($app) {
     return new AAuth(
         Auth::user(),
         Session::get('roleId')
@@ -637,7 +674,7 @@ $rolePermissionService->activateRole($roleId);
 $rolePermissionService->deactivateRole($roleId);
 ```
 
-### Attaching a Role to a User
+### Attaching a Permission to a Role
 ```php
 $role = Role::whereName('System Role 1')->first();
 $permissionName = 'test_permission1';
@@ -658,9 +695,9 @@ $rolePermissionService->syncPermissionsOfRole(
 );
 ```
 
-### Detaching Permission from a Role
+### Detaching a Permission from a Role
 ```php
-$rolePermissionService->detachSystemRoleFromUser($role->id, $user->id);
+$rolePermissionService->detachPermissionFromRole($permissionName, $role->id);
 ```
 
 ### Creating an Organization Role and Attaching to a User
@@ -788,6 +825,15 @@ class Order extends Model implements AAuthABACModelInterface
 This setup prepares your model to have ABAC rules applied to it. The `getModelType()` method provides a string identifier for your model type, which can be used in rule definitions. The `getABACRules()` method is where you can define default or fallback attribute conditions for accessing instances of this model. While the primary mechanism for applying role-specific rules is via the `RoleModelAbacRule` model (see "Managing ABAC Rules and Associations"), these model-defined rules can act as a base or default. The detailed format for the rule syntax is covered in the "Defining ABAC Rules" section.
 
 ## AAuth Service and Facade Methods
+
+> **Prerequisites — when AAuth throws.** Resolving `aauth` (or using the `AAuth` facade)
+> builds the context for the **current authenticated user + their selected role**, so it
+> needs an authenticated request. It throws `AuthenticationException` when there is no
+> logged-in user, `MissingRoleException` when no `roleId` is in the session, and
+> `UserHasNoAssignedRoleException` when the selected role is not assigned to the user or is
+> `passive`. Do **not** call `AAuth::can()` where there is no authenticated user + active
+> selected role (e.g. a queue job or console command) — handle authorization there
+> explicitly instead.
 
 ### Current Roles All Permissions
 current user's selected roles permissions with **AAuth Facade**
@@ -1044,11 +1090,11 @@ $allOrdersIncludingNonCompleted = Order::withoutGlobalScope(AAuthABACModelScope:
 // Find a specific order by ID, ignoring ABAC rules
 $anyOrder = Order::withoutGlobalScope(AAuthABACModelScope::class)->find(1);
 ```
-The `withoutGlobalScopes()->all()` method mentioned earlier in the "Getting All Model Collection without any access control" section also effectively bypasses this and all other global scopes. Use this capability judiciously, as it circumvents the defined access controls.
+The `withoutGlobalScopes()->get()` method mentioned earlier in the "Getting All Model Collection without any access control" section also effectively bypasses this and all other global scopes. Use this capability judiciously, as it circumvents the defined access controls.
 
 ## Getting All Model Collection without any access control
 ```php
-ExampleModel::withoutGlobalScopes()->all()
+ExampleModel::withoutGlobalScopes()->get()
 ```
 
 that's all.
@@ -1172,6 +1218,29 @@ $user->can('edit_something');
 
 ---
 
+## Blade Directives
+
+AAuth also registers its own Blade directives for view-level checks (alongside Laravel's `@can`):
+
+```blade
+{{-- Show a block only when the current role has the permission --}}
+@aauth('edit_invoice')
+    <a href="{{ route('invoices.edit', $invoice) }}">Edit</a>
+@endaauth
+
+{{-- Conditionals (each supports @else) --}}
+@aauth_can('approve', $amount)   Approve   @else   Read only   @endaauth_can
+@aauth_role('Accountant')        ...                           @endaauth_role
+@aauth_super_admin               Admin panel                   @endaauth_super_admin
+```
+
+- `@aauth('perm') … @endaauth` — permission check (directive pair).
+- `@aauth_can('perm', ...$args)` — permission check with parametric arguments.
+- `@aauth_role('RoleName')` — current-role name check.
+- `@aauth_super_admin` — true when the user is a super admin.
+
+---
+
 ## Super Admin
 
 When enabled, users with the configured column set to `true` bypass all permission checks.
@@ -1237,32 +1306,11 @@ use AuroraWebSoftware\AAuth\Events\PermissionRemovedEvent; // Properties: Role $
 
 ## Performance Optimization
 
-AAuth v2 includes built-in caching and database optimization features.
-
-### Cache Configuration
-
-```php
-// config/aauth.php
-'cache' => [
-    'enabled' => true,          // Enable/disable caching
-    'ttl' => 3600,              // Cache TTL in seconds (1 hour)
-    'prefix' => 'aauth',        // Cache key prefix
-    'store' => null,            // Cache store (null = default)
-],
-```
-
-### What Gets Cached
-
-- **Role data**: Role with permissions and ABAC rules
-- **Switchable roles**: User's available roles for switching
-
-### Cache Invalidation
-
-Cache is automatically invalidated when:
-
-- Role is updated or deleted (via `RoleObserver`)
-- Permission is added, updated, or removed (via `RolePermissionObserver`)
-- User role assignment changes (via `RolePermissionService`)
+AAuth loads a user's role, permissions and ABAC rules **once per request** into the
+request-scoped `AAuth` instance, so every `can()` / permission check within a request is
+served from memory — no per-check database query. There is intentionally **no
+cross-request cache**: it is unnecessary here and avoids stale-permission and
+multi-tenant cache-key hazards.
 
 ### Database Indexes
 
@@ -1273,17 +1321,6 @@ AAuth v2 includes optimized database indexes for better query performance:
 - idx_role_permission_composite   // Permission checks (role_id, permission)
 - idx_uron_composite              // User-role joins (user_id, role_id)
 - idx_organization_nodes_path     // Organization hierarchy queries
-```
-
-### Disabling Cache
-
-To disable caching (e.g., for debugging):
-
-```php
-// config/aauth.php
-'cache' => [
-    'enabled' => false,
-],
 ```
 
 ---

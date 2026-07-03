@@ -8,23 +8,21 @@ use Illuminate\Support\Facades\Facade;
 /**
  * AAuth Facade
  *
- * @see AuroraWebSoftware
- * @static switchableRoles(): array|Collection|\Illuminate\Support\Collection
- * @static permissions(): \Illuminate\Support\Collection|array
- * @static organizationPermissions(): \Illuminate\Support\Collection|array
- * @static systemPermissions(): array|\Illuminate\Support\Collection
- * @static organizationNodeIds(): array|null
- * @static can(string $string)
- * @static passOrAbort(string $string, string $message = 'No Permission')
+ * @see \AuroraWebSoftware\AAuth\AAuth
  *
- * @method static organizationNodes(bool $includeRootNode = false, ?string $modelType = null): \Illuminate\Support\Collection
- * @static organizationNode(int $nodeId, ?string $modelType = null): OrganizationNode|array|Collection|Model
- * @static descendant(int $rootNodeId, int $childNodeId): bool
- * @static switchableRolesStatic(int $userId): array|Collection|\Illuminate\Support\Collection
- *
- * @method static currentRole() \AuroraWebSoftware\AAuth\Models\Role|null
- * @method static ABACRules(string $modelType) array|null
- * @method static organizationNodesQuery(bool $includeRootNode = false, ?string $modelType = null): OrganizationNode|Builder
+ * @method static array<int, \AuroraWebSoftware\AAuth\Models\Role>|\Illuminate\Support\Collection<int, \AuroraWebSoftware\AAuth\Models\Role> switchableRoles()
+ * @method static array<int, mixed> permissions()
+ * @method static array<int, mixed> organizationPermissions()
+ * @method static array<int, mixed> systemPermissions()
+ * @method static array<int, int>|null organizationNodeIds()
+ * @method static bool can(string $permission, mixed ...$arguments)
+ * @method static void passOrAbort(string $permission, string $message = 'No Permission', array<int, mixed> $arguments = [])
+ * @method static \Illuminate\Support\Collection<int, \AuroraWebSoftware\AAuth\Models\OrganizationNode> organizationNodes(bool $includeRootNode = false, ?string $modelType = null)
+ * @method static \AuroraWebSoftware\AAuth\Models\OrganizationNode organizationNode(int $nodeId, ?string $modelType = null)
+ * @method static bool descendant(int $rootNodeId, int $childNodeId)
+ * @method static \AuroraWebSoftware\AAuth\Models\Role|null currentRole()
+ * @method static array<string, mixed>|null ABACRules(string $modelType)
+ * @method static Builder<\AuroraWebSoftware\AAuth\Models\OrganizationNode> organizationNodesQuery(bool $includeRootNode = false, ?string $modelType = null)
  */
 class AAuth extends Facade
 {

@@ -3,8 +3,10 @@
 namespace AuroraWebSoftware\AAuth\Models;
 
 use AuroraWebSoftware\AAuth\Contracts\AAuthUserContract;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -36,8 +38,9 @@ use Illuminate\Support\Facades\DB;
  */
 class User extends Authenticatable implements AAuthUserContract
 {
-    /** @use \Illuminate\Database\Eloquent\Factories\HasFactory<\Illuminate\Database\Eloquent\Factories\Factory<\AuroraWebSoftware\AAuth\Models\User>> */
+    /** @use HasFactory<Factory<User>> */
     use HasFactory;
+
     use Notifiable;
 
     protected $fillable = [
@@ -62,7 +65,7 @@ class User extends Authenticatable implements AAuthUserContract
     ];
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\AuroraWebSoftware\AAuth\Models\Role, \AuroraWebSoftware\AAuth\Models\User, \Illuminate\Database\Eloquent\Relations\Pivot>
+     * @return BelongsToMany<Role, User, Pivot>
      */
     public function roles(): BelongsToMany
     {
@@ -74,18 +77,14 @@ class User extends Authenticatable implements AAuthUserContract
      */
     public function rolesWithOrganizationNodes(): Collection
     {
-        // @phpstan-ignore-next-line
         $rolesCollection = collect();
 
         $rolesWithOrganizationNodes = DB::table('user_role_organization_node')->where('user_id', '=', $this->id)->get();
 
         foreach ($rolesWithOrganizationNodes as $rolesWithOrganizationNode) {
             $role = Role::find($rolesWithOrganizationNode->role_id);
-            /**
-             * @var Role $role
-             * @phpstan-ignore-next-line
-             */
-            $role->organizationNode = OrganizationNode::find($rolesWithOrganizationNode->organization_node_id);
+            /** @var Role $role */
+            $role->organizationNode = OrganizationNode::find((int) $rolesWithOrganizationNode->organization_node_id);
 
             $rolesCollection->push($role);
         }
@@ -94,7 +93,7 @@ class User extends Authenticatable implements AAuthUserContract
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\AuroraWebSoftware\AAuth\Models\Role, \AuroraWebSoftware\AAuth\Models\User, \Illuminate\Database\Eloquent\Relations\Pivot>
+     * @return BelongsToMany<Role, $this, Pivot>
      */
     public function system_roles(): BelongsToMany
     {
@@ -103,7 +102,7 @@ class User extends Authenticatable implements AAuthUserContract
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\AuroraWebSoftware\AAuth\Models\Role, \AuroraWebSoftware\AAuth\Models\User, \Illuminate\Database\Eloquent\Relations\Pivot>
+     * @return BelongsToMany<Role, $this, Pivot>
      */
     public function organization_roles(): BelongsToMany
     {
@@ -111,18 +110,12 @@ class User extends Authenticatable implements AAuthUserContract
             ->where('type', 'organization');
     }
 
-    /**
-     * @return int
-     */
     public function getAssignedUserCountAttribute(): int
     {
         return DB::table('user_role_organization_node')
             ->where('user_id', $this->id)->count();
     }
 
-    /**
-     * @return bool
-     */
     public function getDeletableAttribute(): bool
     {
         // todo new syntax

@@ -8,13 +8,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AAuthPermission
 {
-    /**
-     * @param Request $request
-     * @param Closure $next
-     * @param string $permission
-     * @param mixed ...$parameters
-     * @return Response
-     */
     public function handle(Request $request, Closure $next, string $permission, mixed ...$parameters): Response
     {
         try {

@@ -8,12 +8,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AAuthRole
 {
-    /**
-     * @param Request $request
-     * @param Closure $next
-     * @param string $role
-     * @return Response
-     */
     public function handle(Request $request, Closure $next, string $role): Response
     {
         try {
