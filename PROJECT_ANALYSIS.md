@@ -22,7 +22,7 @@
 
 4. **Dokümantasyon**
    - README dosyaları mevcut
-   - Laravel Boost guideline'ları eklendi
+   - AGENTS.md (tool-agnostic AI rehberi) + README-contr + .claude/agents/
    - Kod içi yorumlar var
 
 ### ⚠️ Eksiklikler ve İyileştirme Alanları

@@ -121,9 +121,9 @@ This guide covers upgrading from AAuth v1 to v2.
 
 ## Requirements
 
-- PHP 8.2 or higher
-- Laravel 11 or 12
-- MySQL 8.0+ or PostgreSQL 13+
+- PHP 8.2, 8.3 or 8.4
+- Laravel 11, 12 or 13
+- SQLite, MySQL 8.0+ / MariaDB, or PostgreSQL 13+
 
 ## Step 1: Update Composer
 
@@ -152,7 +152,7 @@ php artisan vendor:publish --tag="aauth-config" --force
 New config options in v2:
 
 ```php
-// config/aauth.php
+// config/aauth-advanced.php
 return [
     'super_admin' => [
         'enabled' => false,
