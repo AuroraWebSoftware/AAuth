@@ -5,7 +5,7 @@
 | AAuth Advanced Configuration (v2 Features)
 |--------------------------------------------------------------------------
 |
-| This config contains v2 features: caching, super admin, and other
+| This config contains v2 features: super admin, and other
 | advanced settings. These features are optional and backward compatible.
 |
 | To enable these features, publish this config:

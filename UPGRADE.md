@@ -53,8 +53,13 @@ return **zero rows** (fail closed) for a role with no accessible nodes, instead 
 whole table or an exception.
 
 Also fixed (non-behavioural): `Role::permissions()` (was returning every role's
-permissions), the assigned-user count, non-atomic permission sync, the pgsql seed
-sequence, and cache invalidation now honours the configured `cache.store`.
+permissions), the assigned-user count, non-atomic permission sync, and the pgsql seed
+sequence.
+
+**Removed the opt-in role/permission cache** (`aauth-advanced.cache.*`). Authorization
+data is now loaded **once per request** into the request-scoped AAuth instance — no
+persistent cache, no invalidation apparatus, tenant-safe, and no action needed. A
+published `aauth-advanced.php` simply ignores the old `cache` key.
 
 ## Upgrading to 21.1.0 (security + reliability minor)
 
@@ -153,12 +158,6 @@ return [
         'enabled' => false,
         'column' => 'is_super_admin',
     ],
-    'cache' => [
-        'enabled' => true,
-        'ttl' => 3600,
-        'prefix' => 'aauth',
-        'store' => null,
-    ],
 ];
 ```
 
@@ -200,18 +199,6 @@ Minimum name length changed from 5 to 3 characters:
 ```
 
 ## New Features in v2
-
-### Caching
-
-Role and permission data is now cached by default:
-
-```php
-// Disable caching if needed
-// config/aauth.php
-'cache' => [
-    'enabled' => false,
-],
-```
 
 ### Organization Depth Filtering
 
@@ -261,20 +248,6 @@ DB::table('roles')
 ```
 
 ## Troubleshooting
-
-### Cache Issues
-
-If you experience stale data after updates:
-
-```php
-// Clear AAuth cache manually
-$prefix = config('aauth.cache.prefix', 'aauth');
-Cache::forget("{$prefix}:role:{$roleId}");
-Cache::forget("{$prefix}:user:{$userId}:switchable_roles");
-
-// Or disable cache temporarily
-// config/aauth.php: 'cache' => ['enabled' => false]
-```
 
 ### Database Index Errors
 

@@ -1239,32 +1239,11 @@ use AuroraWebSoftware\AAuth\Events\PermissionRemovedEvent; // Properties: Role $
 
 ## Performance Optimization
 
-AAuth v2 includes built-in caching and database optimization features.
-
-### Cache Configuration
-
-```php
-// config/aauth.php
-'cache' => [
-    'enabled' => true,          // Enable/disable caching
-    'ttl' => 3600,              // Cache TTL in seconds (1 hour)
-    'prefix' => 'aauth',        // Cache key prefix
-    'store' => null,            // Cache store (null = default)
-],
-```
-
-### What Gets Cached
-
-- **Role data**: Role with permissions and ABAC rules
-- **Switchable roles**: User's available roles for switching
-
-### Cache Invalidation
-
-Cache is automatically invalidated when:
-
-- Role is updated or deleted (via `RoleObserver`)
-- Permission is added, updated, or removed (via `RolePermissionObserver`)
-- User role assignment changes (via `RolePermissionService`)
+AAuth loads a user's role, permissions and ABAC rules **once per request** into the
+request-scoped `AAuth` instance, so every `can()` / permission check within a request is
+served from memory — no per-check database query. There is intentionally **no
+cross-request cache**: it is unnecessary here and avoids stale-permission and
+multi-tenant cache-key hazards.
 
 ### Database Indexes
 
@@ -1275,17 +1254,6 @@ AAuth v2 includes optimized database indexes for better query performance:
 - idx_role_permission_composite   // Permission checks (role_id, permission)
 - idx_uron_composite              // User-role joins (user_id, role_id)
 - idx_organization_nodes_path     // Organization hierarchy queries
-```
-
-### Disabling Cache
-
-To disable caching (e.g., for debugging):
-
-```php
-// config/aauth.php
-'cache' => [
-    'enabled' => false,
-],
 ```
 
 ---
