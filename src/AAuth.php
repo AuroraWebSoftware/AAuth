@@ -478,30 +478,12 @@ class AAuth
         bool $includeRootNode = false,
         ?string $modelType = null
     ): \Illuminate\Support\Collection {
-        $rootNodes = OrganizationNode::whereIn('id', $this->organizationNodeIds)->get();
-
-        return OrganizationNode::where(function ($query) use ($rootNodes, $includeRootNode) {
-            // Fail closed on an empty accessible-node set (no whole-table leak).
-            if ($rootNodes->isEmpty()) {
-                $query->whereRaw('1 = 0');
-
-                return;
-            }
-
-            foreach ($rootNodes as $rootNode) {
-                $query->orWhere('path', 'like', $rootNode->path.'/%');
-
-                if ($includeRootNode) {
-                    $query->orWhere('path', '=', $rootNode->path);
-                }
-            }
-        })
-            // Depth filtering using path length calculation
-            // Depth = (number of slashes in path) - 1
-            // Examples: "/" = depth 0, "/1/" = depth 1, "/1/3/" = depth 2
+        // Reuse the single empty-guarded subtree builder (it already fails closed on an
+        // empty node set and applies the model-type filter), then layer depth/scope on top.
+        return $this->organizationNodesQuery($includeRootNode, $modelType)
+            // Depth = (number of '/' in path) - 1.
             ->when($minDepthFromRoot !== null || $maxDepthFromRoot !== null, function ($query) use ($minDepthFromRoot, $maxDepthFromRoot) {
                 if ($minDepthFromRoot !== null) {
-                    // MySQL and PostgreSQL compatible
                     $query->whereRaw('(LENGTH(path) - LENGTH(REPLACE(path, ?, ?))) - 1 >= ?', ['/', '', $minDepthFromRoot]);
                 }
 
@@ -509,21 +491,15 @@ class AAuth
                     $query->whereRaw('(LENGTH(path) - LENGTH(REPLACE(path, ?, ?))) - 1 <= ?', ['/', '', $maxDepthFromRoot]);
                 }
             })
-            // Scope name filtering
             ->when($scopeName !== null, function ($query) use ($scopeName) {
                 $query->whereHas('organization_scope', function ($q) use ($scopeName) {
                     $q->where('name', $scopeName);
                 });
             })
-            // Scope level filtering
             ->when($scopeLevel !== null, function ($query) use ($scopeLevel) {
                 $query->whereHas('organization_scope', function ($q) use ($scopeLevel) {
                     $q->where('level', $scopeLevel);
                 });
-            })
-            // Model type filtering
-            ->when($modelType !== null, function ($query) use ($modelType) {
-                $query->where('model_type', '=', $modelType);
             })
             ->get();
     }
