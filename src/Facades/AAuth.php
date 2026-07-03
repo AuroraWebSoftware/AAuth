@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Facade;
  *
  * @see \AuroraWebSoftware\AAuth\AAuth
  *
- * @method static array|\Illuminate\Support\Collection switchableRoles()
+ * @method static array<int, \AuroraWebSoftware\AAuth\Models\Role>|\Illuminate\Support\Collection<int, \AuroraWebSoftware\AAuth\Models\Role> switchableRoles()
  * @method static array permissions()
  * @method static array organizationPermissions()
  * @method static array systemPermissions()
