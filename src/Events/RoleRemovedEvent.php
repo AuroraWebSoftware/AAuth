@@ -16,5 +16,6 @@ class RoleRemovedEvent
         public int $userId,
         public Role $role,
         public ?OrganizationNode $organizationNode = null
-    ) {}
+    ) {
+    }
 }

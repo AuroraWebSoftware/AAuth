@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 
 beforeEach(function () {
     Artisan::call('migrate:fresh');
-    (new SampleDataSeeder)->run();
+    (new SampleDataSeeder())->run();
 });
 
 // F2 — Role::permissions() must return ONLY this role's permissions (no all-roles leak).

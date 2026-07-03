@@ -15,5 +15,6 @@ class PermissionAddedEvent
         public Role $role,
         public string $permission,
         public ?array $parameters = null
-    ) {}
+    ) {
+    }
 }

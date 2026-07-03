@@ -16,5 +16,6 @@ class PermissionUpdatedEvent
         public string $permission,
         public ?array $parameters = null,
         public ?array $oldParameters = null
-    ) {}
+    ) {
+    }
 }

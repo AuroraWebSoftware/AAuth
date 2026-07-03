@@ -117,47 +117,47 @@ class SampleDataSeeder extends Seeder
         $organizationNode4->path = $organizationNode2->path.'/'.$organizationNode4->id;
         $organizationNode4->save();
 
-        $role1 = Role::create([
+        $role1 = Role::forceCreate([
             'type' => 'system',
             'name' => 'System Role 1',
             'status' => 'active',
         ]);
 
-        $role2 = Role::create([
+        $role2 = Role::forceCreate([
             'type' => 'system',
             'name' => 'System Role 2',
             'status' => 'active',
         ]);
 
-        $role3 = Role::create([
+        $role3 = Role::forceCreate([
             'organization_scope_id' => $organizationScope1->id,
             'type' => 'organization',
             'name' => 'Root Role 1',
             'status' => 'active',
         ]);
 
-        $role4 = Role::create([
+        $role4 = Role::forceCreate([
             'organization_scope_id' => $organizationScope1->id,
             'type' => 'organization',
             'name' => 'Root Role 2',
             'status' => 'active',
         ]);
 
-        $role5 = Role::create([
+        $role5 = Role::forceCreate([
             'organization_scope_id' => $organizationScope2->id,
             'type' => 'organization',
             'name' => 'Sub-Scope Role 1',
             'status' => 'active',
         ]);
 
-        $role6 = Role::create([
+        $role6 = Role::forceCreate([
             'organization_scope_id' => $organizationScope2->id,
             'type' => 'organization',
             'name' => 'Sub-Scope Role 2',
             'status' => 'active',
         ]);
 
-        $role7 = Role::create([
+        $role7 = Role::forceCreate([
             'organization_scope_id' => $organizationScope3->id,
             'type' => 'organization',
             'name' => 'Sub-Sub-Scope Role 1',

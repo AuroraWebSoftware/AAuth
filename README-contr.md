@@ -41,7 +41,8 @@ A change must be **green on SQLite, MariaDB and PostgreSQL** — materialized-pa
 ## 4. Quality gates
 
 ```bash
-vendor/bin/pint --test                          # code style (Laravel Pint)
+composer format                                 # code style (PHP-CS-Fixer) — fix
+vendor/bin/php-cs-fixer fix --dry-run --diff --allow-risky=yes   # check only (CI gate)
 vendor/bin/phpstan analyse --memory-limit=1G    # static analysis (Larastan)
 ```
 

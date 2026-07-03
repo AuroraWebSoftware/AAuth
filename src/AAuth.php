@@ -37,14 +37,14 @@ class AAuth
      */
     public function __construct(?AAuthUserContract $user, ?int $roleId)
     {
-        throw_unless($user, new AuthenticationException);
-        throw_unless($roleId, new MissingRoleException);
+        throw_unless($user, new AuthenticationException());
+        throw_unless($roleId, new MissingRoleException());
 
         // Only an ACTIVE assigned role may be selected — deactivateRole() is an
         // effective kill switch on the very next request.
         throw_if(
             $user->roles()->where('roles.id', '=', $roleId)->where('status', '=', 'active')->count() < 1,
-            new UserHasNoAssignedRoleException
+            new UserHasNoAssignedRoleException()
         );
 
         $this->user = $user;
@@ -53,7 +53,7 @@ class AAuth
             ? $this->getCachedRole($roleId)
             : $this->loadRole($roleId);
 
-        throw_unless($this->role, new MissingRoleException);
+        throw_unless($this->role, new MissingRoleException());
 
         $this->organizationNodeIds = DB::table('user_role_organization_node')
             ->where('user_id', '=', $user->id)
@@ -450,7 +450,7 @@ class AAuth
             return OrganizationNode::findOrFail($nodeId)->first();
         }
         */
-        throw new InvalidOrganizationNodeException;
+        throw new InvalidOrganizationNodeException();
     }
 
     public function organizationNodeIds(): ?array
@@ -538,7 +538,7 @@ class AAuth
     public function descendant(int $rootNodeId, int $childNodeId): bool
     {
         $subTreeRootNode = OrganizationNode::find($rootNodeId);
-        throw_unless($subTreeRootNode, new InvalidOrganizationNodeException);
+        throw_unless($subTreeRootNode, new InvalidOrganizationNodeException());
 
         // Anchored to the '/' separator so root '1' does not match sibling '10'/'1/3'→'1/30'.
         return OrganizationNode::where('id', '=', $childNodeId)

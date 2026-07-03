@@ -11,7 +11,7 @@ Run a full pre-PR review of the **current working diff** using the four speciali
 1. **Scope the diff.** `git diff --name-only main...HEAD` (fall back to `git diff` for uncommitted work). If empty, say so and stop.
 
 2. **Run the gates ONCE** (so agents cite results instead of re-running):
-   - `vendor/bin/pint --test`
+   - `vendor/bin/php-cs-fixer fix --dry-run --diff --allow-risky=yes` (project uses PHP-CS-Fixer, not Pint)
    - `vendor/bin/phpstan analyse --memory-limit=1G` (must have the memory flag or it OOMs)
    - `AAUTH_TEST_DB=sqlite vendor/bin/pest` (or the MySQL target on :33062)
    - `composer audit`

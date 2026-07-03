@@ -16,7 +16,7 @@ Green tests are not enough — this package already had 137 passing tests while 
 ## Methodology
 1. `git diff main...HEAD` — what behavior changed?
 2. Run the gates (with the project's flags):
-   - `vendor/bin/pint --test` (formatting)
+   - `vendor/bin/php-cs-fixer fix --dry-run --diff --allow-risky=yes` (code style — this project uses PHP-CS-Fixer via `composer format`, NOT Pint)
    - `vendor/bin/phpstan analyse --memory-limit=1G` (must not OOM without the flag)
    - `AAUTH_TEST_DB=sqlite vendor/bin/pest` (fast local run)
 3. For every behavior change, confirm a matching test exists — and a **negative** one where security-relevant.
@@ -26,7 +26,7 @@ Green tests are not enough — this package already had 137 passing tests while 
 
 | ID | Category | Check (fails → severity) | How to verify |
 |----|----------|--------------------------|---------------|
-| TQ1 | Format | Pint clean → LOW | `vendor/bin/pint --test` |
+| TQ1 | Format | PHP-CS-Fixer clean → LOW | `vendor/bin/php-cs-fixer fix --dry-run --diff --allow-risky=yes` (project uses PHP-CS-Fixer, not Pint) |
 | TQ2 | Static | PHPStan clean **and NO new suppression added** (`@phpstan-ignore`, baseline entry, `ignoreErrors`, `excludePaths`) → **BLOCKER** on new suppression | `vendor/bin/phpstan analyse --memory-limit=1G`; `git diff` phpstan-baseline.neon / phpstan.neon.dist; grep diff for `@phpstan-ignore` |
 | TQ3 | Tests | Pest green → HIGH | `AAUTH_TEST_DB=sqlite vendor/bin/pest` |
 | TQ4 | Coverage | Every behavior change ships with a test in the **same** change → HIGH | map diff methods ↔ new tests |

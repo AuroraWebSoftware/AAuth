@@ -1,5 +1,61 @@
 # Upgrade Guide
 
+## Upgrading to the next release (security hardening — behaviour changes)
+
+This release fixes several confirmed authorization defects **secure-by-default** (no
+config flags). Each change makes the *correct* behaviour the default; a few are
+observable and are listed here. Review before upgrading.
+
+**1. `Role` privilege columns are no longer mass-assignable (IMPORTANT)**
+
+`Role::$fillable` is narrowed to `['name', 'status']`. `type` and
+`organization_scope_id` can no longer be set through `Role::create($input)` /
+`->update($input)` — this stops a rename/create endpoint fed with raw request input
+from escalating an organization role to a system role. **Set them explicitly** (or use
+`RolePermissionService::createRole()`, which does). If you called
+`Role::create(['type' => ..., 'organization_scope_id' => ...])` directly, those keys are
+now silently ignored — switch to explicit assignment.
+
+**2. Parametric permissions fail closed**
+
+`can('perm')` on a permission that declares parameter constraints now returns `false`
+when called with no/insufficient/type-mismatched arguments (previously it granted). Pass
+the runtime value(s): `can('approve', $amount)`, or `passOrAbort('approve', 'msg', [$amount])`
+(the new optional third argument). Non-parametric `can('perm')` is unaffected.
+
+**3. Deactivated roles are rejected**
+
+A role with `status = 'passive'` can no longer be selected as the current role and no
+longer appears in `switchableRoles()`. `deactivateRole()` is now an effective kill switch.
+
+**4. `Gate::before` defers to host policies**
+
+When your app registers a Policy that handles an ability for a model, AAuth abstains so
+your object-level (ownership) check still runs — a name-only AAuth permission no longer
+shadows a host policy.
+
+**5. Org-write helpers enforce the subtree boundary**
+
+`createWith/updateWith/deleteWithAAuthOrganizationNode` and
+`attachOrganizationRoleToUser` now reject a target node outside the active role's
+accessible subtree — but only when an AAuth context is bound. Seeders, console commands
+and queue jobs run without a context and are skipped (no behaviour change there).
+
+**6. `descendant()` is separator-anchored**
+
+`descendant()` no longer reports a sibling with a shared numeric prefix (e.g. node `1`
+vs `10`, `1/3` vs `1/30`) as a descendant. Results change only for those false-positive cases.
+
+**7. Empty accessible-node set returns zero rows**
+
+`organizationNodes()` / `getAccessibleOrganizationNodes()` and the org global scope now
+return **zero rows** (fail closed) for a role with no accessible nodes, instead of the
+whole table or an exception.
+
+Also fixed (non-behavioural): `Role::permissions()` (was returning every role's
+permissions), the assigned-user count, non-atomic permission sync, the pgsql seed
+sequence, and cache invalidation now honours the configured `cache.store`.
+
 ## Upgrading to 21.1.0 (security + reliability minor)
 
 This release is fully backward compatible — `composer update` from any 21.x will not break a working host application. No migration, no config change, no signature change.

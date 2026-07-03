@@ -13,5 +13,6 @@ class RoleDeletedEvent
 
     public function __construct(
         public Role $role
-    ) {}
+    ) {
+    }
 }

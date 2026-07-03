@@ -100,13 +100,16 @@ class OrganizationService
             'parent_id' => $organizationNode['parent_id'] ?? null,
         ];
 
-        $created = OrganizationNode::create($attributes);
+        // Atomic two-step write: insert to obtain the id, then set the real path.
+        // Wrapped so a failure between the two writes cannot leave a node with a
+        // bogus '<parent>/?' placeholder path (which would match the parent subtree LIKE).
+        return DB::transaction(function () use ($attributes, $parentPath) {
+            $created = OrganizationNode::create($attributes);
+            $created->path = $parentPath.$created->id;
+            $created->save();
 
-        // todo , can be add inside model's created event
-        $created->path = $parentPath.$created->id;
-        $created->save();
-
-        return $created;
+            return $created;
+        });
     }
 
     public function createOrganizationNodeForModel(Model $model, int $parentOrganizationId): ?OrganizationNode

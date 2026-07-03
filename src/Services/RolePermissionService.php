@@ -42,7 +42,7 @@ class RolePermissionService
             }
         }
 
-        $model = new Role;
+        $model = new Role();
         $model->fill(['name' => $role['name'] ?? null, 'status' => $role['status'] ?? 'active']);
         // type / organization_scope_id are set explicitly here (not mass-assignable).
         $model->type = $role['type'] ?? null;
@@ -155,7 +155,7 @@ class RolePermissionService
     public function syncPermissionsOfRole(array $permissions, int $roleId): bool
     {
         $role = Role::find($roleId);
-        throw_if($role == null, new InvalidRoleException);
+        throw_if($role == null, new InvalidRoleException());
 
         return DB::transaction(function () use ($permissions, $roleId) {
             $detached = $this->detachAllPermissionsFromRole($roleId);
@@ -180,7 +180,7 @@ class RolePermissionService
         }
 
         throw_unless(User::whereId($userId)
-            ->exists(), new InvalidUserException);
+            ->exists(), new InvalidUserException());
 
         $roleQuery = Role::whereId($roleIdOrIds);
         if ($this->hasRolesTypeColumn()) {
@@ -188,7 +188,7 @@ class RolePermissionService
         } else {
             $roleQuery->whereNull('organization_scope_id');
         }
-        throw_unless($roleQuery->exists(), new InvalidRoleException);
+        throw_unless($roleQuery->exists(), new InvalidRoleException());
 
         $result = User::find($userId)->system_roles()->sync($roleIdOrIds, false);
 
@@ -211,7 +211,7 @@ class RolePermissionService
         }
 
         throw_unless(User::whereId($userId)
-            ->exists(), new InvalidUserException);
+            ->exists(), new InvalidUserException());
 
         // Defensive: check if old 'type' column exists
         $roleQuery = Role::whereId($roleIdOrIds);
@@ -220,7 +220,7 @@ class RolePermissionService
         } else {
             $roleQuery->whereNull('organization_scope_id');
         }
-        throw_unless($roleQuery->exists(), new InvalidRoleException);
+        throw_unless($roleQuery->exists(), new InvalidRoleException());
 
         $result = User::find($userId)->system_roles()->detach($roleIdOrIds);
 
@@ -250,7 +250,7 @@ class RolePermissionService
     {
         // todo burası belki user trait'i ile yapılabilir ?
         throw_unless(User::whereId($userId)
-            ->exists(), new InvalidUserException);
+            ->exists(), new InvalidUserException());
 
         $roleQuery = Role::whereId($roleId);
         if ($this->hasRolesTypeColumn()) {
@@ -258,10 +258,10 @@ class RolePermissionService
         } else {
             $roleQuery->whereNotNull('organization_scope_id');
         }
-        throw_unless($roleQuery->exists(), new InvalidRoleException);
+        throw_unless($roleQuery->exists(), new InvalidRoleException());
 
         throw_unless(OrganizationNode::whereId($organizationNodeId)
-            ->exists(), new InvalidOrganizationNodeException);
+            ->exists(), new InvalidOrganizationNodeException());
 
         // A caller may only assign a role at a node within their own accessible subtree
         // (skipped when there is no active AAuth context — seeders/console/queue).
@@ -295,7 +295,7 @@ class RolePermissionService
     {
         // todo burası belki user trait'i ile yapılabilir ?
         throw_unless(User::whereId($userId)
-            ->exists(), new InvalidUserException);
+            ->exists(), new InvalidUserException());
 
         $roleQuery = Role::whereId($roleId);
         if ($this->hasRolesTypeColumn()) {
@@ -303,10 +303,10 @@ class RolePermissionService
         } else {
             $roleQuery->whereNotNull('organization_scope_id');
         }
-        throw_unless($roleQuery->exists(), new InvalidRoleException);
+        throw_unless($roleQuery->exists(), new InvalidRoleException());
 
         throw_unless(OrganizationNode::whereId($organizationNodeId)
-            ->exists(), new InvalidOrganizationNodeException);
+            ->exists(), new InvalidOrganizationNodeException());
 
         $result = DB::table('user_role_organization_node')
             ->where([
@@ -334,7 +334,7 @@ class RolePermissionService
      */
     public function detachOrganizationRoleFromUserBy(int $organizationNodeId, int $roleId, int $userId): int
     {
-        throw_unless(User::whereId($userId)->exists(), new InvalidUserException);
+        throw_unless(User::whereId($userId)->exists(), new InvalidUserException());
 
         $roleQuery = Role::whereId($roleId);
         if ($this->hasRolesTypeColumn()) {
@@ -342,11 +342,11 @@ class RolePermissionService
         } else {
             $roleQuery->whereNotNull('organization_scope_id');
         }
-        throw_unless($roleQuery->exists(), new InvalidRoleException);
+        throw_unless($roleQuery->exists(), new InvalidRoleException());
 
         throw_unless(
             OrganizationNode::whereId($organizationNodeId)->exists(),
-            new InvalidOrganizationNodeException
+            new InvalidOrganizationNodeException()
         );
 
         $result = DB::table('user_role_organization_node')
@@ -390,7 +390,13 @@ class RolePermissionService
         try {
             $aauth = app('aauth');
         } catch (Throwable $e) {
-            return;
+            // No resolvable AAuth context: legitimate for console/seeders/queue (skip),
+            // but an unauthenticated / invalid-role HTTP request must be DENIED.
+            if (app()->runningInConsole()) {
+                return;
+            }
+
+            throw $e;
         }
 
         $aauth->organizationNode($nodeId);

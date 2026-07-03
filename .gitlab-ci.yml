@@ -33,10 +33,10 @@ phpstan:
     - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
     - composer install --no-interaction --prefer-dist --no-progress
 
-pint:
+cs-fixer:
   stage: quality
   script:
-    - vendor/bin/pint --test
+    - vendor/bin/php-cs-fixer fix --dry-run --diff --allow-risky=yes
   before_script:
     - apt-get update -yqq && apt-get install -yqq git unzip
     - curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer

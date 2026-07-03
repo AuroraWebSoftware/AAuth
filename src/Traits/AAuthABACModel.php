@@ -8,6 +8,6 @@ trait AAuthABACModel
 {
     public static function bootAAuthABACModel(): void
     {
-        static::addGlobalScope(new AAuthABACModelScope);
+        static::addGlobalScope(new AAuthABACModelScope());
     }
 }

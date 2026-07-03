@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 beforeEach(function () {
     Artisan::call('migrate:fresh');
-    (new SampleDataSeeder)->run();
+    (new SampleDataSeeder())->run();
 });
 
 // S1 — parametric permission enforcement is FAIL-CLOSED (positional).
@@ -62,4 +62,26 @@ it('S6: descendant does not match a numeric-prefix sibling', function () {
 
     expect($aauth->descendant(2, $siblingId))->toBeFalse(); // '1/20' is NOT a descendant of '1/2'
     expect($aauth->descendant(2, 4))->toBeTrue();           // '1/2/4' IS a descendant of '1/2'
+});
+
+// S1 (string constraint) — a string-valued parameter enforces exact match, fail-closed.
+it('S1: string parametric constraint enforces exact match', function () {
+    $role = Role::create(['type' => 'system', 'name' => 'Q', 'status' => 'active']);
+    $role->givePermission('export', ['region' => 'EU']);
+    DB::table('user_role_organization_node')->insert(['user_id' => 1, 'role_id' => $role->id]);
+    $this->app->singleton('aauth', fn ($app) => new AAuth(User::find(1), $role->id));
+
+    $aauth = app('aauth');
+    expect($aauth->can('export', 'EU'))->toBeTrue();
+    expect($aauth->can('export', 'US'))->toBeFalse(); // wrong value
+    expect($aauth->can('export'))->toBeFalse();       // no arg on a parametric perm
+});
+
+// S2 (switchable) — a deactivated role is excluded from the switchable list.
+it('S2: a deactivated role is excluded from switchableRoles', function () {
+    app(RolePermissionService::class)->deactivateRole(1); // system role assigned to user 1
+    $this->app->singleton('aauth', fn ($app) => new AAuth(User::find(1), 3)); // stay on an active role
+
+    $ids = collect(app('aauth')->switchableRoles())->pluck('id')->all();
+    expect($ids)->not->toContain(1);
 });

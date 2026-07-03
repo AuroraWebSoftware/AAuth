@@ -14,5 +14,6 @@ class PermissionRemovedEvent
     public function __construct(
         public Role $role,
         public string $permission
-    ) {}
+    ) {
+    }
 }
