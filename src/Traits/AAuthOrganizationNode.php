@@ -10,6 +10,7 @@ use AuroraWebSoftware\AAuth\Scopes\AAuthOrganizationNodeScope;
 use AuroraWebSoftware\AAuth\Services\OrganizationService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 /**
@@ -17,12 +18,9 @@ use Throwable;
  */
 trait AAuthOrganizationNode
 {
-    /**
-     * @return void
-     */
     public static function bootAAuthOrganizationNode(): void
     {
-        static::addGlobalScope(new AAuthOrganizationNodeScope());
+        static::addGlobalScope(new AAuthOrganizationNodeScope);
         /*
         static::saving(function ($model) {
             $model->slug = $model->generateSlug($model->title);
@@ -30,17 +28,11 @@ trait AAuthOrganizationNode
          */
     }
 
-    /**
-     * @return mixed
-     */
     public function allWithoutAAuthOrganizationNodeScope(): mixed
     {
         return self::withoutGlobalScopes()->all();
     }
 
-    /**
-     * @return OrganizationNode|Builder|Model|null
-     */
     public function relatedAAuthOrganizationNode(): Model|OrganizationNode|Builder|null
     {
         return OrganizationNode::whereModelId($this->getModelId())
@@ -54,18 +46,18 @@ trait AAuthOrganizationNode
     public static function createWithAAuthOrganizationNode(array $modelCreateData, int $parentOrganizationNodeId, int $organizationScopeId)
     {
         // todo di
-        $organizationService = new OrganizationService();
+        $organizationService = new OrganizationService;
 
         // todo yetki kontrolü ? serviste mi olmalı?
         // gerekli validationlar, organization scope validationları vs.
         // commit rollback
         $parentOrganizationNode = OrganizationNode::find($parentOrganizationNodeId);
 
-        throw_if($parentOrganizationNode == null, new InvalidOrganizationNodeException());
+        throw_if($parentOrganizationNode == null, new InvalidOrganizationNodeException);
 
         $organizationScope = OrganizationScope::find($organizationScopeId);
 
-        throw_if($organizationScope == null, new InvalidOrganizationScopeException());
+        throw_if($organizationScope == null, new InvalidOrganizationScopeException);
 
         $createdModel = self::create($modelCreateData);
 
@@ -87,58 +79,61 @@ trait AAuthOrganizationNode
     public static function updateWithAAuthOrganizationNode(int $modelId, int $nodeId, array $modelUpdateData, int $parentOrganizationNodeId, int $organizationScopeId)
     {
 
-        $organizationService = new OrganizationService();
+        $organizationService = new OrganizationService;
 
         $parentOrganizationNode = OrganizationNode::find($parentOrganizationNodeId);
 
-        throw_if($parentOrganizationNode == null, new InvalidOrganizationNodeException());
+        throw_if($parentOrganizationNode == null, new InvalidOrganizationNodeException);
 
         $organizationScope = OrganizationScope::find($organizationScopeId);
 
-        throw_if($organizationScope == null, new InvalidOrganizationScopeException());
+        throw_if($organizationScope == null, new InvalidOrganizationScopeException);
 
+        return DB::transaction(function () use ($modelId, $nodeId, $modelUpdateData, $parentOrganizationNode, $organizationScope, $organizationService) {
+            $modelInfo = self::findOrFail($modelId);
+            $updatedModel = $modelInfo->update($modelUpdateData);
 
-        $modelInfo = self::find($modelId);
+            // Persist the node's new parent/scope/name, THEN recompute the whole
+            // subtree path (updateNodePathsRecursively only recomputes; it does not
+            // persist field changes on its own).
+            $node = OrganizationNode::findOrFail($nodeId);
+            $node->update([
+                'name' => $modelInfo->getModelName(),
+                'organization_scope_id' => $organizationScope->id,
+                'parent_id' => $parentOrganizationNode->id,
+            ]);
 
-        $updatedModel = $modelInfo->update($modelUpdateData);
+            $organizationService->updateNodePathsRecursively($node, false);
 
-
-
-        $OrgNodeUpdateData = [
-            'name' => $modelInfo->getModelName(),
-            'organization_scope_id' => $organizationScope->id,
-            'parent_id' => $parentOrganizationNode->id,
-            'model_type' => self::getModelType(),
-            'model_id' => $modelId,
-        ];
-        $updateON = $organizationService->updateOrganizationNodesRecursively($OrgNodeUpdateData, $nodeId);
-
-        return $updatedModel;
+            return $updatedModel;
+        });
     }
 
     /**
-     * @param int $modelId
      * @return bool
+     *
      * @throws Throwable
      */
     public static function deleteWithAAuthOrganizationNode(int $modelId)
     {
 
-        $organizationService = new OrganizationService();
+        $organizationService = new OrganizationService;
 
-        $organizationNode = OrganizationNode::where('model_id', $modelId)->first();
+        return DB::transaction(function () use ($modelId, $organizationService) {
+            $organizationNode = OrganizationNode::where('model_id', $modelId)
+                ->where('model_type', self::getModelType())
+                ->first();
 
+            throw_if($organizationNode == null, new InvalidOrganizationNodeException);
 
-        throw_if($organizationNode == null, new InvalidOrganizationNodeException());
+            $modelInfo = self::findOrFail($modelId);
+            $modelInfo->delete();
 
+            // Pass the model (not its id) — deleteOrganizationNodesRecursively expects
+            // an OrganizationNode; participate in the outer transaction.
+            $organizationService->deleteOrganizationNodesRecursively($organizationNode, false);
 
-        $modelInfo = self::findOrFail($modelId);
-
-        $deleteModel = $modelInfo->delete($modelInfo);
-
-
-        $deleteON = $organizationService->deleteOrganizationNodesRecursively($organizationNode->id);
-
-        return true;
+            return true;
+        });
     }
 }

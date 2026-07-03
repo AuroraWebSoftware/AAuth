@@ -37,12 +37,12 @@ class AAuth
      */
     public function __construct(?AAuthUserContract $user, ?int $roleId)
     {
-        throw_unless($user, new AuthenticationException());
-        throw_unless($roleId, new MissingRoleException());
+        throw_unless($user, new AuthenticationException);
+        throw_unless($roleId, new MissingRoleException);
 
         throw_if(
             $user->roles()->where('roles.id', '=', $roleId)->count() < 1,
-            new UserHasNoAssignedRoleException()
+            new UserHasNoAssignedRoleException
         );
 
         $this->user = $user;
@@ -51,7 +51,7 @@ class AAuth
             ? $this->getCachedRole($roleId)
             : $this->loadRole($roleId);
 
-        throw_unless($this->role, new MissingRoleException());
+        throw_unless($this->role, new MissingRoleException);
 
         $this->organizationNodeIds = DB::table('user_role_organization_node')
             ->where('user_id', '=', $user->id)
@@ -61,9 +61,6 @@ class AAuth
         $this->loadAndCacheContext();
     }
 
-    /**
-     * @return Role|null
-     */
     public function currentRole(): ?Role
     {
         // todo unit test
@@ -83,7 +80,6 @@ class AAuth
     }
 
     /**
-     * @param int $userId
      * @return array|Collection<int, Role>|\Illuminate\Support\Collection<int, Role>
      */
     public static function switchableRolesStatic(int $userId): array|Collection|\Illuminate\Support\Collection
@@ -97,8 +93,6 @@ class AAuth
 
     /**
      * Role's all permissions
-     *
-     * @return array
      */
     public function permissions(): array
     {
@@ -110,8 +104,6 @@ class AAuth
     /**
      * Get organization permissions for current role
      * Defensive: supports both old 'type' column and new organization_scope_id approach
-     *
-     * @return array
      */
     public function organizationPermissions(): array
     {
@@ -132,8 +124,6 @@ class AAuth
     /**
      * Get system permissions for current role
      * Defensive: supports both old 'type' column and new organization_scope_id approach
-     *
-     * @return array
      */
     public function systemPermissions(): array
     {
@@ -153,8 +143,6 @@ class AAuth
 
     /**
      * Check if type column exists in roles table (for backward compatibility)
-     *
-     * @return bool
      */
     protected function hasRolesTypeColumn(): bool
     {
@@ -169,9 +157,6 @@ class AAuth
 
     /**
      * Get cached role with permissions and ABAC rules
-     *
-     * @param int $roleId
-     * @return Role|null
      */
     protected function getCachedRole(int $roleId): ?Role
     {
@@ -190,9 +175,6 @@ class AAuth
 
     /**
      * Load role from database with permissions and ABAC rules
-     *
-     * @param int $roleId
-     * @return Role|null
      */
     protected function loadRole(int $roleId): ?Role
     {
@@ -233,11 +215,6 @@ class AAuth
             ->select('roles.id', 'name')->get();
     }
 
-    /**
-     * @param string $permission
-     * @param mixed ...$arguments
-     * @return bool
-     */
     public function can(string $permission, mixed ...$arguments): bool
     {
         $cacheKey = $this->getPermissionCacheKey($permission, $arguments);
@@ -274,9 +251,6 @@ class AAuth
         return $result;
     }
 
-    /**
-     * @return bool
-     */
     public function isSuperAdmin(): bool
     {
         $context = $this->getAuthContext();
@@ -340,7 +314,7 @@ class AAuth
 
     protected function getPermissionCacheKey(string $permission, array $arguments): string
     {
-        return $permission . ':' . md5(json_encode($arguments) ?: '');
+        return $permission.':'.md5(json_encode($arguments) ?: '');
     }
 
     protected function validateParameters(array $roleParameters, array $arguments): bool
@@ -374,6 +348,7 @@ class AAuth
 
     /**
      * @deprecated Use getAuthContext() instead
+     *
      * @return array<string, array|null>
      */
     protected function getPermissionsWithParameters(): array
@@ -383,11 +358,6 @@ class AAuth
         return $context['permissions'];
     }
 
-    /**
-     * @param string $permission
-     * @param string $message
-     * @return void
-     */
     public function passOrAbort(string $permission, string $message = 'No Permission'): void
     {
         // todo mesaj dil dosyasından gelecek.
@@ -400,55 +370,35 @@ class AAuth
      * Returns user's current role's authorized organization nodes
      * if model type is given, returns only this model typed nodes.
      *
-     * @param bool $includeRootNode
-     * @param string|null $modelType
      * @return \Illuminate\Support\Collection<int, OrganizationNode>
      *
      * @throws Throwable
      */
     public function organizationNodes(bool $includeRootNode = false, ?string $modelType = null): \Illuminate\Support\Collection
     {
-        // todo scope eklenecek. $scopeLevel $scopeName
-        // todo depth ler eklenecek $maxDepthFromRoot $minDepthFromRoot
-
-        return OrganizationNode::where(function ($query) use ($includeRootNode) {
-            foreach ($this->organizationNodeIds as $organizationNodeId) {
-                $rootNode = OrganizationNode::find($organizationNodeId);
-                throw_unless($rootNode, new InvalidOrganizationNodeException());
-
-                /**
-                 * @phpstan-ignore-next-line
-                 */
-                $query->orWhere('path', 'like', $rootNode->path . '/%');
-
-                if ($includeRootNode) {
-                    /**
-                     * @phpstan-ignore-next-line
-                     */
-                    $query->orWhere('path', $rootNode->path);
-                }
-
-            }
-        })
-            ->when($modelType !== null, function ($query) use ($modelType) {
-                return $query->where('model_type', '=', $modelType);
-            })->get();
+        // Delegate to the single empty-guarded builder: fixes the N+1 (per-id find())
+        // and the empty-scope over-exposure (a role with no nodes must return ZERO rows).
+        return $this->organizationNodesQuery($includeRootNode, $modelType)->get();
     }
 
     /**
-     * @param bool $includeRootNode
-     * @param string|null $modelType
-     * @return OrganizationNode|Builder
      * @throws Throwable
      */
     public function organizationNodesQuery(bool $includeRootNode = false, ?string $modelType = null): OrganizationNode|Builder
     {
         $rootNodes = OrganizationNode::whereIn('id', $this->organizationNodeIds)->get();
-        throw_unless($rootNodes->isNotEmpty(), new InvalidOrganizationNodeException());
 
         return OrganizationNode::where(function ($query) use ($rootNodes, $includeRootNode) {
+            // Fail closed: a role with no accessible nodes matches ZERO rows,
+            // never falling through to an unconstrained (whole-table) result.
+            if ($rootNodes->isEmpty()) {
+                $query->whereRaw('1 = 0');
+
+                return;
+            }
+
             foreach ($rootNodes as $rootNode) {
-                $query->orWhere('path', 'like', $rootNode->path . '/%');
+                $query->orWhere('path', 'like', $rootNode->path.'/%');
 
                 if ($includeRootNode) {
                     $query->orWhere('path', '=', $rootNode->path);
@@ -462,9 +412,6 @@ class AAuth
     /**
      * checks if current role authorized to access given node id
      *
-     * @param int $nodeId
-     * @param string|null $modelType
-     * @return OrganizationNode
      *
      * @throws InvalidOrganizationNodeException|Throwable
      */
@@ -483,12 +430,9 @@ class AAuth
             return OrganizationNode::findOrFail($nodeId)->first();
         }
         */
-        throw new InvalidOrganizationNodeException();
+        throw new InvalidOrganizationNodeException;
     }
 
-    /**
-     * @return array|null
-     */
     public function organizationNodeIds(): ?array
     {
         return $this->organizationNodeIds;
@@ -497,13 +441,13 @@ class AAuth
     /**
      * Get accessible organization nodes with depth and scope filtering
      *
-     * @param int|null $minDepthFromRoot Minimum depth from root (inclusive, 0-based)
-     * @param int|null $maxDepthFromRoot Maximum depth from root (inclusive, 0-based)
-     * @param string|null $scopeName Organization scope name filter
-     * @param int|null $scopeLevel Organization scope level filter
-     * @param bool $includeRootNode Include root nodes in results
-     * @param string|null $modelType Filter by model type
-     * @return \Illuminate\Support\Collection
+     * @param  int|null  $minDepthFromRoot  Minimum depth from root (inclusive, 0-based)
+     * @param  int|null  $maxDepthFromRoot  Maximum depth from root (inclusive, 0-based)
+     * @param  string|null  $scopeName  Organization scope name filter
+     * @param  int|null  $scopeLevel  Organization scope level filter
+     * @param  bool  $includeRootNode  Include root nodes in results
+     * @param  string|null  $modelType  Filter by model type
+     *
      * @throws Throwable
      */
     public function getAccessibleOrganizationNodes(
@@ -514,21 +458,21 @@ class AAuth
         bool $includeRootNode = false,
         ?string $modelType = null
     ): \Illuminate\Support\Collection {
-        return OrganizationNode::where(function ($query) use ($includeRootNode) {
-            foreach ($this->organizationNodeIds as $organizationNodeId) {
-                $rootNode = OrganizationNode::find($organizationNodeId);
-                throw_unless($rootNode, new InvalidOrganizationNodeException());
+        $rootNodes = OrganizationNode::whereIn('id', $this->organizationNodeIds)->get();
 
-                /**
-                 * @phpstan-ignore-next-line
-                 */
-                $query->orWhere('path', 'like', $rootNode->path . '/%');
+        return OrganizationNode::where(function ($query) use ($rootNodes, $includeRootNode) {
+            // Fail closed on an empty accessible-node set (no whole-table leak).
+            if ($rootNodes->isEmpty()) {
+                $query->whereRaw('1 = 0');
+
+                return;
+            }
+
+            foreach ($rootNodes as $rootNode) {
+                $query->orWhere('path', 'like', $rootNode->path.'/%');
 
                 if ($includeRootNode) {
-                    /**
-                     * @phpstan-ignore-next-line
-                     */
-                    $query->orWhere('path', $rootNode->path);
+                    $query->orWhere('path', '=', $rootNode->path);
                 }
             }
         })
@@ -568,25 +512,18 @@ class AAuth
      * Checks if tree has given child
      * No permission check.
      *
-     * @param int $rootNodeId
-     * @param int $childNodeId
-     * @return bool
      *
      * @throws Throwable
      */
     public function descendant(int $rootNodeId, int $childNodeId): bool
     {
         $subTreeRootNode = OrganizationNode::find($rootNodeId);
-        throw_unless($subTreeRootNode, new InvalidOrganizationNodeException());
+        throw_unless($subTreeRootNode, new InvalidOrganizationNodeException);
 
-        return OrganizationNode::where('path', 'like', $subTreeRootNode->path . '%')
+        return OrganizationNode::where('path', 'like', $subTreeRootNode->path.'%')
             ->where('id', '=', $childNodeId)->exists();
     }
 
-    /**
-     * @param string $modelType
-     * @return array|null
-     */
     public function ABACRules(string $modelType): ?array
     {
         return RoleModelAbacRule::where('role_id', '=', $this->role->id)

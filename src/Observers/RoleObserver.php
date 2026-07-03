@@ -35,10 +35,12 @@ class RoleObserver
         }
 
         $prefix = config('aauth-advanced.cache.prefix', 'aauth');
+        $store = config('aauth-advanced.cache.store');
+        $cache = $store ? Cache::store($store) : Cache::store();
 
-        Cache::forget("{$prefix}:role:{$role->id}");
-        Cache::forget("{$prefix}:role:{$role->id}:permissions");
-        Cache::forget("{$prefix}:role:{$role->id}:abac_rules");
+        $cache->forget("{$prefix}:role:{$role->id}");
+        $cache->forget("{$prefix}:role:{$role->id}:permissions");
+        $cache->forget("{$prefix}:role:{$role->id}:abac_rules");
 
         // Clear switchable roles cache for all users with this role
         $userIds = DB::table('user_role_organization_node')
@@ -47,7 +49,7 @@ class RoleObserver
             ->pluck('user_id');
 
         foreach ($userIds as $userId) {
-            Cache::forget("{$prefix}:user:{$userId}:switchable_roles");
+            $cache->forget("{$prefix}:user:{$userId}:switchable_roles");
         }
     }
 }

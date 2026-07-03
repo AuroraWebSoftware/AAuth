@@ -27,9 +27,6 @@ class RolePermissionService
     /**
      * Creates a Perm. with given array
      *
-     * @param  array  $role
-     * @param  bool  $withValidation
-     * @return Role
      *
      * @throws ValidationException
      */
@@ -50,11 +47,6 @@ class RolePermissionService
 
     /**
      * Updates a Perm.
-     *
-     * @param  array  $role
-     * @param  int  $id
-     * @param  bool  $withValidation
-     * @return Role|null
      */
     public function updateRole(array $role, int $id, bool $withValidation = true): ?Role
     {
@@ -74,9 +66,6 @@ class RolePermissionService
 
     /**
      * deletes the role.
-     *
-     * @param  int  $id
-     * @return bool|null
      */
     public function deleteRole(int $id): ?bool
     {
@@ -85,9 +74,6 @@ class RolePermissionService
 
     /**
      * activates the roles
-     *
-     * @param  int  $roleId
-     * @return bool
      */
     public function activateRole(int $roleId): bool
     {
@@ -99,9 +85,6 @@ class RolePermissionService
 
     /**
      * deactivates the roles
-     *
-     * @param  int  $roleId
-     * @return bool
      */
     public function deactivateRole(int $roleId): bool
     {
@@ -111,11 +94,6 @@ class RolePermissionService
         return $roleId->save();
     }
 
-    /**
-     * @param  string|array  $permissionOrPermissions
-     * @param  int  $roleId
-     * @return bool
-     */
     public function attachPermissionToRole(string|array $permissionOrPermissions, int $roleId): bool
     {
         $roleId = Role::find($roleId)->id;
@@ -135,11 +113,6 @@ class RolePermissionService
         return true;
     }
 
-    /**
-     * @param  string|array  $permissions
-     * @param  int  $roleId
-     * @return bool
-     */
     public function detachPermissionFromRole(string|array $permissions, int $roleId): bool
     {
         $roleId = Role::find($roleId)->id;
@@ -159,10 +132,6 @@ class RolePermissionService
         return true;
     }
 
-    /**
-     * @param  int  $roleId
-     * @return bool
-     */
     public function detachAllPermissionsFromRole(int $roleId): bool
     {
         $roleId = Role::find($roleId)->id;
@@ -174,28 +143,23 @@ class RolePermissionService
     }
 
     /**
-     * @param  array  $permissions
-     * @param  int  $roleId
-     * @return bool
-     *
      * @throws Throwable
      */
     public function syncPermissionsOfRole(array $permissions, int $roleId): bool
     {
-        // todo need refactor
         $role = Role::find($roleId);
-        throw_if($role == null, new InvalidRoleException());
+        throw_if($role == null, new InvalidRoleException);
 
-        $detached = $this->detachAllPermissionsFromRole($roleId);
-        $attached = $this->attachPermissionToRole($permissions, $roleId);
+        return DB::transaction(function () use ($permissions, $roleId) {
+            $detached = $this->detachAllPermissionsFromRole($roleId);
+            $attached = $this->attachPermissionToRole($permissions, $roleId);
 
-        return $attached && $detached;
+            return $attached && $detached;
+        });
     }
 
     /**
-     * @param  int  $userId
      * @param  array  $roleIdOrIds
-     * @return array
      *
      * @throws Throwable
      */
@@ -209,7 +173,7 @@ class RolePermissionService
         }
 
         throw_unless(User::whereId($userId)
-            ->exists(), new InvalidUserException());
+            ->exists(), new InvalidUserException);
 
         $roleQuery = Role::whereId($roleIdOrIds);
         if ($this->hasRolesTypeColumn()) {
@@ -217,7 +181,7 @@ class RolePermissionService
         } else {
             $roleQuery->whereNull('organization_scope_id');
         }
-        throw_unless($roleQuery->exists(), new InvalidRoleException());
+        throw_unless($roleQuery->exists(), new InvalidRoleException);
 
         $result = User::find($userId)->system_roles()->sync($roleIdOrIds, false);
 
@@ -228,9 +192,7 @@ class RolePermissionService
     }
 
     /**
-     * @param  int  $userId
      * @param  int  $roleIdOrIds
-     * @return int
      *
      * @throws Throwable
      */
@@ -242,7 +204,7 @@ class RolePermissionService
         }
 
         throw_unless(User::whereId($userId)
-            ->exists(), new InvalidUserException());
+            ->exists(), new InvalidUserException);
 
         // Defensive: check if old 'type' column exists
         $roleQuery = Role::whereId($roleIdOrIds);
@@ -251,7 +213,7 @@ class RolePermissionService
         } else {
             $roleQuery->whereNull('organization_scope_id');
         }
-        throw_unless($roleQuery->exists(), new InvalidRoleException());
+        throw_unless($roleQuery->exists(), new InvalidRoleException);
 
         $result = User::find($userId)->system_roles()->detach($roleIdOrIds);
 
@@ -260,11 +222,6 @@ class RolePermissionService
         return $result;
     }
 
-    /**
-     * @param  int  $userId
-     * @param  array  $roleIds
-     * @return array
-     */
     public function syncUserSystemRoles(int $userId, array $roleIds): array
     {
         // todo
@@ -279,10 +236,6 @@ class RolePermissionService
     /**
      * it makes organization insert and return the pivot table id's
      *
-     * @param  int  $userId
-     * @param  int  $roleId
-     * @param  int  $organizationNodeId
-     * @return bool
      *
      * @throws Throwable
      */
@@ -290,7 +243,7 @@ class RolePermissionService
     {
         // todo burası belki user trait'i ile yapılabilir ?
         throw_unless(User::whereId($userId)
-            ->exists(), new InvalidUserException());
+            ->exists(), new InvalidUserException);
 
         $roleQuery = Role::whereId($roleId);
         if ($this->hasRolesTypeColumn()) {
@@ -298,10 +251,10 @@ class RolePermissionService
         } else {
             $roleQuery->whereNotNull('organization_scope_id');
         }
-        throw_unless($roleQuery->exists(), new InvalidRoleException());
+        throw_unless($roleQuery->exists(), new InvalidRoleException);
 
         throw_unless(OrganizationNode::whereId($organizationNodeId)
-            ->exists(), new InvalidOrganizationNodeException());
+            ->exists(), new InvalidOrganizationNodeException);
 
         $result = DB::table('user_role_organization_node')
             ->updateOrInsert([
@@ -325,18 +278,13 @@ class RolePermissionService
      *             This historic-order method continues to work and emits no
      *             runtime notice; it will be removed in the next major release.
      *
-     * @param  int  $userId
-     * @param  int  $roleId
-     * @param  int  $organizationNodeId
-     * @return int
-     *
      * @throws Throwable
      */
     public function detachOrganizationRoleFromUser(int $userId, int $roleId, int $organizationNodeId): int
     {
         // todo burası belki user trait'i ile yapılabilir ?
         throw_unless(User::whereId($userId)
-            ->exists(), new InvalidUserException());
+            ->exists(), new InvalidUserException);
 
         $roleQuery = Role::whereId($roleId);
         if ($this->hasRolesTypeColumn()) {
@@ -344,10 +292,10 @@ class RolePermissionService
         } else {
             $roleQuery->whereNotNull('organization_scope_id');
         }
-        throw_unless($roleQuery->exists(), new InvalidRoleException());
+        throw_unless($roleQuery->exists(), new InvalidRoleException);
 
         throw_unless(OrganizationNode::whereId($organizationNodeId)
-            ->exists(), new InvalidOrganizationNodeException());
+            ->exists(), new InvalidOrganizationNodeException);
 
         $result = DB::table('user_role_organization_node')
             ->where([
@@ -370,16 +318,12 @@ class RolePermissionService
      * which keeps the historic, inconsistent parameter order for backward
      * compatibility and will be removed in the next major release.
      *
-     * @param  int  $organizationNodeId
-     * @param  int  $roleId
-     * @param  int  $userId
-     * @return int
      *
      * @throws Throwable
      */
     public function detachOrganizationRoleFromUserBy(int $organizationNodeId, int $roleId, int $userId): int
     {
-        throw_unless(User::whereId($userId)->exists(), new InvalidUserException());
+        throw_unless(User::whereId($userId)->exists(), new InvalidUserException);
 
         $roleQuery = Role::whereId($roleId);
         if ($this->hasRolesTypeColumn()) {
@@ -387,11 +331,11 @@ class RolePermissionService
         } else {
             $roleQuery->whereNotNull('organization_scope_id');
         }
-        throw_unless($roleQuery->exists(), new InvalidRoleException());
+        throw_unless($roleQuery->exists(), new InvalidRoleException);
 
         throw_unless(
             OrganizationNode::whereId($organizationNodeId)->exists(),
-            new InvalidOrganizationNodeException()
+            new InvalidOrganizationNodeException
         );
 
         $result = DB::table('user_role_organization_node')
@@ -409,8 +353,6 @@ class RolePermissionService
 
     /**
      * Check if type column exists in roles table (for backward compatibility)
-     *
-     * @return bool
      */
     protected function hasRolesTypeColumn(): bool
     {
@@ -425,9 +367,6 @@ class RolePermissionService
 
     /**
      * Clear user's role-related cache
-     *
-     * @param int $userId
-     * @return void
      */
     protected function clearUserRoleCache(int $userId): void
     {
@@ -436,7 +375,9 @@ class RolePermissionService
         }
 
         $prefix = config('aauth-advanced.cache.prefix', 'aauth');
+        $store = config('aauth-advanced.cache.store');
+        $cache = $store ? Cache::store($store) : Cache::store();
 
-        Cache::forget("{$prefix}:user:{$userId}:switchable_roles");
+        $cache->forget("{$prefix}:user:{$userId}:switchable_roles");
     }
 }

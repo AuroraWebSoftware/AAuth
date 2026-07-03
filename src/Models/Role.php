@@ -2,11 +2,13 @@
 
 namespace AuroraWebSoftware\AAuth\Models;
 
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -27,27 +29,24 @@ use Illuminate\Support\Facades\DB;
  */
 class Role extends Model
 {
-    /** @use \Illuminate\Database\Eloquent\Factories\HasFactory<\Illuminate\Database\Eloquent\Factories\Factory<\AuroraWebSoftware\AAuth\Models\Role>> */
+    /** @use HasFactory<Factory<Role>> */
     use HasFactory;
 
     protected $fillable = ['organization_scope_id', 'type', 'name', 'status'];
 
     /**
      * Get permissions as array (legacy method - backward compatible)
-     *
-     * @return array
      */
     public function permissions(): array
     {
-        return $this
-            ->join('role_permission', 'role_permission.role_id', '=', 'roles.id')
+        return RolePermission::where('role_id', $this->id)
             ->pluck('permission')->toArray();
     }
 
     /**
      * Get role permissions as HasMany relationship (v2)
      *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\AuroraWebSoftware\AAuth\Models\RolePermission, \AuroraWebSoftware\AAuth\Models\Role>
+     * @return HasMany<RolePermission, Role>
      */
     public function rolePermissions(): HasMany
     {
@@ -55,7 +54,7 @@ class Role extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany<\AuroraWebSoftware\AAuth\Models\RoleModelAbacRule, \AuroraWebSoftware\AAuth\Models\Role>
+     * @return HasMany<RoleModelAbacRule, Role>
      */
     public function abacRules(): HasMany
     {
@@ -63,7 +62,7 @@ class Role extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\AuroraWebSoftware\AAuth\Models\OrganizationScope, \AuroraWebSoftware\AAuth\Models\Role>
+     * @return BelongsTo<OrganizationScope, Role>
      */
     public function organization_scope(): BelongsTo
     {
@@ -71,7 +70,7 @@ class Role extends Model
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\AuroraWebSoftware\AAuth\Models\OrganizationNode, \AuroraWebSoftware\AAuth\Models\Role, \Illuminate\Database\Eloquent\Relations\Pivot>
+     * @return BelongsToMany<OrganizationNode, Role, Pivot>
      */
     public function organization_nodes(): BelongsToMany
     {
@@ -80,10 +79,6 @@ class Role extends Model
 
     /**
      * Give a permission to this role
-     *
-     * @param string $permission
-     * @param array|null $parameters
-     * @return \AuroraWebSoftware\AAuth\Models\RolePermission
      */
     public function givePermission(string $permission, ?array $parameters = null): RolePermission
     {
@@ -100,9 +95,6 @@ class Role extends Model
 
     /**
      * Remove a permission from this role
-     *
-     * @param string $permission
-     * @return bool
      */
     public function removePermission(string $permission): bool
     {
@@ -114,8 +106,7 @@ class Role extends Model
     /**
      * Sync permissions for this role
      *
-     * @param array $permissions Array of permission strings or ['permission' => 'params'] pairs
-     * @return void
+     * @param  array  $permissions  Array of permission strings or ['permission' => 'params'] pairs
      */
     public function syncPermissions(array $permissions): void
     {
@@ -136,9 +127,6 @@ class Role extends Model
 
     /**
      * Check if role has a specific permission
-     *
-     * @param string $permission
-     * @return bool
      */
     public function hasPermission(string $permission): bool
     {
@@ -147,19 +135,13 @@ class Role extends Model
             ->exists();
     }
 
-    /**
-     * @return int
-     */
     public function getAssignedUserCountAttribute(): int
     {
-        // new attribute syntax
+        // Distinct users assigned this role (a user may hold it at multiple nodes).
         return DB::table('user_role_organization_node')
-            ->where('role_id', $this->id)->groupBy('user_id')->count();
+            ->where('role_id', $this->id)->distinct('user_id')->count('user_id');
     }
 
-    /**
-     * @return bool
-     */
     public function getDeletableAttribute(): bool
     {
         // new attribute syntax

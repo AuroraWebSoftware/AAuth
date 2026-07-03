@@ -58,8 +58,10 @@ class RolePermissionObserver
         }
 
         $prefix = config('aauth-advanced.cache.prefix', 'aauth');
+        $store = config('aauth-advanced.cache.store');
+        $cache = $store ? Cache::store($store) : Cache::store();
 
-        Cache::forget("{$prefix}:role:{$permission->role_id}");
-        Cache::forget("{$prefix}:role:{$permission->role_id}:permissions");
+        $cache->forget("{$prefix}:role:{$permission->role_id}");
+        $cache->forget("{$prefix}:role:{$permission->role_id}:permissions");
     }
 }
