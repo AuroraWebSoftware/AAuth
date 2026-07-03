@@ -1,13 +1,14 @@
 # PHPStan level-7 baseline — ONLY genuine, irreducible Larastan/library/query quirks.
-# Each of these would require a BREAKING change to remove, so they are baselined (not fixed):
-#   - property.notFound $id: AAuthUserContract exposes $id via the Eloquent model; PHPStan
-#     only honours it through a __get() interface method, which would break consumers.
-#   - argument.type (roles.id / uro.user_id): table/alias-qualified columns on joined
-#     queries are correct SQL but rejected by checkModelProperties (a false positive).
-#   - return.type User::roles(): the public contract types the relation with a concrete
+# There are NO excludePaths, NO blanket ignoreErrors, and NO inline @phpstan-ignore in src.
+# Each remaining entry would require a BREAKING change (or reduced Larastan strictness) to fix:
+#   - property.notFound $id (x4): AAuthUserContract exposes Eloquent's $id; PHPStan only
+#     honours it via a __get() interface method, which would break consumers.
+#   - argument.type roles.id / uro.user_id (x6): table/alias-qualified columns on JOINed
+#     queries are correct SQL but rejected by checkModelProperties (false positive).
+#   - return.type User::roles() (x1): the public contract types the relation with a concrete
 #     model, invariantly incompatible with the model's own $this.
-#   - trait.unused: AAuthUser/AAuthOrganizationNode/AAuthABACModel are PUBLIC library traits
-#     consumed by external models, so PHPStan sees zero uses inside src.
+#   - trait.unused (x3): AAuthUser/AAuthOrganizationNode/AAuthABACModel are PUBLIC library
+#     traits consumed by external models, so PHPStan sees zero uses inside src.
 # Regenerate with: vendor/bin/phpstan analyse --generate-baseline
 parameters:
 	ignoreErrors:

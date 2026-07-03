@@ -96,7 +96,6 @@ class OrganizationNode extends Model
     public function breadCrumbs(): \Illuminate\Support\Collection
     {
         $pathNodeIds = explode('/', $this->path);
-        /* @phpstan-ignore-next-line */
         $breadCrumbs = collect();
         foreach ($pathNodeIds as $pathNodeId) {
             $breadCrumbs->push(OrganizationNode::findOrFail($pathNodeId));

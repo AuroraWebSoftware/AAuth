@@ -19,7 +19,7 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $type
  * @property string $name
  * @property string $status
- * @property OrganizationNode $organizationNode
+ * @property ?OrganizationNode $organizationNode
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property int|null $organization_scope_id

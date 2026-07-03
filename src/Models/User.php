@@ -77,19 +77,14 @@ class User extends Authenticatable implements AAuthUserContract
      */
     public function rolesWithOrganizationNodes(): Collection
     {
-        // @phpstan-ignore-next-line
         $rolesCollection = collect();
 
         $rolesWithOrganizationNodes = DB::table('user_role_organization_node')->where('user_id', '=', $this->id)->get();
 
         foreach ($rolesWithOrganizationNodes as $rolesWithOrganizationNode) {
             $role = Role::find($rolesWithOrganizationNode->role_id);
-            /**
-             * @var Role $role
-             *
-             * @phpstan-ignore-next-line
-             */
-            $role->organizationNode = OrganizationNode::find($rolesWithOrganizationNode->organization_node_id);
+            /** @var Role $role */
+            $role->organizationNode = OrganizationNode::find((int) $rolesWithOrganizationNode->organization_node_id);
 
             $rolesCollection->push($role);
         }

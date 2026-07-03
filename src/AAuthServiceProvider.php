@@ -61,10 +61,10 @@ class AAuthServiceProvider extends PackageServiceProvider
         // classic PHP-FPM each request is a fresh process, so scoped() and singleton()
         // are observationally equivalent (no behaviour change for PHP-FPM consumers).
         $this->app->scoped('aauth', function ($app) {
-            return new AAuth(
-                Auth::user(), // @phpstan-ignore-line
-                Session::get('roleId')
-            );
+            /** @var \AuroraWebSoftware\AAuth\Contracts\AAuthUserContract|null $user */
+            $user = Auth::user();
+
+            return new AAuth($user, Session::get('roleId'));
         });
 
         Gate::before(function ($user, $ability, $arguments = []) {
