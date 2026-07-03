@@ -12,7 +12,7 @@ use Illuminate\Support\Carbon;
  * AuroraWebSoftware\AAuth\Models\Role
  *
  * @property int $id
- * @property array $rules_json
+ * @property array<string, mixed> $rules_json
  * @property string $model_type
  * @property int $role_id
  * @property Carbon|null $created_at

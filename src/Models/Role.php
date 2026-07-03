@@ -50,7 +50,7 @@ class Role extends Model
     /**
      * Get role permissions as HasMany relationship (v2)
      *
-     * @return HasMany<RolePermission, Role>
+     * @return HasMany<RolePermission, $this>
      */
     public function rolePermissions(): HasMany
     {
@@ -58,7 +58,7 @@ class Role extends Model
     }
 
     /**
-     * @return HasMany<RoleModelAbacRule, Role>
+     * @return HasMany<RoleModelAbacRule, $this>
      */
     public function abacRules(): HasMany
     {
@@ -66,7 +66,7 @@ class Role extends Model
     }
 
     /**
-     * @return BelongsTo<OrganizationScope, Role>
+     * @return BelongsTo<OrganizationScope, $this>
      */
     public function organization_scope(): BelongsTo
     {
@@ -74,7 +74,7 @@ class Role extends Model
     }
 
     /**
-     * @return BelongsToMany<OrganizationNode, Role, Pivot>
+     * @return BelongsToMany<OrganizationNode, $this, Pivot>
      */
     public function organization_nodes(): BelongsToMany
     {
@@ -83,6 +83,8 @@ class Role extends Model
 
     /**
      * Give a permission to this role
+     *
+     * @param  array<string, mixed>|null  $parameters
      */
     public function givePermission(string $permission, ?array $parameters = null): RolePermission
     {
@@ -110,7 +112,7 @@ class Role extends Model
     /**
      * Sync permissions for this role
      *
-     * @param  array  $permissions  Array of permission strings or ['permission' => 'params'] pairs
+     * @param  array<int|string, mixed>  $permissions  Array of permission strings or ['permission' => 'params'] pairs
      */
     public function syncPermissions(array $permissions): void
     {

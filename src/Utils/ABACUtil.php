@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Validator;
 class ABACUtil
 {
     /**
+     * @param  array<string, mixed>  $abacRules
+     *
      * @throws Exception
      */
     public static function validateAbacRuleArray(array $abacRules): void

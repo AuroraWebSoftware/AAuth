@@ -54,7 +54,7 @@ class OrganizationScope extends Model
     }
 
     /**
-     * @return HasMany<OrganizationNode, OrganizationScope>
+     * @return HasMany<OrganizationNode, $this>
      */
     public function organization_nodes(): HasMany
     {

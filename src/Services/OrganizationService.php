@@ -21,6 +21,7 @@ class OrganizationService
     /**
      * Creates an org. scope with given array
      *
+     * @param  array<string, mixed>  $organizationScope
      *
      * @throws ValidationException
      */
@@ -41,6 +42,7 @@ class OrganizationService
     /**
      * Updates a Perm.
      *
+     * @param  array<string, mixed>  $organizationScope
      *
      * @throws ValidationException
      */

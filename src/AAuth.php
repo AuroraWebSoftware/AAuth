@@ -28,8 +28,14 @@ class AAuth
 
     public Role $role;
 
+    /**
+     * @var array<int, mixed>|null
+     */
     public ?array $organizationNodeIds;
 
+    /**
+     * @var array<string, bool>
+     */
     protected array $requestCache = [];
 
     /**
@@ -70,7 +76,7 @@ class AAuth
     }
 
     /**
-     * @return array|Collection<int, Role>|\Illuminate\Support\Collection<int, Role>
+     * @return array<int, Role>|Collection<int, Role>|\Illuminate\Support\Collection<int, Role>
      */
     public function switchableRoles(): array|Collection|\Illuminate\Support\Collection
     {
@@ -82,7 +88,7 @@ class AAuth
     }
 
     /**
-     * @return array|Collection<int, Role>|\Illuminate\Support\Collection<int, Role>
+     * @return array<int, Role>|Collection<int, Role>|\Illuminate\Support\Collection<int, Role>
      */
     public static function switchableRolesStatic(int $userId): array|Collection|\Illuminate\Support\Collection
     {
@@ -96,6 +102,8 @@ class AAuth
 
     /**
      * Role's all permissions
+     *
+     * @return array<int, mixed>
      */
     public function permissions(): array
     {
@@ -107,6 +115,8 @@ class AAuth
     /**
      * Get organization permissions for current role
      * Defensive: supports both old 'type' column and new organization_scope_id approach
+     *
+     * @return array<int, mixed>
      */
     public function organizationPermissions(): array
     {
@@ -127,6 +137,8 @@ class AAuth
     /**
      * Get system permissions for current role
      * Defensive: supports both old 'type' column and new organization_scope_id approach
+     *
+     * @return array<int, mixed>
      */
     public function systemPermissions(): array
     {
@@ -299,6 +311,9 @@ class AAuth
         Context::addHidden(self::CONTEXT_KEY, $context);
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     protected function getAuthContext(): array
     {
         $context = Context::getHidden(self::CONTEXT_KEY);
@@ -319,11 +334,18 @@ class AAuth
         Context::forgetHidden(self::CONTEXT_KEY);
     }
 
+    /**
+     * @param  array<int|string, mixed>  $arguments
+     */
     protected function getPermissionCacheKey(string $permission, array $arguments): string
     {
         return $permission.':'.md5(json_encode($arguments) ?: '');
     }
 
+    /**
+     * @param  array<int|string, mixed>  $roleParameters
+     * @param  array<int|string, mixed>  $arguments
+     */
     protected function validateParameters(array $roleParameters, array $arguments): bool
     {
         // Positional matching: the Nth declared parameter is checked against the Nth
@@ -365,7 +387,7 @@ class AAuth
     /**
      * @deprecated Use getAuthContext() instead
      *
-     * @return array<string, array|null>
+     * @return array<string, array<int|string, mixed>|null>
      */
     protected function getPermissionsWithParameters(): array
     {
@@ -453,6 +475,9 @@ class AAuth
         throw new InvalidOrganizationNodeException();
     }
 
+    /**
+     * @return array<int, mixed>|null
+     */
     public function organizationNodeIds(): ?array
     {
         return $this->organizationNodeIds;
@@ -467,6 +492,7 @@ class AAuth
      * @param  int|null  $scopeLevel  Organization scope level filter
      * @param  bool  $includeRootNode  Include root nodes in results
      * @param  string|null  $modelType  Filter by model type
+     * @return \Illuminate\Support\Collection<int, OrganizationNode>
      *
      * @throws Throwable
      */
@@ -492,12 +518,14 @@ class AAuth
                 }
             })
             ->when($scopeName !== null, function ($query) use ($scopeName) {
-                $query->whereHas('organization_scope', function ($q) use ($scopeName) {
+                $query->whereHas('organization_scope', function (Builder $q) use ($scopeName) {
+                    /** @var Builder<\AuroraWebSoftware\AAuth\Models\OrganizationScope> $q */
                     $q->where('name', $scopeName);
                 });
             })
             ->when($scopeLevel !== null, function ($query) use ($scopeLevel) {
-                $query->whereHas('organization_scope', function ($q) use ($scopeLevel) {
+                $query->whereHas('organization_scope', function (Builder $q) use ($scopeLevel) {
+                    /** @var Builder<\AuroraWebSoftware\AAuth\Models\OrganizationScope> $q */
                     $q->where('level', $scopeLevel);
                 });
             })
@@ -524,6 +552,9 @@ class AAuth
             })->exists();
     }
 
+    /**
+     * @return array<string, mixed>|null
+     */
     public function ABACRules(string $modelType): ?array
     {
         return RoleModelAbacRule::where('role_id', '=', $this->role->id)

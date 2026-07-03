@@ -27,6 +27,7 @@ class RolePermissionService
     /**
      * Creates a Perm. with given array
      *
+     * @param  array<string, mixed>  $role
      *
      * @throws ValidationException
      */
@@ -54,6 +55,8 @@ class RolePermissionService
 
     /**
      * Updates a Perm.
+     *
+     * @param  array<string, mixed>  $role
      */
     public function updateRole(array $role, int $id, bool $withValidation = true): ?Role
     {
@@ -101,6 +104,9 @@ class RolePermissionService
         return $roleId->save();
     }
 
+    /**
+     * @param  string|array<int, string>  $permissionOrPermissions
+     */
     public function attachPermissionToRole(string|array $permissionOrPermissions, int $roleId): bool
     {
         $roleId = Role::find($roleId)->id;
@@ -120,6 +126,9 @@ class RolePermissionService
         return true;
     }
 
+    /**
+     * @param  string|array<int, string>  $permissions
+     */
     public function detachPermissionFromRole(string|array $permissions, int $roleId): bool
     {
         $roleId = Role::find($roleId)->id;
@@ -150,6 +159,8 @@ class RolePermissionService
     }
 
     /**
+     * @param  array<int, string>  $permissions
+     *
      * @throws Throwable
      */
     public function syncPermissionsOfRole(array $permissions, int $roleId): bool
@@ -166,7 +177,8 @@ class RolePermissionService
     }
 
     /**
-     * @param  array  $roleIdOrIds
+     * @param  array<int, int>|int  $roleIdOrIds
+     * @return array<string, mixed>
      *
      * @throws Throwable
      */
@@ -199,7 +211,7 @@ class RolePermissionService
     }
 
     /**
-     * @param  int  $roleIdOrIds
+     * @param  array<int, int>|int  $roleIdOrIds
      *
      * @throws Throwable
      */
@@ -229,6 +241,10 @@ class RolePermissionService
         return $result;
     }
 
+    /**
+     * @param  array<int, int>  $roleIds
+     * @return array<string, mixed>
+     */
     public function syncUserSystemRoles(int $userId, array $roleIds): array
     {
         // todo

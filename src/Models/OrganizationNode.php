@@ -53,7 +53,7 @@ class OrganizationNode extends Model
     protected $fillable = ['organization_scope_id', 'name', 'model_type', 'model_id', 'path', 'parent_id'];
 
     /**
-     * @return BelongsTo<OrganizationScope, static>
+     * @return BelongsTo<OrganizationScope, $this>
      */
     public function organization_scope(): BelongsTo
     {
@@ -106,7 +106,7 @@ class OrganizationNode extends Model
     }
 
     /**
-     * @return MorphTo<Model, OrganizationNode>
+     * @return MorphTo<Model, $this>
      */
     public function relatedModel(): MorphTo
     {

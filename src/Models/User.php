@@ -98,7 +98,7 @@ class User extends Authenticatable implements AAuthUserContract
     }
 
     /**
-     * @return BelongsToMany<Role, User, Pivot>
+     * @return BelongsToMany<Role, $this, Pivot>
      */
     public function system_roles(): BelongsToMany
     {
@@ -107,7 +107,7 @@ class User extends Authenticatable implements AAuthUserContract
     }
 
     /**
-     * @return BelongsToMany<Role, User, Pivot>
+     * @return BelongsToMany<Role, $this, Pivot>
      */
     public function organization_roles(): BelongsToMany
     {

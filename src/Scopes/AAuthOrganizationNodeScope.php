@@ -3,14 +3,19 @@
 namespace AuroraWebSoftware\AAuth\Scopes;
 
 use AuroraWebSoftware\AAuth\Facades\AAuth;
+use AuroraWebSoftware\AAuth\Interfaces\AAuthOrganizationNodeInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Scope;
 
+/**
+ * @implements Scope<Model&AAuthOrganizationNodeInterface>
+ */
 class AAuthOrganizationNodeScope implements Scope
 {
     /**
-     * @param  Builder<Model>  $builder
+     * @param  Builder<covariant Model&AAuthOrganizationNodeInterface>  $builder
+     * @param  Model&AAuthOrganizationNodeInterface  $model
      */
     public function apply(Builder $builder, Model $model): void
     {
@@ -37,6 +42,9 @@ class AAuthOrganizationNodeScope implements Scope
 
     /**
      * Prefix the where column with the table name if needed
+     *
+     * @param  array<string, mixed>  $where
+     * @return array<string, mixed>
      */
     protected function prefixWhereColumn(array $where, string $from): array
     {
@@ -49,6 +57,8 @@ class AAuthOrganizationNodeScope implements Scope
 
     /**
      * Get the select columns for the query (only selects fields from the left table)
+     *
+     * @return array<int, string>
      */
     protected function getSelectColumns(string $from): array
     {

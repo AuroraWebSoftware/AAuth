@@ -6,6 +6,9 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateOrganizationNodeRequest extends FormRequest
 {
+    /**
+     * @var array<string, mixed>
+     */
     public static array $rules = [
         'name' => ['required', 'min:3'],
         'parent_id' => ['required', 'int'],
@@ -21,6 +24,8 @@ class UpdateOrganizationNodeRequest extends FormRequest
 
     /**
      * Get the validation rules that apply to the request.
+     *
+     * @return array<string, mixed>
      */
     public function rules(): array
     {

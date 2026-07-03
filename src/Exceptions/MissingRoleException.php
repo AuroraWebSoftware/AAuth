@@ -9,7 +9,7 @@ class MissingRoleException extends Exception
     /**
      * All of the guards that were checked.
      *
-     * @var array
+     * @var list<string>
      */
     protected $guards;
 
@@ -24,6 +24,7 @@ class MissingRoleException extends Exception
      * Create a new authentication exception.
      *
      * @param  string|null  $message
+     * @param  list<string>  $guards
      * @param  string|null  $redirectTo
      * @return void
      */
@@ -58,7 +59,7 @@ class MissingRoleException extends Exception
     /**
      * Get the guards that were checked.
      *
-     * @return array
+     * @return list<string>
      */
     public function guards()
     {
