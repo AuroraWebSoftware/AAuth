@@ -40,6 +40,8 @@ class Role extends Model
 
     /**
      * Get permissions as array (legacy method - backward compatible)
+     *
+     * @return array<int, mixed>
      */
     public function permissions(): array
     {

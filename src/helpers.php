@@ -40,7 +40,7 @@ if (! function_exists('aauth_active_organization')) {
             return null;
         }
 
-        return OrganizationNode::find($nodeIds[0]);
+        return OrganizationNode::find((int) $nodeIds[0]);
     }
 }
 

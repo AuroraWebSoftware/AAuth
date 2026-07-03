@@ -11,12 +11,4 @@ parameters:
     tmpDir: build/phpstan
     checkOctaneCompatibility: true
     checkModelProperties: true
-    ignoreErrors:
-        - identifier: missingType.iterableValue
-
-#    ignoreErrors:
-#        - '#.*Internal error.*#'
-    excludePaths:
-        - src/Scopes/AAuthOrganizationNodeScope.php
-        - src/Scopes/AAuthABACModelScope.php
 

@@ -11,9 +11,9 @@ use Illuminate\Support\Facades\Facade;
  * @see \AuroraWebSoftware\AAuth\AAuth
  *
  * @method static array<int, \AuroraWebSoftware\AAuth\Models\Role>|\Illuminate\Support\Collection<int, \AuroraWebSoftware\AAuth\Models\Role> switchableRoles()
- * @method static array permissions()
- * @method static array organizationPermissions()
- * @method static array systemPermissions()
+ * @method static array<int, mixed> permissions()
+ * @method static array<int, mixed> organizationPermissions()
+ * @method static array<int, mixed> systemPermissions()
  * @method static array<int, int>|null organizationNodeIds()
  * @method static bool can(string $permission, mixed ...$arguments)
  * @method static void passOrAbort(string $permission, string $message = 'No Permission', array<int, mixed> $arguments = [])

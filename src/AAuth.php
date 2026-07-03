@@ -223,7 +223,6 @@ class AAuth
      */
     protected function loadSwitchableRoles(): Collection
     {
-        // @phpstan-ignore-next-line
         return Role::where('uro.user_id', '=', $this->user->id)
             ->where('status', '=', 'active')
             ->leftJoin('user_role_organization_node as uro', 'uro.role_id', '=', 'roles.id')
