@@ -32,7 +32,11 @@ class Role extends Model
     /** @use HasFactory<Factory<Role>> */
     use HasFactory;
 
-    protected $fillable = ['organization_scope_id', 'type', 'name', 'status'];
+    // Privilege-defining columns (type, organization_scope_id) are intentionally NOT
+    // mass-assignable — they may only be set explicitly by the authorized service
+    // methods, so forwarding raw request input cannot escalate an org role to a
+    // system role or move it into another scope.
+    protected $fillable = ['name', 'status'];
 
     /**
      * Get permissions as array (legacy method - backward compatible)

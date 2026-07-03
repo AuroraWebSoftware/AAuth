@@ -15,8 +15,6 @@ class UpdateRoleRequest extends FormRequest
 
     /**
      * Determine if the user is authorized to make this request.
-     *
-     * @return bool
      */
     public function authorize(): bool
     {
@@ -25,13 +23,11 @@ class UpdateRoleRequest extends FormRequest
 
     /**
      * Get the validation rules that apply to the request.
-     *
-     * @return array
      */
     public function rules(): array
     {
         $rules = self::$rules;
-        $rules['name'][] = 'unique:roles,name,' . $this->route('role');
+        $rules['name'][] = 'unique:roles,name,'.$this->route('role');
 
         return $rules;
     }

@@ -50,7 +50,7 @@ class RolePermission extends Model
     /**
      * Get the role that owns this permission.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo<\AuroraWebSoftware\AAuth\Models\Role, \AuroraWebSoftware\AAuth\Models\RolePermission>
+     * @return BelongsTo<Role, RolePermission>
      */
     public function role(): BelongsTo
     {

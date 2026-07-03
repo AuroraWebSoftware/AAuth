@@ -42,7 +42,14 @@ class RolePermissionService
             }
         }
 
-        return Role::create($role);
+        $model = new Role;
+        $model->fill(['name' => $role['name'] ?? null, 'status' => $role['status'] ?? 'active']);
+        // type / organization_scope_id are set explicitly here (not mass-assignable).
+        $model->type = $role['type'] ?? null;
+        $model->organization_scope_id = $role['organization_scope_id'] ?? null;
+        $model->save();
+
+        return $model;
     }
 
     /**
@@ -256,6 +263,10 @@ class RolePermissionService
         throw_unless(OrganizationNode::whereId($organizationNodeId)
             ->exists(), new InvalidOrganizationNodeException);
 
+        // A caller may only assign a role at a node within their own accessible subtree
+        // (skipped when there is no active AAuth context — seeders/console/queue).
+        $this->assertOrganizationNodeAuthorized($organizationNodeId);
+
         $result = DB::table('user_role_organization_node')
             ->updateOrInsert([
                 'user_id' => $userId,
@@ -368,6 +379,23 @@ class RolePermissionService
     /**
      * Clear user's role-related cache
      */
+    /**
+     * Enforce the active role's org-subtree boundary on role assignment, but only when
+     * an AAuth context is resolvable (seeders/console/queue run without one and skip).
+     *
+     * @throws Throwable
+     */
+    protected function assertOrganizationNodeAuthorized(int $nodeId): void
+    {
+        try {
+            $aauth = app('aauth');
+        } catch (Throwable $e) {
+            return;
+        }
+
+        $aauth->organizationNode($nodeId);
+    }
+
     protected function clearUserRoleCache(int $userId): void
     {
         if (! config('aauth-advanced.cache.enabled', false)) {

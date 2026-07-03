@@ -40,8 +40,10 @@ class AAuth
         throw_unless($user, new AuthenticationException);
         throw_unless($roleId, new MissingRoleException);
 
+        // Only an ACTIVE assigned role may be selected — deactivateRole() is an
+        // effective kill switch on the very next request.
         throw_if(
-            $user->roles()->where('roles.id', '=', $roleId)->count() < 1,
+            $user->roles()->where('roles.id', '=', $roleId)->where('status', '=', 'active')->count() < 1,
             new UserHasNoAssignedRoleException
         );
 
@@ -86,6 +88,7 @@ class AAuth
     {
         // todo test'i yazılacak
         return Role::where('uro.user_id', '=', $userId)
+            ->where('status', '=', 'active')
             ->leftJoin('user_role_organization_node as uro', 'uro.role_id', '=', 'roles.id')
             ->distinct()
             ->select('roles.id', 'name')->get();
@@ -210,6 +213,7 @@ class AAuth
     {
         // @phpstan-ignore-next-line
         return Role::where('uro.user_id', '=', $this->user->id)
+            ->where('status', '=', 'active')
             ->leftJoin('user_role_organization_node as uro', 'uro.role_id', '=', 'roles.id')
             ->distinct()
             ->select('roles.id', 'name')->get();
@@ -238,9 +242,12 @@ class AAuth
         }
 
         if (empty($arguments)) {
-            $this->requestCache[$cacheKey] = true;
+            // Fail closed: a permission that declares parameter constraints cannot be
+            // granted without the runtime value(s) needed to check them.
+            $result = empty($context['permissions'][$permission]);
+            $this->requestCache[$cacheKey] = $result;
 
-            return true;
+            return $result;
         }
 
         $roleParameters = $context['permissions'][$permission];
@@ -319,17 +326,20 @@ class AAuth
 
     protected function validateParameters(array $roleParameters, array $arguments): bool
     {
-        foreach ($roleParameters as $paramName => $roleValue) {
-            $argIndex = array_search($paramName, array_keys($roleParameters));
-
-            if (! isset($arguments[$argIndex])) {
-                continue;
+        // Positional matching: the Nth declared parameter is checked against the Nth
+        // runtime argument. Fail closed on any missing/mismatched/unknown constraint.
+        $argIndex = 0;
+        foreach ($roleParameters as $roleValue) {
+            if (! array_key_exists($argIndex, $arguments)) {
+                return false;
             }
 
             $runtimeValue = $arguments[$argIndex];
+            $argIndex++;
 
-            if (is_int($roleValue) && is_numeric($runtimeValue)) {
-                if ($runtimeValue > $roleValue) {
+            if (is_int($roleValue)) {
+                // Numeric upper bound; a non-numeric runtime value cannot satisfy it.
+                if (! is_numeric($runtimeValue) || $runtimeValue > $roleValue) {
                     return false;
                 }
             } elseif (is_array($roleValue)) {
@@ -340,6 +350,12 @@ class AAuth
                 if ((bool) $runtimeValue !== $roleValue) {
                     return false;
                 }
+            } elseif (is_string($roleValue)) {
+                if ((string) $runtimeValue !== $roleValue) {
+                    return false;
+                }
+            } else {
+                return false;
             }
         }
 
@@ -358,10 +374,12 @@ class AAuth
         return $context['permissions'];
     }
 
-    public function passOrAbort(string $permission, string $message = 'No Permission'): void
+    /**
+     * @param  array<int, mixed>  $arguments  parametric permission values, forwarded to can()
+     */
+    public function passOrAbort(string $permission, string $message = 'No Permission', array $arguments = []): void
     {
-        // todo mesaj dil dosyasından gelecek.
-        if (! $this->can($permission)) {
+        if (! $this->can($permission, ...$arguments)) {
             abort(ResponseAlias::HTTP_UNAUTHORIZED, $message);
         }
     }
@@ -382,6 +400,8 @@ class AAuth
     }
 
     /**
+     * @return Builder<OrganizationNode>|OrganizationNode
+     *
      * @throws Throwable
      */
     public function organizationNodesQuery(bool $includeRootNode = false, ?string $modelType = null): OrganizationNode|Builder
@@ -520,8 +540,12 @@ class AAuth
         $subTreeRootNode = OrganizationNode::find($rootNodeId);
         throw_unless($subTreeRootNode, new InvalidOrganizationNodeException);
 
-        return OrganizationNode::where('path', 'like', $subTreeRootNode->path.'%')
-            ->where('id', '=', $childNodeId)->exists();
+        // Anchored to the '/' separator so root '1' does not match sibling '10'/'1/3'→'1/30'.
+        return OrganizationNode::where('id', '=', $childNodeId)
+            ->where(function ($query) use ($subTreeRootNode) {
+                $query->where('path', '=', $subTreeRootNode->path)
+                    ->orWhere('path', 'like', $subTreeRootNode->path.'/%');
+            })->exists();
     }
 
     public function ABACRules(string $modelType): ?array

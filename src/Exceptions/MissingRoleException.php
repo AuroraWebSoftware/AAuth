@@ -24,7 +24,6 @@ class MissingRoleException extends Exception
      * Create a new authentication exception.
      *
      * @param  string|null  $message
-     * @param  array  $guards
      * @param  string|null  $redirectTo
      * @return void
      */
@@ -39,8 +38,6 @@ class MissingRoleException extends Exception
 
     /**
      * Get default translated message
-     *
-     * @return string
      */
     protected function getDefaultMessage(): string
     {

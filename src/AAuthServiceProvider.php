@@ -19,21 +19,13 @@ use Spatie\LaravelPackageTools\PackageServiceProvider;
 
 class AAuthServiceProvider extends PackageServiceProvider
 {
-    /**
-     * @param  Package  $package
-     * @return void
-     */
     public function configurePackage(Package $package): void
     {
         $package
             ->name('aauth')
-            ->hasConfigFile(['aauth', 'aauth-advanced'])
-        ;
+            ->hasConfigFile(['aauth', 'aauth-advanced']);
     }
 
-    /**
-     * @return void
-     */
     public function boot(): void
     {
         parent::boot();
@@ -77,6 +69,17 @@ class AAuthServiceProvider extends PackageServiceProvider
 
         Gate::before(function ($user, $ability, $arguments = []) {
             try {
+                // Defer to a host-app Policy when one handles this ability for the given
+                // model, so object-level checks (e.g. ownership) still run. A name-only
+                // AAuth permission must NOT silently shadow a registered policy (IDOR).
+                $model = is_array($arguments) ? ($arguments[0] ?? null) : $arguments;
+                if (is_object($model) || (is_string($model) && class_exists($model))) {
+                    $policy = Gate::getPolicyFor($model);
+                    if ($policy !== null && method_exists($policy, $ability)) {
+                        return null;
+                    }
+                }
+
                 /** @var AAuth $aauth */
                 $aauth = app('aauth');
 

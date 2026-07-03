@@ -21,9 +21,6 @@ class OrganizationService
     /**
      * Creates an org. scope with given array
      *
-     * @param array $organizationScope
-     * @param bool $withValidation
-     * @return OrganizationScope
      *
      * @throws ValidationException
      */
@@ -44,10 +41,6 @@ class OrganizationService
     /**
      * Updates a Perm.
      *
-     * @param array $organizationScope
-     * @param int $id
-     * @param bool $withValidation
-     * @return ?OrganizationScope
      *
      * @throws ValidationException
      */
@@ -69,9 +62,6 @@ class OrganizationService
 
     /**
      * deletes perm.
-     *
-     * @param int $id
-     * @return bool|null
      */
     public function deleteOrganizationScope(int $id): ?bool
     {
@@ -82,8 +72,6 @@ class OrganizationService
      * Creates an org. node with given array
      *
      * @param  array<string, mixed>  $organizationNode
-     * @param  bool  $withValidation
-     * @return OrganizationNode
      *
      * @throws ValidationException
      */
@@ -108,24 +96,19 @@ class OrganizationService
             'name' => $organizationNode['name'] ?? null,
             'model_type' => $organizationNode['model_type'] ?? null,
             'model_id' => $organizationNode['model_id'] ?? null,
-            'path' => $parentPath . '/?',
+            'path' => $parentPath.'/?',
             'parent_id' => $organizationNode['parent_id'] ?? null,
         ];
 
         $created = OrganizationNode::create($attributes);
 
         // todo , can be add inside model's created event
-        $created->path = $parentPath . $created->id;
+        $created->path = $parentPath.$created->id;
         $created->save();
 
         return $created;
     }
 
-    /**
-     * @param Model $model
-     * @param int $parentOrganizationId
-     * @return OrganizationNode|null
-     */
     public function createOrganizationNodeForModel(Model $model, int $parentOrganizationId): ?OrganizationNode
     {
         return null;
@@ -133,8 +116,6 @@ class OrganizationService
 
     /**
      * Return path with trailing slash (/)
-     * @param int|null $organizationNodeId
-     * @return string|null
      */
     public function getPath(?int $organizationNodeId): ?string
     {
@@ -142,12 +123,9 @@ class OrganizationService
             return '';
         }
 
-        return OrganizationNode::find($organizationNodeId)?->path . '/';
+        return OrganizationNode::find($organizationNodeId)?->path.'/';
     }
 
-    /**
-     * @param int $organizationNodeId
-     */
     public function calculatePath(int $organizationNodeId): void
     {
         // todo
@@ -166,9 +144,6 @@ class OrganizationService
      *  - true  (default): open a top-level transaction here.
      *  - false           : the caller is already managing a transaction; participate in it.
      *
-     * @param  OrganizationNode  $node
-     * @param  bool|null  $withDBTransaction
-     * @return void
      *
      * @throws \Throwable
      */
@@ -185,13 +160,10 @@ class OrganizationService
 
     /**
      * Inner recursion for path updates. Does not manage transactions.
-     *
-     * @param  OrganizationNode  $node
-     * @return void
      */
     protected function updateSubtreePaths(OrganizationNode $node): void
     {
-        $node->path = $this->getPath($node->parent_id) . $node->id;
+        $node->path = $this->getPath($node->parent_id).$node->id;
         $node->save();
 
         foreach (OrganizationNode::whereParentId($node->id)->get() as $subNode) {
@@ -207,9 +179,6 @@ class OrganizationService
      * and re-throw the original exception. Previous versions silently swallowed
      * exceptions.
      *
-     * @param  OrganizationNode  $node
-     * @param  bool|null  $withDBTransaction
-     * @return void
      *
      * @throws \Throwable
      */
@@ -226,9 +195,6 @@ class OrganizationService
 
     /**
      * Inner recursion for deletes. Does not manage transactions.
-     *
-     * @param  OrganizationNode  $node
-     * @return void
      */
     protected function deleteSubtree(OrganizationNode $node): void
     {

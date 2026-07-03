@@ -2,7 +2,10 @@
 
 namespace AuroraWebSoftware\AAuth\Contracts;
 
+use AuroraWebSoftware\AAuth\Models\Role;
+use AuroraWebSoftware\AAuth\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
 /**
  * @property-read int $id
@@ -10,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 interface AAuthUserContract
 {
     /**
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany<\AuroraWebSoftware\AAuth\Models\Role, \AuroraWebSoftware\AAuth\Models\User, \Illuminate\Database\Eloquent\Relations\Pivot>
+     * @return BelongsToMany<Role, User, Pivot>
      */
     public function roles(): BelongsToMany;
 }

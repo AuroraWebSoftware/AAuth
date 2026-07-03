@@ -16,11 +16,8 @@ use Illuminate\Database\Eloquent\Scope;
 class AAuthABACModelScope implements Scope
 {
     /**
-     * @param Builder<TModelClass> $builder
-     * @param Model $model
-     * @param mixed $rules
-     * @param string $parentOperator
-     * @return void
+     * @param  Builder<TModelClass>  $builder
+     *
      * @throws Exception
      */
     public function apply(Builder $builder, Model $model, mixed $rules = false, string $parentOperator = '&&'): void
@@ -31,6 +28,7 @@ class AAuthABACModelScope implements Scope
              *
              * PHPStan analysis does not return any errors, but it underlines the ABACRules method because it somehow
              * does not see it, even though it is defined in the facade.
+             *
              * @phpstan-ignore-next-line
              */
             $rules = AAuth::ABACRules($model::getModelType()) ?? [];
@@ -47,7 +45,7 @@ class AAuthABACModelScope implements Scope
                 $this->apply($query, $model, $rules);
             });
         } else {
-            $logicalOperators = ["&&","||"];
+            $logicalOperators = ['&&', '||'];
 
             foreach ($rules as $rule) {
                 $firstKey = array_key_first($rule);
@@ -65,13 +63,8 @@ class AAuthABACModelScope implements Scope
     /**
      * Apply logical operator (&& or ||) to the query builder.
      *
-     * @param Builder<TModelClass> $builder
-     * @param array $abacRule
-     * @param Model $model
-     * @param string $logicalOperator
-     * @param string $parentOperator
+     * @param  Builder<TModelClass>  $builder
      *
-     * @return void
      * @throws Exception
      */
     protected function applyLogicalOperator(Builder $builder, array $abacRule, Model $model, string $logicalOperator, string $parentOperator): void
@@ -86,11 +79,7 @@ class AAuthABACModelScope implements Scope
     /**
      * Apply conditional operator to the query builder.
      *
-     * @param Builder<TModelClass> $builder
-     * @param array   $rule
-     * @param string  $parentOperator
-     *
-     * @return void
+     * @param  Builder<TModelClass>  $builder
      */
     protected function applyConditionalOperator(Builder $builder, array $rule, string $parentOperator): void
     {

@@ -11,9 +11,6 @@ class StoreOrganizationScopeRequest extends FormRequest
         'level' => [],
     ];
 
-    /**
-     * @return array
-     */
     public static function getRules(): array
     {
         return self::$rules;

@@ -16,6 +16,5 @@ class RoleAssignedEvent
         public int $userId,
         public Role $role,
         public ?OrganizationNode $organizationNode = null
-    ) {
-    }
+    ) {}
 }

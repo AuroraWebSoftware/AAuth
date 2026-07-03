@@ -17,6 +17,5 @@ class RoleSwitchedEvent
         public Role $newRole,
         public ?Role $oldRole = null,
         public ?OrganizationNode $organizationNode = null
-    ) {
-    }
+    ) {}
 }

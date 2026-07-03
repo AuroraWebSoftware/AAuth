@@ -11,17 +11,11 @@ use Illuminate\Support\Facades\Schema;
 
 trait AAuthUser
 {
-    /**
-     * @return BelongsToMany
-     */
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class, 'user_role_organization_node');
     }
 
-    /**
-     * @return Collection
-     */
     public function rolesWithOrganizationNodes(): Collection
     {
         $rolesCollection = collect();
@@ -40,8 +34,6 @@ trait AAuthUser
     /**
      * Get system roles (global roles not tied to organization)
      * Defensive: supports both old 'type' column and new organization_scope_id approach
-     *
-     * @return BelongsToMany
      */
     public function system_roles(): BelongsToMany
     {
@@ -58,8 +50,6 @@ trait AAuthUser
     /**
      * Get organization roles (roles tied to an organization scope)
      * Defensive: supports both old 'type' column and new organization_scope_id approach
-     *
-     * @return BelongsToMany
      */
     public function organization_roles(): BelongsToMany
     {
@@ -75,8 +65,6 @@ trait AAuthUser
 
     /**
      * Check if type column exists in roles table (for backward compatibility)
-     *
-     * @return bool
      */
     protected function hasRolesTypeColumn(): bool
     {
@@ -89,18 +77,12 @@ trait AAuthUser
         return $hasType;
     }
 
-    /**
-     * @return int
-     */
     public function getAssignedUserCountAttribute(): int
     {
         return DB::table('user_role_organization_node')
             ->where('user_id', $this->id)->count();
     }
 
-    /**
-     * @return bool
-     */
     public function getDeletableAttribute(): bool
     {
         // todo new syntax

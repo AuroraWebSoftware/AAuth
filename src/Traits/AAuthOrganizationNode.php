@@ -41,6 +41,25 @@ trait AAuthOrganizationNode
     }
 
     /**
+     * Enforce the active role's org-subtree boundary on writes — but only when an AAuth
+     * context is resolvable. Seeders, console commands and queue jobs run without an
+     * authenticated role and are intentionally skipped (no context = no enforcement).
+     *
+     * @throws Throwable
+     */
+    protected static function assertOrganizationNodeAuthorized(int $nodeId): void
+    {
+        try {
+            $aauth = app('aauth');
+        } catch (Throwable $e) {
+            return;
+        }
+
+        // Throws InvalidOrganizationNodeException when the node is outside the subtree.
+        $aauth->organizationNode($nodeId);
+    }
+
+    /**
      * @throws Throwable
      */
     public static function createWithAAuthOrganizationNode(array $modelCreateData, int $parentOrganizationNodeId, int $organizationScopeId)
@@ -48,9 +67,6 @@ trait AAuthOrganizationNode
         // todo di
         $organizationService = new OrganizationService;
 
-        // todo yetki kontrolü ? serviste mi olmalı?
-        // gerekli validationlar, organization scope validationları vs.
-        // commit rollback
         $parentOrganizationNode = OrganizationNode::find($parentOrganizationNodeId);
 
         throw_if($parentOrganizationNode == null, new InvalidOrganizationNodeException);
@@ -58,6 +74,9 @@ trait AAuthOrganizationNode
         $organizationScope = OrganizationScope::find($organizationScopeId);
 
         throw_if($organizationScope == null, new InvalidOrganizationScopeException);
+
+        // Reject grafting under a parent outside the active role's accessible subtree.
+        self::assertOrganizationNodeAuthorized($parentOrganizationNodeId);
 
         $createdModel = self::create($modelCreateData);
 
@@ -88,6 +107,8 @@ trait AAuthOrganizationNode
         $organizationScope = OrganizationScope::find($organizationScopeId);
 
         throw_if($organizationScope == null, new InvalidOrganizationScopeException);
+
+        self::assertOrganizationNodeAuthorized($parentOrganizationNodeId);
 
         return DB::transaction(function () use ($modelId, $nodeId, $modelUpdateData, $parentOrganizationNode, $organizationScope, $organizationService) {
             $modelInfo = self::findOrFail($modelId);
@@ -125,6 +146,8 @@ trait AAuthOrganizationNode
                 ->first();
 
             throw_if($organizationNode == null, new InvalidOrganizationNodeException);
+
+            self::assertOrganizationNodeAuthorized($organizationNode->id);
 
             $modelInfo = self::findOrFail($modelId);
             $modelInfo->delete();

@@ -9,9 +9,6 @@ use Illuminate\Support\Facades\Validator;
 class ABACUtil
 {
     /**
-     * @param  array  $abacRules
-     * @return void
-     *
      * @throws Exception
      */
     public static function validateAbacRuleArray(array $abacRules): void
@@ -26,7 +23,10 @@ class ABACUtil
         foreach (ABACCondition::cases() as $condition) {
             $validationRules[$condition->value] = ['array'];
             if (array_key_exists($condition->value, $abacRules)) {
-                $validationRules[$condition->value.'.attribute'] = ['string', 'required'];
+                // 'attribute' is interpolated into the column position of the query, so it
+                // must be a bare column identifier — reject quotes, '->', spaces, etc.
+                // (fail closed against SQL/column injection from stored rules).
+                $validationRules[$condition->value.'.attribute'] = ['string', 'required', 'regex:/^[A-Za-z_][A-Za-z0-9_]*$/'];
                 $validationRules[$condition->value.'.value'] = ['string', 'required'];
             }
         }
@@ -45,9 +45,6 @@ class ABACUtil
     }
 
     /**
-     * @param  string  $ruleJson
-     * @return void
-     *
      * @throws Exception
      */
     public static function validateAbacRuleJson(string $ruleJson): void

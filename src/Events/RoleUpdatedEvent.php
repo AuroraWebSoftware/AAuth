@@ -13,6 +13,5 @@ class RoleUpdatedEvent
 
     public function __construct(
         public Role $role
-    ) {
-    }
+    ) {}
 }

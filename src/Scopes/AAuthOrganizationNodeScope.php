@@ -5,13 +5,12 @@ namespace AuroraWebSoftware\AAuth\Scopes;
 use AuroraWebSoftware\AAuth\Facades\AAuth;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Scope;
 
-class AAuthOrganizationNodeScope implements \Illuminate\Database\Eloquent\Scope
+class AAuthOrganizationNodeScope implements Scope
 {
     /**
-     * @param Builder<Model> $builder
-     * @param Model $model
-     * @return void
+     * @param  Builder<Model>  $builder
      */
     public function apply(Builder $builder, Model $model): void
     {
@@ -30,9 +29,6 @@ class AAuthOrganizationNodeScope implements \Illuminate\Database\Eloquent\Scope
 
     /**
      * Get the table name from the query's "from" clause
-     *
-     * @param mixed $from
-     * @return string
      */
     protected function getFromTableName(mixed $from): string
     {
@@ -41,14 +37,10 @@ class AAuthOrganizationNodeScope implements \Illuminate\Database\Eloquent\Scope
 
     /**
      * Prefix the where column with the table name if needed
-     *
-     * @param array $where
-     * @param string $from
-     * @return array
      */
     protected function prefixWhereColumn(array $where, string $from): array
     {
-        if (isset($where['column']) && ! str_contains($where['column'], $from . '.')) {
+        if (isset($where['column']) && ! str_contains($where['column'], $from.'.')) {
             $where['column'] = sprintf('%s.%s', $from, $where['column']);
         }
 
@@ -57,9 +49,6 @@ class AAuthOrganizationNodeScope implements \Illuminate\Database\Eloquent\Scope
 
     /**
      * Get the select columns for the query (only selects fields from the left table)
-     *
-     * @param string $from
-     * @return array
      */
     protected function getSelectColumns(string $from): array
     {
